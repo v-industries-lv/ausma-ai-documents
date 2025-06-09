@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/lobby-style.css">
+    <link rel="shortcut icon" href="/static/svg-icons/ausma.ai_simple_logo_final_006.svg">
+    <title>ausma.ai: Lobby</title>
+</head>
+
+<body>
+    <div id="main">
+        <h1 id="chat-room-lobby-heading">Chat Room Lobby</h1>
+        <div>
+            <form id="new-room-form">
+                <input id="room-name" placeholder="Room name" required>
+                <button class="button create-button" type="submit">Create Room</button>
+            </form>
+        </div>
+    </div>
+    <div id="available_rooms">
+        <div class="ausma_ai_logo">
+            <img src="/static/svg-icons/ausma.ai_simple_logo_final_011.svg"  alt="ausma.ai-logo" height="80px" width="250px">
+        </div>
+        <h2 id="rooms_heading">Available Rooms</h2>
+        <ul id="rooms-list"></ul>
+    </div>
+    <script src="/static/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        document.getElementById('new-room-form').onsubmit = function (e) {
+            e.preventDefault();
+            const name = document.getElementById('room-name').value.trim();
+            if (name) {
+                fetch('/create_room', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name })
+                }).then(res => res.json()).then(room => {
+                    document.getElementById('room-name').value = '';
+                });
+            }
+        };
+
+        // Listen for live updates
+        socket.on('rooms_list', function (rooms) {
+            renderRooms(rooms);
+        });
+
+        function removeRoom(event) {
+        var room = event.target.getAttribute('data-value');
+            socket.emit('remove_room', {"room_id": room});
+        }
+
+        function renderRooms(rooms) {
+            let ul = document.getElementById('rooms-list');
+            ul.innerHTML = '';
+            rooms.forEach(room => {
+                let li = document.createElement('li');
+                li.innerHTML = `<div class="room-item">${room.name}</div>
+                <button onclick="window.location.href='/chat/${room.id}'">Join</button>
+                <img src='/static/svg-icons/waste-bin.svg' class="remove_room_image" data-value="${room.id}"
+                style='height:30px;cursor:pointer;width:30px;margin-right:5px;vertical-align:middle;'>`;
+                ul.appendChild(li);
+            });
+            document.querySelectorAll('.remove_room_image').forEach(function(click_image) {click_image.addEventListener('click', removeRoom)})
+        }
+
+        // Call this just after DOM loads (before any socket logic)
+        function fetchRooms() {
+            fetch('/rooms').then(r => r.json()).then(renderRooms);
+        }
+
+        // On page load
+        window.onload = fetchRooms;
+
+        // Socket.IO: will overwrite live as rooms_list arrives
+        socket.on('rooms_list', renderRooms);
+
+
+    </script>
+</body>
+
+</html>

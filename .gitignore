@@ -1,0 +1,9 @@
+instance
+logs
+chroma
+text
+images
+.venv
+test/chroma
+test/text
+test/images

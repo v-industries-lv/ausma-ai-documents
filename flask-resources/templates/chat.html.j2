@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/static/svg-icons/ausma.ai_simple_logo_final_006.svg">
+    <script>
+        let room = {{ room | tojson}};
+    </script>
+    <title>ausma.ai: {{room_name}}</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <script src="/static/socket.io.js"></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div>
+                <a href="/">
+                    <img src="/static/svg-icons/home-svgrepo-com.svg" alt="home-icon" class="home_icon">
+                </a>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div id="background">
+            <h1 id="input-heading"><span id="l-outfit">ausma.ai</span> : {{room_name}}</h1>
+            <div id="Rag-llm">
+                <div id="rag">
+                    <p>RAG type:</p>
+                    {# <label for="none_rag" class="rag_button">None</label>
+                    <input type="radio" name="rag_type" id="none_rag" class="rags" value="none" checked> #}
+                    <div class="rag_buttons">
+                        <label class="rag_button"><input type="radio" name="rag_type" id="none_rag" class="rags"
+                                value="none" checked><span>None</span></label>
+
+                        <label class="rag_button"><input type="radio" name="rag_type" id="raw_rag" class="rags"
+                                value="raw">
+                            <span>RAW</span></label>
+
+                        <label class="rag_button"><input type="radio" name="rag_type" id="ocr_llm_rag" class="rags"
+                                value="ocr_llm">
+                            <span>OCR + LLM</span></label>
+
+                        <label class="rag_button"><input type="radio" name="rag_type" id="llm_rag" class="rags"
+                                value="llm">
+                            <span>LLM</span></label>
+                    </div>
+                </div>
+
+                <div id="llm_">
+                    <p>LLM model:</p>
+                    <select name="llm" id="llm_model">
+                        {% if llmlist|length == 1 %}
+                        <option value="{{llmlist[0]}}" selected>{{llmlist[0]}}</option>
+                        {% elif llmlist|length > 1 %}
+                        <option value="{{llmlist[0]}}" selected>{{llmlist[0]}}</option>
+                        {% for x in llmlist[1:] %}
+                        <option value="{{x}}">{{x}}</option>
+                        {% endfor %}
+                        {% else %}
+                        <option value="No models found!" selected>No models found!</option>
+                        {% endif %}
+                    </select>
+
+                </div>
+            </div>
+
+            <div id="communication">
+
+                <div id="chat"></div>
+
+                <div id="spinner" style="display: none;">
+                    <span class="loader"></span> <span class="processing">Processing...</span>
+                </div>
+                
+                <div id="input">
+                    <label id="u_i" for="user_input">User input:</label>
+                    <textarea id="user_input" rows="3" name="user_input" placeholder="Ask me anything!"></textarea>
+                    <button id="send_button" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+
+
+
+
+            <script src="../static/chat_handler.js"></script>
+        </div>
+    </main>
+</body>
+
+</html>

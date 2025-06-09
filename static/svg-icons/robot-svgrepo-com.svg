@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+
+<svg
+   width="800px"
+   height="800px"
+   viewBox="0 0 24 24"
+   fill="none"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="robot-svgrepo-com.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="namedview4"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     inkscape:zoom="0.45875"
+     inkscape:cx="400"
+     inkscape:cy="400"
+     inkscape:window-width="1536"
+     inkscape:window-height="888"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <g
+     id="g1"
+     transform="matrix(1.3385158,0,0,1.6584609,-4.0621892,-8.2834492)"
+     style="fill:#fa994a;fill-opacity:1">
+    <path
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       d="m 7.5,11 c -0.55228,0 -1,0.4477 -1,1 0,0.5523 0.44772,1 1,1 0.55228,0 1,-0.4477 1,-1 0,-0.5523 -0.44772,-1 -1,-1 z m -2,1 c 0,-1.1046 0.89543,-2 2,-2 1.10457,0 2,0.8954 2,2 0,1.1046 -0.89543,2 -2,2 -1.10457,0 -2,-0.8954 -2,-2 z"
+       fill="#47495F"
+       id="path1"
+       style="fill:#fa994a;fill-opacity:1" />
+    <path
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       d="m 16.5,11 c -0.5523,0 -1,0.4477 -1,1 0,0.5523 0.4477,1 1,1 0.5523,0 1,-0.4477 1,-1 0,-0.5523 -0.4477,-1 -1,-1 z m -2,1 c 0,-1.1046 0.8954,-2 2,-2 1.1046,0 2,0.8954 2,2 0,1.1046 -0.8954,2 -2,2 -1.1046,0 -2,-0.8954 -2,-2 z"
+       fill="#47495F"
+       id="path2"
+       style="fill:#fa994a;fill-opacity:1" />
+    <path
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       d="m 10,15.5 c 0.2761,0 0.5,0.2239 0.5,0.5 l 3e-4,0.0027 c 0,0 0.0011,0.0046 0.0031,0.0095 0.004,0.0098 0.0137,0.0283 0.0355,0.0541 0.0456,0.0539 0.1312,0.1239 0.2705,0.1936 C 11.0883,16.3993 11.5085,16.5 12,16.5 c 0.4915,0 0.9117,-0.1007 1.1906,-0.2401 0.1393,-0.0697 0.2249,-0.1397 0.2705,-0.1936 0.0218,-0.0258 0.0315,-0.0443 0.0355,-0.0541 0.002,-0.0049 0.0031,-0.0095 0.0031,-0.0095 L 13.5,16 c 0,-0.2761 0.2239,-0.5 0.5,-0.5 0.2761,0 0.5,0.2239 0.5,0.5 0,0.5676 -0.4471,0.9468 -0.8622,1.1543 C 13.1928,17.3768 12.6131,17.5 12,17.5 11.3869,17.5 10.8072,17.3768 10.3622,17.1543 9.9471,16.9468 9.5,16.5676 9.5,16 9.5,15.7239 9.72386,15.5 10,15.5 Z"
+       fill="#47495F"
+       id="path3"
+       style="fill:#fa994a;fill-opacity:1" />
+    <path
+       fill-rule="evenodd"
+       clip-rule="evenodd"
+       d="m 16,5.5 v 2 H 8 v -2 C 8,5.22386 7.77614,5 7.5,5 7.22386,5 7,5.22386 7,5.5 v 2 H 6 C 4.61929,7.5 3.5,8.61929 3.5,10 v 7 c 0,1.3807 1.11929,2.5 2.5,2.5 h 12 c 1.3807,0 2.5,-1.1193 2.5,-2.5 V 10 C 20.5,8.61929 19.3807,7.5 18,7.5 h -1 v -2 C 17,5.22386 16.7761,5 16.5,5 16.2239,5 16,5.22386 16,5.5 Z M 6,8.5 C 5.17157,8.5 4.5,9.17157 4.5,10 v 7 c 0,0.8284 0.67157,1.5 1.5,1.5 h 12 c 0.8284,0 1.5,-0.6716 1.5,-1.5 V 10 C 19.5,9.17157 18.8284,8.5 18,8.5 Z"
+       fill="#47495F"
+       id="path4"
+       style="fill:#fa994a;fill-opacity:1" />
+  </g>
+</svg>

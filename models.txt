@@ -1,0 +1,5 @@
+deepseek-r1
+gemma3
+llama3.3
+mistral
+qwen2.5
