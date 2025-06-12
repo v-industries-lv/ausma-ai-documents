@@ -63,11 +63,21 @@ def main(args):
             documents.append(doc)
 
         if len(documents) > 0:
+            print(documents, len(documents))
             text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
             chunks = text_splitter.split_documents(documents)
-            vectorstore = Chroma.from_documents(documents=chunks, embedding=embeddings,
-                                                persist_directory=db_folder)
-            print(f"Vectorstore created with {vectorstore._collection.count()} documents")
+            to_database = []
+            empty_strings = []
+            for chunk in chunks:
+                if len(chunk['page_content=']) == 0:
+                    empty_strings.append(chunk)
+                else:
+                    to_database.append(chunk)
+            print("Empty chunks: ", empty_strings)
+            if len(to_database) > 0:
+                vectorstore = Chroma.from_documents(documents=to_database, embedding=embeddings,
+                                                    persist_directory=db_folder)
+                print(f"Vectorstore created with {vectorstore._collection.count()} documents")
 
 
 if __name__ == '__main__':
