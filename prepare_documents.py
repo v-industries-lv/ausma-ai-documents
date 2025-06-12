@@ -1,7 +1,7 @@
 import argparse
 import os
 import re
-
+import traceback
 from pdf2image import convert_from_path
 from pypdf import PdfReader
 
@@ -48,66 +48,72 @@ def main(args):
     for document in os.listdir(documents_folder):
         print(document)
         document_path = os.path.join(documents_folder, document)
+        if document.endswith(".pdf"):
+            # RAW convert
+            if 'raw' in conversions:
+                print("Raw dumping", document)
+                reader = PdfReader(document_path)
+                os.makedirs(os.path.join(input_root, "text", "raw", document), exist_ok=True)
+                for index, page in enumerate(reader.pages):
+                    output_name = "page_" + str(index).rjust(len(str(len(reader.pages))), "0") + ".txt"
+                    with open(os.path.join(input_root, "text", "raw", document, output_name), "w") as fh:
+                        text = page.extract_text()
+                        text = text.replace('\xa0\n', '')
+                        pattern = r"([a-zA-Z0-9,’])(\s\n)([a-zA-Z0-9])"
+                        text = re.sub(pattern, r"\1 \3", text)
+                        pattern = r"([a-zA-Z0-9])([—])(\n)([a-zA-Z0-9])"
+                        text = re.sub(pattern, r"\1 \2 \4", text)
+                        fh.write(text)
+            if len([x for x in ['ocr', 'ocr_llm', 'llm'] if x in conversions]) > 0:
+                # Document to images
+                dpi = args.dpi if args.dpi else 300
+                document_images_path = os.path.join(input_root, "images")
+                document_images_output = os.path.join(document_images_path, document)
+                os.makedirs(document_images_output, exist_ok=True)
+                try:
+                    pdf_to_image(
+                        input_file_path=document_path,
+                        output_path=document_images_output,
+                        poppler_path=args.poppler_path,
+                        dpi=dpi,
+                    )
+                except Exception as e:
+                    print(f"Error processing document: {document}")
+                    print(traceback.format_exc())
+                image_files = os.listdir(document_images_output)
+                if len(image_files) > 0:
+                    image_files.sort()
+                    # Image to text: OCR
+                    if 'ocr' in conversions:
+                        image_to_text(
+                            convertor=ocr_convertor.OCR_convertor(),
+                            image_files=image_files,
+                            input_root=input_root,
+                            document=document,
+                            document_images_output=document_images_output
+                        )
 
-        # RAW convert
-        if 'raw' in conversions:
-            print("Raw dumping", document)
-            reader = PdfReader(document_path)
-            os.makedirs(os.path.join(input_root, "text", "raw", document), exist_ok=True)
-            for index, page in enumerate(reader.pages):
-                output_name = "page_" + str(index).rjust(len(str(len(reader.pages))), "0") + ".txt"
-                with open(os.path.join(input_root, "text", "raw", document, output_name), "w") as fh:
-                    text = page.extract_text()
-                    text = text.replace('\xa0\n', '')
-                    pattern = r"([a-zA-Z0-9,’])(\s\n)([a-zA-Z0-9])"
-                    text = re.sub(pattern, r"\1 \3", text)
-                    pattern = r"([a-zA-Z0-9])([—])(\n)([a-zA-Z0-9])"
-                    text = re.sub(pattern, r"\1 \2 \4", text)
-                    fh.write(text)
-        if len([x for x in ['ocr', 'ocr_llm', 'llm'] if x in conversions]) > 0:
-            # Document to images
-            dpi = args.dpi if args.dpi else 300
-            document_images_path = os.path.join(input_root, "images")
-            document_images_output = os.path.join(document_images_path, document)
-            os.makedirs(document_images_output, exist_ok=True)
-            pdf_to_image(
-                input_file_path=document_path,
-                output_path=document_images_output,
-                poppler_path=args.poppler_path,
-                dpi=dpi,
-            )
-            image_files = os.listdir(document_images_output)
-            image_files.sort()
+                    # Image to text: OCR + LLM
+                    if 'ocr_llm' in conversions:
+                        image_to_text(
+                            convertor=ocr_with_llm_convertor.OCR_LLM_convertor(model=text_model),
+                            image_files=image_files,
+                            input_root=input_root,
+                            document=document,
+                            document_images_output=document_images_output
+                        )
 
-            # Image to text: OCR
-            if 'ocr' in conversions:
-                image_to_text(
-                    convertor=ocr_convertor.OCR_convertor(),
-                    image_files=image_files,
-                    input_root=input_root,
-                    document=document,
-                    document_images_output=document_images_output
-                )
-
-            # Image to text: OCR + LLM
-            if 'ocr_llm' in conversions:
-                image_to_text(
-                    convertor=ocr_with_llm_convertor.OCR_LLM_convertor(model=text_model),
-                    image_files=image_files,
-                    input_root=input_root,
-                    document=document,
-                    document_images_output=document_images_output
-                )
-
-            # Image to text: LLM
-            if 'llm' in conversions:
-                image_to_text(
-                    convertor=llm_convertor.LLM_convertor(model=vision_model),
-                    image_files=image_files,
-                    input_root=input_root,
-                    document=document,
-                    document_images_output=document_images_output
-                )
+                    # Image to text: LLM
+                    if 'llm' in conversions:
+                        image_to_text(
+                            convertor=llm_convertor.LLM_convertor(model=vision_model),
+                            image_files=image_files,
+                            input_root=input_root,
+                            document=document,
+                            document_images_output=document_images_output
+                        )
+        else:
+            print(f"Cannot process document {document}. Filetype not supported")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
