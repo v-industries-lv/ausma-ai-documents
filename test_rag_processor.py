@@ -31,9 +31,11 @@ class Test(unittest.TestCase):
         vector_store = Chroma(persist_directory=db_folder, embedding_function=embeddings)
 
         results = vector_store.similarity_search_with_score(
-            "What is a duck?", k=10,
+            "What is a duck?", k=2,
         )
+        print(len(results))
         for doc, score in results:
+            print(doc, score)
             self.assertTrue("duck" in doc.page_content or "Duck" in doc.page_content)
 
 if __name__ == '__main__':

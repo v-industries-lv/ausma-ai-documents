@@ -69,7 +69,7 @@ def main(args):
             to_database = []
             empty_strings = []
             for chunk in chunks:
-                if len(chunk['page_content=']) == 0:
+                if len(chunk.page_content) == 0:
                     empty_strings.append(chunk)
                 else:
                     to_database.append(chunk)
