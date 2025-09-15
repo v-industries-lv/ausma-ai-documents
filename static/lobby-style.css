@@ -1,238 +1,275 @@
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 html {
-    font-family: 'Lato', sans-serif;
-    height: 100%;
+  font-family: "Lato", sans-serif;
+  height: 100%;
 }
 
 body {
-    margin: 0;
-    display: grid;
-    width: 100%;
-    height: 100%;
-    grid-template-columns: [col-1-start]24rem [col-1-end] auto;
+  margin: 0;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-columns: [col-1-start]24rem [col-1-end] auto;
 }
 
 #main {
-    height: 100%;
-    background-color: #212121;
-    grid-column-start: 2;
-    grid-column-end: 3;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  height: 100%;
+  background-color: #212121;
+  grid-column-start: 2;
+  grid-column-end: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 #new-room-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #chat-room-lobby-heading {
-    color: #8b8b8b;
-    font-size: 40px;
-    font-weight: 800;
-    margin-bottom: 2rem;
+  color: #8b8b8b;
+  font-size: 40px;
+  font-weight: 800;
+  margin-bottom: 2rem;
 }
 
 #room-name {
-    background: #8b8b8b;
-    margin-bottom: 2rem;
-    width: 30rem;
-    height: 2rem;
-    border: solid #575757 1px;
-    color: #282828;
-    border-radius: 5px;
-    font-size: 16px;
-    padding: 0.2rem 0.5rem;
-    box-sizing: border-box;
+  background: #8b8b8b;
+  margin-bottom: 2rem;
+  width: 30rem;
+  height: 2rem;
+  border: solid #575757 1px;
+  color: #282828;
+  border-radius: 5px;
+  font-size: 16px;
+  padding: 0.2rem 0.5rem;
+  box-sizing: border-box;
 }
 
-.create-button{
-        margin:0;
-    }
+.create-button {
+  margin: 0;
+}
 
 ::placeholder {
-    color: #282828;
-    opacity: 1;
+  color: #282828;
+  opacity: 1;
 }
 
 ::-ms-input-placeholder {
-    color: #282828;
+  color: #282828;
 }
 
 textarea:focus,
 input:focus {
-    outline: none;
+  outline: none;
 }
 
 .button {
-    background: #41b8aaff;
-    background-image: -webkit-linear-gradient(top, #41b8aaff, #369a8eff);
-    background-image: -moz-linear-gradient(top, #41b8aaff, #369a8eff);
-    background-image: -ms-linear-gradient(top, #41b8aaff, #369a8eff);
-    background-image: -o-linear-gradient(top, #41b8aaff, #369a8eff);
-    background-image: linear-gradient(to bottom, #41b8aaff, #369a8eff);
-    width: 170px;
-    height: 50px;
-    -webkit-border-radius: 28;
-    -moz-border-radius: 28;
-    border-radius: 28px;
-    color: #282828;
-    font-weight: 500;
-    font-size: 20px;
-    padding: 10px 20px 10px 20px;
-    text-decoration: none;
-    transition: all 0.3s ease;
+  background: #41b8aaff;
+  background-image: -webkit-linear-gradient(top, #41b8aaff, #369a8eff);
+  background-image: -moz-linear-gradient(top, #41b8aaff, #369a8eff);
+  background-image: -ms-linear-gradient(top, #41b8aaff, #369a8eff);
+  background-image: -o-linear-gradient(top, #41b8aaff, #369a8eff);
+  background-image: linear-gradient(to bottom, #41b8aaff, #369a8eff);
+  width: 170px;
+  height: 50px;
+  -webkit-border-radius: 28;
+  -moz-border-radius: 28;
+  border-radius: 28px;
+  color: #282828;
+  font-weight: 500;
+  font-size: 20px;
+  padding: 10px 20px 10px 20px;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
 
 .create-button:hover {
-    background: #78cfc5ff;
-    background-image: -webkit-linear-gradient(top, #78cfc5ff, #54c3b6ff);
-    background-image: -moz-linear-gradient(top, #78cfc5ff, #54c3b6ff);
-    background-image: -ms-linear-gradient(top, #78cfc5ff, #54c3b6ff);
-    background-image: -o-linear-gradient(top, #78cfc5ff, #54c3b6ff);
-    background-image: linear-gradient(to bottom, #78cfc5ff, #54c3b6ff);
-    text-decoration: none;
+  background: #78cfc5ff;
+  background-image: -webkit-linear-gradient(top, #78cfc5ff, #54c3b6ff);
+  background-image: -moz-linear-gradient(top, #78cfc5ff, #54c3b6ff);
+  background-image: -ms-linear-gradient(top, #78cfc5ff, #54c3b6ff);
+  background-image: -o-linear-gradient(top, #78cfc5ff, #54c3b6ff);
+  background-image: linear-gradient(to bottom, #78cfc5ff, #54c3b6ff);
+  text-decoration: none;
+}
+
+.nav_bar {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0 2rem 0;
 }
 
 #available_rooms {
-    grid-column-start: 1;
-    grid-column-end: 2;
-    grid-row-start: 1;
-    grid-row-end: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-right: solid rgb(160, 160, 160) 1px;
-    max-width: 40rem;
-    overflow: auto;
-    scrollbar-color: #282828 #8b8b8b;
-    background-color: #121212;
+  grid-column-start: 1;
+  grid-column-end: 2;
+  grid-row-start: 1;
+  grid-row-end: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: solid rgb(160, 160, 160) 1px;
+  max-width: 40rem;
+  overflow: auto;
+  scrollbar-color: #282828 #8b8b8b;
+  background-color: #121212;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .ausma_ai_logo {
-    margin: 2rem 2rem 0 2rem;
+  height: 30px;
+  width: 150px;
+}
+
+.home_icon {
+  height: 25px;
+  width: 25px;
+  margin: 9px 0 3px 0;
+}
+
+.control-buttons {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  margin: 0 0 0 2rem;
+}
+
+.gear {
+  margin: 9px 0.5rem 3px 0;
+}
+
+.home_icon:hover {
+  filter: brightness(2);
+  transition: all 0.3s ease;
 }
 
 #rooms_heading {
-    color: #8b8b8b;
-    font-size: 28px;
-    margin: 1rem;
-    font-weight: 400;
+  color: #8b8b8b;
+  font-size: 28px;
+  font-weight: 400;
+  margin: 0 1rem 0 0;
 }
 
 #rooms-list {
-    min-width: 255px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 16px;
-    color: white;
-    padding: 1.3rem 0;
-    font-weight: 300;
-    border: solid 1px white;
-    border-radius: 28px;
-    background: #282828;
+  min-width: 255px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 16px;
+  color: white;
+  padding: 1.3rem 0;
+  font-weight: 300;
+  border: solid 1px white;
+  border-radius: 28px;
+  background: #282828;
 }
 
 .room-item {
-    width: 12rem;
-    padding: 6px;
-    overflow: auto;
-    white-space: nowrap;
-    scrollbar-color: #282828 #8b8b8b;
-    scrollbar-width: thin;
+  width: 12rem;
+  padding: 6px;
+  overflow: auto;
+  white-space: nowrap;
+  scrollbar-color: #282828 #8b8b8b;
+  scrollbar-width: thin;
 }
 
 li {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    border-bottom: dotted 1px #8b8b8b;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-bottom: dotted 1px #8b8b8b;
 }
 
 li:active,
 li:hover {
-    background: #3f3f3f;
-    border-radius: 5px;
-    padding: 0.5rem 1rem;
-    /* border-radius:14px; */
+  background: #3f3f3f;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  /* border-radius:14px; */
 }
 
 button {
-    width: 50px;
-    height: 25px;
-    color: #fff;
-    border-radius: 28px;
-    font-weight: 500;
-    background: transparent;
-    cursor: pointer;
-    outline: none;
-    transition: all 0.3s ease;
-    margin-left: 1rem;
+  width: 50px;
+  height: 25px;
+  color: #fff;
+  border-radius: 28px;
+  font-weight: 500;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  margin-left: 1rem;
 }
 
 button {
-    background: #717171;
-    border: none;
+  background: #717171;
+  border: none;
 }
 
 button:hover {
-    background: #8b8b8b;
+  background: #8b8b8b;
 }
 
 .remove_room_image {
-    padding-left:10px;
-    margin-left:10px;
+  padding-left: 10px;
+  margin-left: 10px;
 }
 
 .remove_room_image:hover {
-    filter: brightness(2);
-    transition: all 0.3s ease;
+  filter: brightness(2);
+  transition: all 0.3s ease;
 }
 
 @media (max-width: 830px) {
-    body {
-        display: flex;
-        flex-direction: column-reverse;
-        height:auto;
-    }
+  body {
+    display: flex;
+    flex-direction: column-reverse;
+    height: auto;
+  }
 
-    #available_rooms {
-        max-width: 100%;
-        padding:5rem 0 0 0;
-    }
+  #available_rooms {
+    max-width: 100%;
+    padding: 5rem 0 0 0;
+  }
 
-    #main {
-        background-color: #121212;
-        padding:5rem 0 10rem 0;
-    }
+  #main {
+    background-color: #121212;
+    padding: 5rem 0 10rem 0;
+  }
 
-    #available_rooms {
-        overflow: none;
-    }
-
+  #available_rooms {
+    overflow: none;
+  }
 }
 
 @media (max-width: 500px) {
-    #room-name {
-        width: 20rem;
-    }
+  #room-name {
+    width: 20rem;
+  }
 }
 
 @media (max-width: 350px) {
-    #room-name {
-        width: 15rem;
-    }
+  #room-name {
+    width: 15rem;
+  }
 
-    #chat-room-lobby-heading {
-        font-size:30px;
-        }
-    }
+  #chat-room-lobby-heading {
+    font-size: 30px;
+  }
+}

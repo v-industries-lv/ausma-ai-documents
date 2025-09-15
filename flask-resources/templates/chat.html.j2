@@ -10,6 +10,7 @@
     </script>
     <title>ausma.ai: {{room_name}}</title>
     <link rel="stylesheet" href="../static/style.css">
+    <link rel="stylesheet" href="../static/code_block_style.css">
     <script src="/static/socket.io.js"></script>
 </head>
 
@@ -20,6 +21,9 @@
                 <a href="/">
                     <img src="/static/svg-icons/home-svgrepo-com.svg" alt="home-icon" class="home_icon">
                 </a>
+                <a href="/settings">
+                    <img src="/static/svg-icons/gear-svgrepo-com.svg" alt="settings-icon" class="home_icon">
+                </a>
             </div>
         </nav>
     </header>
@@ -27,36 +31,32 @@
         <div id="background">
             <h1 id="input-heading"><span id="l-outfit">ausma.ai</span> : {{room_name}}</h1>
             <div id="Rag-llm">
-                <div id="rag">
-                    <p>RAG type:</p>
-                    {# <label for="none_rag" class="rag_button">None</label>
-                    <input type="radio" name="rag_type" id="none_rag" class="rags" value="none" checked> #}
-                    <div class="rag_buttons">
-                        <label class="rag_button"><input type="radio" name="rag_type" id="none_rag" class="rags"
-                                value="none" checked><span>None</span></label>
 
-                        <label class="rag_button"><input type="radio" name="rag_type" id="raw_rag" class="rags"
-                                value="raw">
-                            <span>RAW</span></label>
+                <div id="knowledge_base">
+                    <p>Knowledge base:</p>
+                    <select name="kb_name" id="kb">
+                        {% if kb_list|length == 1 %}
+                        <option value="{{kb_list[0]}}" selected>{{kb_list[0]}}</option>
+                        {% elif kb_list|length > 1 %}
+                        <option value="{{kb_list[0]}}" selected>{{kb_list[0]}}</option>
+                        {% for x in kb_list[1:] %}
+                        <option value="{{x}}">{{x}}</option>
+                        {% endfor %}
+                        {% else %}
+                        <option value="No knowldege bases found!" selected>No knowldege bases found!</option>
+                        {% endif %}
+                    </select>
 
-                        <label class="rag_button"><input type="radio" name="rag_type" id="ocr_llm_rag" class="rags"
-                                value="ocr_llm">
-                            <span>OCR + LLM</span></label>
-
-                        <label class="rag_button"><input type="radio" name="rag_type" id="llm_rag" class="rags"
-                                value="llm">
-                            <span>LLM</span></label>
-                    </div>
                 </div>
 
                 <div id="llm_">
                     <p>LLM model:</p>
                     <select name="llm" id="llm_model">
-                        {% if llmlist|length == 1 %}
-                        <option value="{{llmlist[0]}}" selected>{{llmlist[0]}}</option>
-                        {% elif llmlist|length > 1 %}
-                        <option value="{{llmlist[0]}}" selected>{{llmlist[0]}}</option>
-                        {% for x in llmlist[1:] %}
+                        {% if llm_list|length == 1 %}
+                        <option value="{{llm_list[0]}}" selected>{{llm_list[0]}}</option>
+                        {% elif llm_list|length > 1 %}
+                        <option value="{{llm_list[0]}}" selected>{{llm_list[0]}}</option>
+                        {% for x in llm_list[1:] %}
                         <option value="{{x}}">{{x}}</option>
                         {% endfor %}
                         {% else %}

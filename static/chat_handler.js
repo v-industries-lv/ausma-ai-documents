@@ -3,15 +3,14 @@ var chat = document.getElementById('chat');
 var input = document.getElementById('user_input');
 var inputHeading = document.getElementById('input-heading');
 var llm_model_select = document.getElementById('llm_model');
+var knowledge_base_select = document.getElementById('kb');
 var spinner = document.getElementById('spinner');
 var send_button = document.getElementById('send_button');
 
 let username = getCookie("username");
   if (username == "") {
-    username = prompt("Please enter your name:", "Anonymous");
-    if (username != "" && username != null) {
-      setCookie("username", username, 365);
-    }
+    username = "Anonymous";
+    setCookie("username", username, 365);
   }
 
 function renderUserMessage(txt) {
@@ -27,13 +26,14 @@ function message_as_html(msg){
     } else {
         entry.className = "assistant-message";
         entry.innerHTML = "<img src='/static/svg-icons/robot-svgrepo-com.svg' class=\"user-icon\" style='height:23px;width:23px;margin-right:10px;vertical-align:middle;'>"
-            + "<span><span class='assistant'>ausma.ai:</span> <div class='message'>" + msg.content + "</div></span>"
+            + "<span><span class='assistant'>ausma.ai:</span><div class='message'>" + msg.content + "</div></span>"
             + "<a href=\"/download_message/"+msg.id+"\" target=\"_blank\" rel=\"noopener\" download>"
             + "<img src='/static/svg-icons/align-bottom-svgrepo-com.svg' class=\"assistant-utils-download\" style='height:30px;width:30px;margin-right:5px;vertical-align:middle;'>"
             + "</a>"
             + "<a href=\"/download_rag_sources/"+msg.id+"\" target=\"_blank\" rel=\"noopener\" download>"
             + "<img src='/static/svg-icons/copy-svgrepo-com.svg' class=\"assistant-utils-download\" style='height:30px;width:30px;margin-right:5px;vertical-align:middle;'>"
-            + "</a>";
+            + "</a>"
+            + "<span class='assistant-model'>("+msg.username+")</span>";
     }
     return entry;
 }
@@ -61,6 +61,23 @@ socket.on('message', function(data) {
   chat.scrollTop = chat.scrollHeight;
 });
 
+socket.on('progress', function(data) {
+  tokens_per_s = data.new_tokens / data.duration_s;
+  tokens_per_s_formatted = Number(tokens_per_s).toFixed(3);
+  tokens = data.total_response_tokens;
+  spinner.style.display = 'flex';
+  var msg = 'Processing... ' + tokens_per_s_formatted + ' tokens/s, total so far: ' + tokens + ' tokens';
+  setProcessingText(msg);
+});
+
+function setProcessingText(txt){
+  var collection = document.getElementsByClassName('processing')
+  // there should only be one item, but it is only identified by the class so get a list
+  for (let i = 0; i < collection.length; i++) {
+    collection[i].innerHTML = txt;
+  }
+}
+
 function getSelectedCase() {
   let radios = document.getElementsByName('rag_type');
   for (let i = 0; i < radios.length; i++) {
@@ -74,11 +91,13 @@ function getSelectedCase() {
 function sendMessage() {
   var user_input = input.value;
   var llm_model = llm_model_select.value;
+  var kb = knowledge_base_select.value;
   var rag_type_select = getSelectedCase();
   if (user_input.trim() !== '') {
-    socket.send({user_input: user_input, llm_model: llm_model, rag_type: rag_type_select, room_id: room.id, username: username});
+    socket.send({user_input: user_input, llm_model: llm_model, kb_name: kb, room_id: room.id, username: username});
     input.value = '';
     spinner.style.display = 'flex';
+    setProcessingText('Processing...');
     disableInputs();
   }
 }

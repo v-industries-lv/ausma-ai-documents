@@ -1,0 +1,4 @@
+{
+  "conversion": "llm",
+  "model": "qwen2.5vl:latest"
+}

@@ -22,6 +22,9 @@ python3 -m venv .venv
 
 # Activate virtual environment and install required packages
 source .venv/bin/activate
+# Installs torch and torchvision for use with CPU only. For GPU support, visit pytorch: https://pytorch.org/get-started/locally/
+pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
 pip install -r requirements.txt
 
 mkdir -p documents

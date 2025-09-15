@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/static/settings-style.css" />
+    <link
+      rel="shortcut icon"
+      href="/static/svg-icons/ausma.ai_simple_logo_final_006.svg"
+    />
+    <title>ausma.ai: settings</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <div>
+          <a href="/">
+            <img
+              src="/static/svg-icons/home-svgrepo-com.svg"
+              alt="home-icon"
+              class="home_icon"
+            />
+          </a>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <h1 class="main-heading">Settings</h1>
+      <section class="settings-list-section">
+        <div class="settings-cnt">
+          <h1 class="settings-option">LLM Runners</h1>
+          <div class="arrow">
+            <svg
+              style="cursor: pointer"
+              xmlns="http://www.w3.org/2000/svg"
+              x="0px"
+              y="0px"
+              width="20"
+              height="20"
+              viewBox="0 0 30 30"
+            >
+              <path
+                d="M 24.990234 8.9863281 A 1.0001 1.0001 0 0 0 24.292969 9.2929688 L 15 18.585938 L 5.7070312 9.2929688 A 1.0001 1.0001 0 0 0 4.9902344 8.9902344 A 1.0001 1.0001 0 0 0 4.2929688 10.707031 L 14.292969 20.707031 A 1.0001 1.0001 0 0 0 15.707031 20.707031 L 25.707031 10.707031 A 1.0001 1.0001 0 0 0 24.990234 8.9863281 z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="setting-list">
+          <p>
+            Control which LLM runners are available and adjust their order to
+            define priority — the top runner has the highest priority.
+          </p>
+          <div id="llm-runners-list" class="container"></div>
+
+          <div class="llm-runner-control-container">
+            <div id="new-llm-runner">
+              <label for="new-llm-runner-type" name="type-select"> Type:</label>
+              <select
+                class="select-class"
+                name="type-select"
+                id="new-llm-runner-type"
+              >
+                <option selected value=""></option>
+                <option value="ollama">ollama</option>
+                <option value="huggingface">huggingface</option>
+                <option value="debug">debug</option>
+              </select>
+
+              <button
+                class="llm-runner-button"
+                name="llm-runner-add-button"
+                disabled
+              >
+                Add +
+              </button>
+            </div>
+            <div class="llm-runner-save-control">
+              <button class="new-llm-runner-button llm-save-control">
+                Save
+              </button>
+              <button class="new-llm-runner-button llm-cancel-control">
+                Cancel
+              </button>
+            </div>
+          </div>
+          <template id="type-llm">
+            <div class="llm-runners-item">
+              <div class="llm-runner-type">
+                <label for="type" name="type"> Type:</label>
+                <input
+                  class="llm-runner-input"
+                  name="type"
+                  id="type"
+                  readonly
+                />
+              </div>
+              <div class="option-fields"></div>
+              <div class="edit-buttons">
+                <button class="remove-llm-runner-button">
+                  Remove &#x2212;
+                </button>
+                <button class="move-up">
+                  Move Up
+                  <span class="small-arrows up">
+                    <svg
+                      style="cursor: pointer"
+                      xmlns="http://www.w3.org/2000/svg"
+                      x="0px"
+                      y="0px"
+                      width="10"
+                      height="10"
+                      viewBox="0 0 30 30"
+                    >
+                      <path
+                        d="M 24.990234 8.9863281 A 1.0001 1.0001 0 0 0 24.292969 9.2929688 L 15 18.585938 L 5.7070312 9.2929688 A 1.0001 1.0001 0 0 0 4.9902344 8.9902344 A 1.0001 1.0001 0 0 0 4.2929688 10.707031 L 14.292969 20.707031 A 1.0001 1.0001 0 0 0 15.707031 20.707031 L 25.707031 10.707031 A 1.0001 1.0001 0 0 0 24.990234 8.9863281 z"
+                      ></path>
+                    </svg>
+                  </span>
+                </button>
+                <button class="move-down">
+                  Move Down
+                  <span class="small-arrows">
+                    <svg
+                      style="cursor: pointer"
+                      xmlns="http://www.w3.org/2000/svg"
+                      x="0px"
+                      y="0px"
+                      width="10"
+                      height="10"
+                      viewBox="0 0 30 30"
+                    >
+                      <path
+                        d="M 24.990234 8.9863281 A 1.0001 1.0001 0 0 0 24.292969 9.2929688 L 15 18.585938 L 5.7070312 9.2929688 A 1.0001 1.0001 0 0 0 4.9902344 8.9902344 A 1.0001 1.0001 0 0 0 4.2929688 10.707031 L 14.292969 20.707031 A 1.0001 1.0001 0 0 0 15.707031 20.707031 L 25.707031 10.707031 A 1.0001 1.0001 0 0 0 24.990234 8.9863281 z"
+                      ></path>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </template>
+          <template id="debug-llm">
+            <div class="llm-runner-form-name">
+              <label class="name-label" for="name"> Name:</label>
+              <input class="llm-runner-input-name" id="name" name="name" />
+            </div>
+          </template>
+          <template id="ollama-llm">
+            <div class="llm-runner-form-name">
+              <label class="name-label" for="name"> Name:</label>
+              <input class="llm-runner-input-name" id="name" name="name" />
+            </div>
+            <div class="llm-runner-form-host">
+              <label class="host-label" for="host">Host:</label>
+              <input class="llm-runner-input-name" id="host" name="host" />
+            </div>
+          </template>
+          <template id="huggingface-llm">
+            <div class="llm-runner-form-name">
+              <label for="api_name"> Name:</label>
+              <input class="llm-runner-input-name" id="api_name" name="name" />
+            </div>
+            <div class="llm-runner-form-api-token">
+              <label for="api">API token:</label>
+              <input class="llm-runner-input-name" id="api" name="api_token" />
+            </div>
+          </template>
+        </div>
+      </section>
+      <section class="settings-list-section">
+        <div class="settings-cnt">
+          <h1 class="settings-option">Default System Prompt</h1>
+          <div class="arrow">
+            <svg
+              style="cursor: pointer"
+              xmlns="http://www.w3.org/2000/svg"
+              x="0px"
+              y="0px"
+              width="20"
+              height="20"
+              viewBox="0 0 30 30"
+            >
+              <path
+                d="M 24.990234 8.9863281 A 1.0001 1.0001 0 0 0 24.292969 9.2929688 L 15 18.585938 L 5.7070312 9.2929688 A 1.0001 1.0001 0 0 0 4.9902344 8.9902344 A 1.0001 1.0001 0 0 0 4.2929688 10.707031 L 14.292969 20.707031 A 1.0001 1.0001 0 0 0 15.707031 20.707031 L 25.707031 10.707031 A 1.0001 1.0001 0 0 0 24.990234 8.9863281 z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+        <div class="setting-list">
+          <p>
+            Set the base instructions that guide how the AI responds. You can
+            customize this prompt to change the assistant personality, tone, and
+            behavior.
+          </p>
+          <div id="default-system-prompt" class="container">
+            <div class="system-prompt-form">
+              <label for="input-textarea" name="default_system_prompt"
+                >Prompt:</label
+              >
+              <textarea
+                class="system-prompt-input"
+                id="input-textarea"
+                name="default_system_prompt"
+              ></textarea>
+
+              <div class="prompt-item-button-div">
+                <button class="prompt_save_button">Save</button>
+                <button class="prompt_cancel_button">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="settings-list-section" id="section-three">
+        <div class="settings-cnt">
+          <h1 class="settings-option">Restore To Default Settings</h1>
+          <div class="arrow">
+            <svg
+              style="cursor: pointer"
+              xmlns="http://www.w3.org/2000/svg"
+              x="0px"
+              y="0px"
+              width="20"
+              height="20"
+              viewBox="0 0 30 30"
+            >
+              <path
+                d="M 24.990234 8.9863281 A 1.0001 1.0001 0 0 0 24.292969 9.2929688 L 15 18.585938 L 5.7070312 9.2929688 A 1.0001 1.0001 0 0 0 4.9902344 8.9902344 A 1.0001 1.0001 0 0 0 4.2929688 10.707031 L 14.292969 20.707031 A 1.0001 1.0001 0 0 0 15.707031 20.707031 L 25.707031 10.707031 A 1.0001 1.0001 0 0 0 24.990234 8.9863281 z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+        <div class="setting-list">
+          <p>Reset all settings to their defaults.</p>
+          <div id="restore-default-settings" class="container setting-buttons">
+            <button onclick="restoreToDefault()">Reset To Defaults</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer></footer>
+    <script>
+      async function restoreToDefault() {
+        await fetch("/config/restore_default_settings", { method: "GET" })
+          .then((response) => response.json())
+          .then((json) => console.log(JSON.stringify(json)));
+        renderAll();
+      }
+
+      document.querySelectorAll(".settings-cnt").forEach(function (option) {
+        option.addEventListener("click", function () {
+          const container = option.closest(".settings-list-section");
+          const settingsList = container.querySelector(".setting-list");
+          const arrowSvg = container.querySelector(".arrow svg");
+
+          if (!settingsList) return;
+
+          const isHidden = !settingsList.classList.contains("open");
+
+          if (isHidden) {
+            settingsList.classList.add("open");
+            option.style.backgroundColor = "#3f3f3f";
+            arrowSvg.classList.add("rotated");
+          } else {
+            settingsList.classList.remove("open");
+            option.style.backgroundColor = "";
+            arrowSvg.classList.remove("rotated");
+          }
+        });
+      });
+
+      function renderLLMRunner(config) {
+        let llmRunners = config.llm_runners;
+        let container = document.getElementById("llm-runners-list");
+        container.innerHTML = "";
+        llmRunners.forEach(addLLMRunner);
+      }
+      function addLLMRunner(llmRunner) {
+        let container = document.getElementById("llm-runners-list");
+        const llmRunners = document
+          .getElementById("type-llm")
+          .content.cloneNode(true);
+        const llmRunnerItem = llmRunners.querySelector(".llm-runners-item");
+        const llmRunnerTypeInput = llmRunners.querySelector("input[name=type]");
+        llmRunnerTypeInput.value = llmRunner.type;
+        const optionFields = llmRunners.querySelector(".option-fields");
+        const removeButton = llmRunnerItem.querySelector(
+          ".remove-llm-runner-button"
+        );
+        removeButton.addEventListener("click", function () {
+          llmRunnerItem.remove();
+        });
+        const moveUp = llmRunnerItem.querySelector(".move-up");
+        moveUp.addEventListener("click", function () {
+          if (llmRunnerItem.previousElementSibling) {
+            llmRunnerItem.parentNode.insertBefore(
+              llmRunnerItem,
+              llmRunnerItem.previousElementSibling
+            );
+          }
+        });
+        const moveDown = llmRunnerItem.querySelector(".move-down");
+        moveDown.addEventListener("click", function () {
+          if (llmRunnerItem.nextElementSibling) {
+            llmRunnerItem.parentNode.insertBefore(
+              llmRunnerItem.nextElementSibling,
+              llmRunnerItem
+            );
+          }
+        });
+
+        if (llmRunner.type == "debug") {
+          const template = document.getElementById("debug-llm");
+          const llmRunnerForm = template.content.cloneNode(true);
+          const llmRunnerNameInput =
+            llmRunnerForm.querySelector("input[name=name]");
+          llmRunnerNameInput.value = llmRunner.name;
+          optionFields.appendChild(llmRunnerForm);
+        } else if (llmRunner.type == "ollama") {
+          const llmRunnerForm = document
+            .getElementById("ollama-llm")
+            .content.cloneNode(true);
+          const llmRunnerNameInput =
+            llmRunnerForm.querySelector("input[name=name]");
+          llmRunnerNameInput.value = llmRunner.name;
+          const llmRunnerHostInput =
+            llmRunnerForm.querySelector("input[name=host]");
+          llmRunnerHostInput.value = llmRunner.host;
+          optionFields.appendChild(llmRunnerForm);
+        } else if (llmRunner.type == "huggingface") {
+          const llmRunnerForm = document
+            .getElementById("huggingface-llm")
+            .content.cloneNode(true);
+          const llmRunnerNameInput =
+            llmRunnerForm.querySelector("input[name=name]");
+          llmRunnerNameInput.value = llmRunner.name;
+          const llmRunnerAPITokenInput = llmRunnerForm.querySelector(
+            "input[name=api_token]"
+          );
+          llmRunnerAPITokenInput.value = llmRunner.api_token;
+          optionFields.appendChild(llmRunnerForm);
+        } else {
+          optionFields.innerHTML = llmRunner;
+        }
+
+        container.appendChild(llmRunnerItem);
+      }
+
+      const llmRunnerFooter = document.getElementById("new-llm-runner");
+      const addLLMRunnerTileButton =
+        llmRunnerFooter.querySelector(".llm-runner-button");
+
+      addLLMRunnerTileButton.addEventListener("click", function () {
+        const type = newLLMRunnerTypeSelect.value;
+        if (type == "ollama") {
+          addLLMRunner({
+            type: "ollama",
+            name: "",
+            host: "http://localhost:11434",
+          });
+        } else if (type == "huggingface") {
+          addLLMRunner({
+            type: "huggingface",
+            name: "",
+            api_token: "",
+          });
+        } else if (type == "debug") {
+          addLLMRunner({
+            type: "debug",
+            name: "debug",
+          });
+        }
+      });
+
+      const newLLMRunnerTypeSelect = llmRunnerFooter.querySelector(
+        "#new-llm-runner-type"
+      );
+
+      function activateButton() {
+        addLLMRunnerTileButton.disabled = newLLMRunnerTypeSelect.value === "";
+      }
+      activateButton();
+
+      newLLMRunnerTypeSelect.addEventListener("change", activateButton);
+
+      const llmSaveButton = document.querySelector(".llm-save-control");
+      const llmCancelButton = document.querySelector(".llm-cancel-control");
+
+      llmSaveButton.addEventListener("click", async function () {
+        const items = document.querySelectorAll(
+          "#llm-runners-list .llm-runners-item"
+        );
+        let result = [];
+        items.forEach(function (item) {
+          const inputs = item.querySelectorAll("input");
+          let values = {};
+          inputs.forEach(function (input) {
+            const name = input.name;
+            const value = input.value;
+            values[name] = value;
+          });
+          result.push(values);
+        });
+        await fetch("/config/llm_runners", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result),
+        })
+          .then((response) => response.json())
+          .then((json) => console.log(JSON.stringify(json)));
+
+        fetchLLMRunners();
+      });
+
+      llmCancelButton.addEventListener("click", function () {
+        fetchLLMRunners();
+      });
+
+      async function fetchLLMRunners() {
+        const response = await fetch("/config");
+        const config = await response.json();
+        renderLLMRunner(config);
+      }
+
+      const systemPromptContainer = document.getElementById(
+        "default-system-prompt"
+      );
+      const systemPromptInput = systemPromptContainer.querySelector(
+        ".system-prompt-input"
+      );
+      const promptSaveButton = systemPromptContainer.querySelector(
+        ".prompt_save_button"
+      );
+      promptSaveButton.addEventListener("click", function () {
+        saveSystemPrompt(systemPromptInput.value);
+      });
+
+      const promptCancelButton = systemPromptContainer.querySelector(
+        ".prompt_cancel_button"
+      );
+
+      promptCancelButton.addEventListener("click", function () {
+        fetchSystemPrompt();
+      });
+
+      function renderSystemPrompt(config) {
+        let configSystemPrompt = config.default_system_prompt;
+
+        systemPromptInput.value = configSystemPrompt;
+      }
+
+      async function saveSystemPrompt(value) {
+        await fetch("/config/default_system_prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(value),
+        })
+          .then((response) => response.json())
+          .then((json) => console.log(JSON.stringify(json)));
+
+        fetchSystemPrompt();
+      }
+
+      async function fetchSystemPrompt() {
+        const response = await fetch("/config");
+        const config = await response.json();
+        renderSystemPrompt(config);
+      }
+
+      function renderAll() {
+        fetchLLMRunners();
+        fetchSystemPrompt();
+      }
+      window.onload = renderAll;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,4 @@
+{
+  "conversion": "ocr_llm",
+  "model": "qwen2.5"
+}

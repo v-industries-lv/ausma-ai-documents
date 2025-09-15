@@ -1,3 +1,4 @@
+.idea
 instance
 logs
 chroma
@@ -7,3 +8,16 @@ images
 test/chroma
 test/text
 test/images
+email_credentials.yaml
+__pycache__
+current.conf
+
+package-lock.json
+node_modules/
+/dist
+/build
+*.spec
+
+.hf_model_cache
+/processed
+/documents
