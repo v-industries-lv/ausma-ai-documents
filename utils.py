@@ -101,3 +101,13 @@ def is_valid_host(value: str) -> bool:
         return True
 
     return False
+
+def to_posix_path(path):
+    if os.sep != "/":
+        return path.replace(os.sep, "/")
+    return path
+
+def from_posix_path(path):
+    if os.sep != "/":
+        return path.replace("/", os.sep)
+    return path

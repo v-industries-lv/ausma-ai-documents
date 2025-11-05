@@ -1,6 +1,5 @@
 import argparse
 import json
-import os
 import uuid
 from typing import List, Optional
 
@@ -14,21 +13,20 @@ from app_modules.kb_module import KBModule
 from config import app, db, settings, socketio
 from config import RAG_DOCUMENT_COUNT
 from domain import ChatRoom, RoomMessage
-from knowledge_base import SuperKBStore, SuperDocSource, LocalFileSystemSource, ChromaKBStore
+from knowledge_base import SuperKBStore, SuperDocSource, KBStore, DocSource
 from knowledge_base_service import KnowledgeBaseService
 from llm_runners.debug_runner import DebugRunner
 from llm_runners.llm_runner import ChatContext, LLMRunner, SuperRunner
 from logger import logger
-from settings import DEFAULT_SYSTEM_PROMPT
+from settings import DEFAULT_SYSTEM_PROMPT, LLM_RUNNERS, KBSTORES, DOC_SOURCES, RESTORE_DEFAULT
 from store.sql_alchemy_stores import SQLAlchemy_ChatStore
 from utils import utc_now
 
 chat_store = SQLAlchemy_ChatStore(db, app)
 
 def handle_settings_updated(name):
-    from settings import LLM_RUNNERS
-    if name == LLM_RUNNERS:
-        update_runners()
+    if name in [RESTORE_DEFAULT, LLM_RUNNERS, KBSTORES, DOC_SOURCES]:
+        update_module_deps()
 
 @app.route('/', methods=['GET'])
 def lobby():
@@ -142,10 +140,9 @@ def handle_message(data):
     user_text = data.get('user_input', '')
     kb_name = data.get('kb_name', None)
     # Save user message
-    user_message = RoomMessage(room_id=room_id, username=username, role='user', content=user_text)
-    chat_store.add_message(user_message)
+    raw_user_message = RoomMessage(room_id=room_id, username=username, role='user', content=user_text)
 
-    emit('message', user_message.as_dict(), to=room_id)
+    emit('message', raw_user_message.as_dict(), to=room_id)
     log_llm_request(data, 'user')
 
     history_query = chat_store.messages_by_room(room_id)
@@ -154,7 +151,7 @@ def handle_message(data):
     user_input = data.get('user_input', None)
     if user_input is None:
         raise ValueError("Missing user input parameter!")
-    assistant_text, rag_sources, train_of_thought = super_runner.chat(
+    assistant_text, rag_sources = super_runner.chat(
         ChatContext(
             data.get('llm_model'),
             system_prompt,
@@ -169,9 +166,14 @@ def handle_message(data):
 
     log_llm_request(assistant_text, 'assistant')
 
-    # Save assistant reply
+    # Adding only if generating message was a success. Otherwise it would show previous user message that did not contribute to chat.
+    # Adding rag_sources to both user and assistant. User message requires it for correct chat history,
+    # assitant needs it to have a reference in its chat message in frontend
+    user_message = RoomMessage(room_id=room_id, username=username, role='user', content=user_text,
+                               rag_sources=rag_sources)
     assistant_msg = RoomMessage(room_id=room_id, username=data.get('llm_model'), role='assistant', content=assistant_text,
                                 rag_sources=rag_sources)
+    chat_store.add_message(user_message)
     message_id = chat_store.add_message(assistant_msg)
     assistant_msg.id = message_id
 
@@ -198,21 +200,22 @@ def parse_args():
     return args
 
 
-def update_runners():
+def update_module_deps():
     # TODO: stop (and then restart?) the kb_service on config change.
     global super_runner
     global kb_service
     global kb_module
     global llm_module
 
-    runner_list: List[LLMRunner] = LLMRunner.from_settings_list(settings.get_runners())
+    runner_list: List[LLMRunner] = LLMRunner.from_settings(settings)
+    kb_stores: List[KBStore] = KBStore.from_settings(settings)
 
     if not args.production:
         runner_list.append(DebugRunner())
     super_runner = SuperRunner(runner_list)
-    # TODO: Move default KBStore and DocSource to default.conf
-    kb_store = SuperKBStore([ChromaKBStore(name = "chroma_store", kb_store_folder = "knowledge_bases/chroma")])
-    doc_source = SuperDocSource(doc_sources=[LocalFileSystemSource("default_local", os.path.join(os.getcwd(), "documents"))])
+    kb_store = SuperKBStore(kb_stores)
+    doc_sources = DocSource.from_settings(settings)
+    doc_source = SuperDocSource(doc_sources=doc_sources)
     kb_service = KnowledgeBaseService(
         kb_store,
         doc_source,
@@ -234,14 +237,14 @@ if __name__ == '__main__':
     SettingsModule(settings).apply_routes(app, handle_settings_updated)
     if args.production:
         print("Running in production mode.")
-        current_runners = settings.get_runners()
+        current_runners = settings.get_llm_runners()
         for runner in list(current_runners):
             if runner["type"] == "debug":
                 current_runners.remove(runner)
         settings["llm_runners"] = current_runners
     else:
         print("Running in debug mode. For production mode add --production to parameters.")
-        current_runners = settings.get_runners()
+        current_runners = settings.get_llm_runners()
         for runner in list(current_runners):
             if runner["type"] == "debug":
                 current_runners.remove(runner)
@@ -249,7 +252,7 @@ if __name__ == '__main__':
         settings["llm_runners"] = current_runners
     kb_module: Optional[KBModule] = None
     llm_module: Optional[LLMModule] = None
-    update_runners()
+    update_module_deps()
     kb_module.apply_routes(app)
     llm_module.apply_routes(app)
     logger.info(f"App starting at {utc_now().isoformat()}")

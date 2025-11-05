@@ -25,10 +25,10 @@ class DebugRunner(LLMRunner):
         return DebugRunner._mock_output()
 
     @staticmethod
-    def from_settings(settings: dict):
+    def from_dict(config: dict):
         runner = None
         try:
-            if settings.get('type') == 'debug':
+            if config.get('type') == 'debug':
                 runner = DebugRunner()
         except Exception as e:
             logger.error(f"Could not create Debug runner from config. Reason: {e}")

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, List
 import os
 from convertors.document_file import DocumentFile
+from convertors.llm_contexts import DocumentContext
 from llm_runners.llm_runner import LLMRunner
 from logger import logger
 from utils import compute_folder_hash, clean_name
@@ -40,7 +41,7 @@ class Convertor(ABC):
         return None
 
     @abstractmethod
-    def convert(self, doc: DocumentFile) -> Optional[ConvertorResult]:
+    def convert(self, doc: DocumentFile, context: DocumentContext) -> Optional[ConvertorResult]:
         pass
 
     def get_or_init_conversion(self, document: DocumentFile) -> ConvertorResult:

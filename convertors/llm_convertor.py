@@ -2,6 +2,7 @@ import base64
 
 from typing import Optional
 from convertors.document_image_convertor import DocumentImageConvertor
+from convertors.llm_contexts import DocumentContext
 from llm_runners.llm_runner import LLMRunner
 
 
@@ -34,7 +35,7 @@ class LlmConvertor(DocumentImageConvertor):
         self.user_text: str = user_text
         self.options: dict = options if options is not None else LlmConvertor.OPTIONS
 
-    def image_to_text(self, input_data) -> str:
+    def image_to_text(self, input_data, context: DocumentContext) -> str:
         system_message= {
             "role": "system",
             "content": self.system_text

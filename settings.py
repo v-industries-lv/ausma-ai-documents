@@ -2,16 +2,26 @@ import copy
 import json
 import os.path
 import shutil
-from typing import List
+from typing import List, Optional
 
 from logger import logger
-from utils import is_valid_host
+from utils import is_valid_host, from_posix_path
 
 # setting keys
-LLM_RUNNERS = 'llm_runners'
 DEFAULT_KNOWLEDGE_BASE = "default_knowledge_base"
 DEFAULT_SYSTEM_PROMPT = 'default_system_prompt'
-SUPPORTED_LLM_RUNNERS = ["debug", "ollama", "huggingface"]
+DEFAULT_LLM_RUNNER = 'default_llm_runner'
+DEFAULT_KBSTORE = 'default_kbstore'
+DEFAULT_DOC_SOURCE = 'default_doc_source'
+
+SUPPORTED_LLM_RUNNERS = ["debug", "ollama", "huggingface", "openai"]
+SUPPORTED_KBSTORES = ["chroma"]
+SUPPORTED_DOC_SOURCES = ["local_fs"]
+
+LLM_RUNNERS = 'llm_runners'
+KBSTORES = "kbstores"
+DOC_SOURCES = "doc_sources"
+RESTORE_DEFAULT = "restore_default"
 
 class Settings:
     def __init__(self, defaults='defaults.conf', active='current.conf'):
@@ -20,10 +30,10 @@ class Settings:
         settings = Settings._read_settings(defaults)
         settings.update(Settings._read_settings(active))
         self.settings = settings
-        # Initialize default knowledge base only if it is the first time initializing settings (no current.conf).
-        # If default knowledge base is deleted after initialization it can be restored by restoring defaults.
+
+        # If active does not exist, we assume fresh install or current config being deleted
         if not os.path.exists(self.active):
-            self.initialize_default_knowledge_base()
+            self.initialize_defaults()
 
 
     def get(self, item, default=None):
@@ -91,14 +101,26 @@ class Settings:
                         errors.append(
                             ValueError(f"LLM runner config list contains duplicates by name! Given: {value}"))
 
-        if key == DEFAULT_SYSTEM_PROMPT:
+        elif key == DEFAULT_SYSTEM_PROMPT:
             if not isinstance(value, str):
                 errors.append(
                     TypeError(f"Key {DEFAULT_SYSTEM_PROMPT} value must be a str type, got {type(value)} instead.")
                 )
-        if key == DEFAULT_KNOWLEDGE_BASE:
+        elif key in DEFAULT_LLM_RUNNER:
             errors.append(
-                ValueError(f"Changing default knowledge base not allowed!")
+                ValueError(f"Changing this value not allowed!")
+            )
+        elif key in DEFAULT_KBSTORE:
+            errors.append(
+                ValueError(f"Changing this value not allowed!")
+            )
+        elif key in DEFAULT_KNOWLEDGE_BASE:
+            errors.append(
+                ValueError(f"Changing this value not allowed!")
+            )
+        elif key in DEFAULT_DOC_SOURCE:
+            errors.append(
+                ValueError(f"Changing this value not allowed!")
             )
         return errors
 
@@ -113,26 +135,50 @@ class Settings:
         # just to make sure noone modifies the local structure
         return copy.deepcopy(self.settings)
 
-    # specific keys
-    def get_runners(self) -> List[dict]:
-        # Prevent bypassing __setitem__ if working on returned value
-        value = self.get(LLM_RUNNERS, []).copy()
+    def _get_items(self, name)-> Optional[List[dict]]:
+        value = self.get(name, []).copy()
         if type(value) == list:
             return value
         else:
             return [value]
 
-    def initialize_default_knowledge_base(self):
-        default_kb = self.settings.get(DEFAULT_KNOWLEDGE_BASE)
-        if default_kb is not None:
-            default_chroma_kb_folder = os.path.join("knowledge_bases", "chroma", "default")
-            if os.path.exists(default_chroma_kb_folder):
-                shutil.rmtree(default_chroma_kb_folder)
-            os.makedirs(default_chroma_kb_folder, exist_ok=True)
-            with open(os.path.join(default_chroma_kb_folder, "config.json"), "w") as fh:
-                json.dump(default_kb, fh, indent=2)
+    def get_llm_runners(self)-> Optional[List[dict]]:
+        return self._get_items(LLM_RUNNERS)
+
+    def get_kbstores(self)-> Optional[List[dict]]:
+        return self._get_items(KBSTORES)
+
+    def get_doc_sources(self)-> Optional[List[dict]]:
+        return self._get_items(DOC_SOURCES)
+
+    def initialize_defaults(self):
+        self.initialize_default_llm_runner()
+        self.initialize_default_kbstore()
+        self.initialize_default_doc_source()
+
+    def initialize_default_llm_runner(self):
+        default_llm_runner = self.settings.get(DEFAULT_LLM_RUNNER)
+        if default_llm_runner is not None:
+            self.settings[LLM_RUNNERS] = [default_llm_runner]
         else:
-            logger.error(f"Default knowledge base not defined!")
+            logger.error(f"Default llm runner not defined!")
+
+    def initialize_default_kbstore(self):
+        default_kbstore = self.settings.get(DEFAULT_KBSTORE)
+        if default_kbstore is not None:
+            os.makedirs(from_posix_path(default_kbstore["kb_store_folder"]), exist_ok=True)
+            self.settings[KBSTORES] = [default_kbstore]
+
+        else:
+            logger.error(f"Default knowledge base store not defined!")
+
+    def initialize_default_doc_source(self):
+        default_doc_source = self.settings.get(DEFAULT_DOC_SOURCE)
+        if default_doc_source is not None:
+            self.settings[DOC_SOURCES] = [default_doc_source]
+
+        else:
+            logger.error(f"Default document source not defined!")
 
     @staticmethod
     def _read_settings(path):
@@ -151,5 +197,5 @@ class Settings:
 
     def restore_defaults(self):
         self.settings = Settings._read_settings(self.defaults)
-        self.initialize_default_knowledge_base()
+        self.initialize_defaults()
         self.save()

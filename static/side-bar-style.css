@@ -1,0 +1,229 @@
+* {
+  box-sizing: border-box;
+}
+
+.side_bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 280px;
+  background-color: #282828;
+  border-right: 1px solid rgb(17, 17, 17);
+  padding: 1rem 0.5rem 0 0.3rem;
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.side_bar.close {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.navigation {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 0 0 1rem 0;
+  padding: 0 0 0 1rem;
+}
+
+.ausma_ai_logo {
+  height: 20px;
+  width: 100px;
+  filter: brightness(0) saturate(100%) invert(55%) sepia(0%) saturate(1517%)
+    hue-rotate(178deg) brightness(101%) contrast(82%);
+}
+
+.ausma_ai_logo:hover,
+.ausma_ai_logo:active {
+  filter: brightness(2);
+  transition: all 0.3s ease;
+}
+
+.home_icon {
+  height: 25px;
+  width: 25px;
+  margin: 1px 0 0 0;
+}
+
+.home_icon:hover {
+  filter: brightness(2);
+  transition: all 0.3s ease;
+}
+
+.gear {
+  margin: 0 0 0 1rem;
+}
+
+aside a:-webkit-any-link {
+  text-decoration: none;
+}
+
+.room_create {
+  margin: 0 0 1rem 0;
+}
+
+#new-room-form {
+  display: flex;
+  flex-direction: row;
+  padding: 0 0.6rem 0;
+}
+
+#room-name {
+  background: #3f3f3f;
+  width: 100%;
+  height: 2rem;
+  color: #8b8b8b;
+  border: none;
+  border-radius: 15px;
+  font-size: 14px;
+  padding: 5px 8px;
+  margin: 0 10px 0 0;
+  box-sizing: border-box;
+}
+
+::placeholder {
+  color: #8b8b8b;
+  opacity: 1;
+}
+
+::-ms-input-placeholder {
+  color: #8b8b8b;
+}
+
+aside textarea:focus,
+aside input:focus {
+  outline: none;
+}
+
+@keyframes highlight {
+  0% {
+    box-shadow: 0 0 0px 0px rgba(240, 54, 48, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 10px 5px rgba(240, 54, 48, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0px 0px rgba(240, 54, 48, 0);
+  }
+}
+
+.highlight {
+  animation: highlight 0.8s ease-out;
+}
+
+.create-button {
+  margin: 0;
+  padding: 0;
+}
+
+.create-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.create-button:hover {
+  filter: brightness(2);
+  transition: all 0.3s ease;
+}
+
+.create-button svg {
+  width: 25px;
+  height: 25px;
+  margin: 1px 0 0 0;
+  display: flex;
+}
+
+.content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0 1rem 0;
+}
+
+#rooms-list {
+  width: 100%;
+  height: 84%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 14px;
+  color: white;
+  font-weight: 300;
+  overflow-y: auto;
+  scrollbar-color: #8b8b8b transparent;
+  scrollbar-width: thin;
+}
+
+.room-item {
+  width: 100%;
+  padding: 6px;
+  overflow: auto;
+  white-space: nowrap;
+  scrollbar-color: #8b8b8b transparent;
+  scrollbar-width: thin;
+}
+
+aside ul {
+  margin: 0;
+  padding: 0;
+}
+
+aside li {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  border-radius: 15px;
+  padding: 5px 8px;
+  margin-bottom: 5px;
+}
+
+aside li:active,
+aside li:hover {
+  background-color: #3f3f3f;
+  border-radius: 15px;
+}
+
+.remove_room_image {
+  padding: 7px;
+}
+
+.remove_room_image:hover {
+  filter: brightness(2);
+  transition: all 0.3s ease;
+}
+
+.toggle_button {
+  position: fixed;
+  top: 1rem;
+  left: 288px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1001;
+  transition: left 0.5s ease;
+}
+
+.toggle_button.at-start {
+  left: 0.5rem;
+}
+
+.toggle_button img {
+  width: 25px;
+  height: 25px;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.button_rotation {
+  transform: scaleX(-1);
+}

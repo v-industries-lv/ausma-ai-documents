@@ -1,3 +1,4 @@
+from convertors.llm_contexts import DocumentContext
 from knowledge_base import KBStore, DocSource
 from llm_runners.llm_runner import LLMRunner
 from logger import logger
@@ -36,7 +37,7 @@ class KnowledgeBaseService:
         kb = self.kb_store.get(name)
         documents = []
         for pattern in kb.selection:
-            documents += self.doc_source.list(pattern)
+            documents += self.doc_source.list_files(pattern)
         documents = list(set(documents))
         documents = sorted(documents)
         processed_documents = []
@@ -69,11 +70,12 @@ class KnowledgeBaseService:
                 documents: list = []
                 for pattern in kb.selection:
                     checkpoint()
-                    documents += self.doc_source.list(pattern)
+                    documents += self.doc_source.list_files(pattern)
                 documents = list(set(documents))
                 documents = sorted(documents)
                 convertors: List[Convertor] = [Convertor.from_config(x, self.llm_runner) for x in kb.convertor_configs]
                 convertors = [x for x in convertors if x is not None]
+                document_context = DocumentContext(kb)
                 for doc_num, document_path in enumerate(documents, 1):
                     checkpoint()
                     self._status_update(status="processing", kb_num=kb_num, kb_store=kb.store, kb_name=kb.name, kb_total=len(kb_list),
@@ -96,7 +98,7 @@ class KnowledgeBaseService:
                                             doc_num=doc_num, doc_path=document_path, doc_total=len(documents),
                                             convertor=convertor.conversion_type)
                         # TODO: needs document_path
-                        convertor_result: Optional[ConvertorResult] = convertor.convert(document)
+                        convertor_result: Optional[ConvertorResult] = convertor.convert(document, document_context)
                         if convertor_result is not None:
                             kb.store_convertor_result(self.llm_runner.get_embedding, convertor_result)
                             break
@@ -106,7 +108,8 @@ class KnowledgeBaseService:
         except InterruptedError as e:
             logger.error(e)
             error_block["status"] = "cancelled"
-        except Exception:
+        except Exception as all_e:
+            logger.error(all_e)
             error_block["error"] = True
         finally:
             with self.lock:

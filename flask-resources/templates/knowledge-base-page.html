@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/static/kb-page-style.css" />
+    <link rel="stylesheet" href="/static/side-bar-style.css" />
     <link
       rel="shortcut icon"
       href="/static/svg-icons/ausma.ai_simple_logo_final_006.svg"
@@ -11,26 +12,14 @@
     <title>ausma.ai: Knowledge-base</title>
   </head>
   <body>
-    <header>
-      <nav>
-        <div>
-          <a href="/">
-            <img
-              src="/static/svg-icons/home-svgrepo-com.svg"
-              alt="home-icon"
-              class="home_icon"
-            />
-          </a>
-        </div>
-      </nav>
-    </header>
+    <header></header>
     <main>
       <h1 class="main-heading">Knowledge Base Settings</h1>
       <section class="kb_service-container" id="kb_service_id">
         <h1 class="kb-heading">Knowledge Base Service</h1>
         <div class="kb_service_buttons">
-          <button class="start_button">Start</button>
-          <button class="stop_button">Stop</button>
+          <button class="start_button button-style">Start</button>
+          <button class="stop_button button-style">Stop</button>
         </div>
         <div class="status__container">Status...</div>
       </section>
@@ -50,7 +39,7 @@
             />
           </div>
           <div class="add_button_cnt">
-            <button class="new_kb_btn" disabled>Add +</button>
+            <button class="new_kb_btn button-style" disabled>Add +</button>
           </div>
         </div>
       </section>
@@ -127,7 +116,7 @@
                   <option value="llm">llm</option>
                 </select>
                 <button
-                  class="convertor_add_button"
+                  class="convertor_add_button button-style"
                   name="convertor_add_button"
                   disabled
                 >
@@ -136,9 +125,11 @@
               </div>
 
               <div class="control_buttons">
-                <button class="save_button">Save</button>
-                <button class="cancel_button">Cancel</button>
-                <button class="remove_button">Remove &#x2212;</button>
+                <button class="save_button button-style">Save</button>
+                <button class="cancel_button button-style">Cancel</button>
+                <button class="remove_button button-style">
+                  Remove &#x2212;
+                </button>
               </div>
             </div>
           </div>
@@ -160,8 +151,8 @@
           </div>
           <div class="option-fields"></div>
           <div class="convertors_button_control_container">
-            <button class="remove_btn">Remove &#x2212;</button>
-            <button class="button-up">
+            <button class="remove_btn button-style">Remove &#x2212;</button>
+            <button class="button-up button-style">
               Move Up
               <span class="small-arrows up">
                 <svg
@@ -179,7 +170,7 @@
                 </svg>
               </span>
             </button>
-            <button class="button-down">
+            <button class="button-down button-style">
               Move Down
               <span class="small-arrows">
                 <svg
@@ -234,6 +225,8 @@
       <template id="ocr"></template>
     </main>
     <footer></footer>
+    <script src="/static/socket.io.js"></script>
+    <script src="/static/side_bar.js"></script>
     <script>
       async function fetchAll() {
         const req = await fetch("/kb");

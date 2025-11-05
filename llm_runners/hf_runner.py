@@ -25,11 +25,11 @@ class HFRunner(LLMRunner):
         self._cleanup()
 
     @staticmethod
-    def from_settings(settings: dict):
+    def from_dict(config: dict):
         runner = None
         try:
-            if settings.get('type') == 'huggingface':
-                runner = HFRunner(settings['api_token'])
+            if config.get('type') == 'huggingface':
+                runner = HFRunner(config['api_token'])
         except Exception as e:
             logger.error(f"Could not create HuggingFace transformers runner from config. Reason: {e}")
         return runner
@@ -100,6 +100,7 @@ class HFRunner(LLMRunner):
         assistant_text = ''
         num_chunks = 0
         last_timestamp: Optional[datetime.datetime] = None
+        # TODO: better speed visualisation?
         for text_token in streamer:
             current_timestamp = utc_now()
             assistant_text += text_token

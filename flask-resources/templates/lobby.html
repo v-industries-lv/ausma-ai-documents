@@ -4,117 +4,78 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/static/lobby-style.css" />
+    <link rel="stylesheet" href="/static/side-bar-style.css" />
     <link
       rel="shortcut icon"
       href="/static/svg-icons/ausma.ai_simple_logo_final_006.svg"
     />
     <title>ausma.ai: Lobby</title>
   </head>
-
   <body>
-    <div id="main">
-      <h1 id="chat-room-lobby-heading">Chat Room Lobby</h1>
-      <div>
-        <form id="new-room-form">
-          <input id="room-name" placeholder="Room name" required />
-          <button class="button create-button" type="submit">
-            Create Room
-          </button>
-        </form>
-      </div>
-    </div>
-    <div id="available_rooms">
-      <div class="header">
-      <div class="nav_bar">
-        <div>
-          <img src="/static/svg-icons/ausma3.svg" class="ausma_ai_logo">
-        </div>
-        <div class="control-buttons">
-        <a href="/settings">
+    <main>
+      <div class="welcome_message">
+        <div class="ausma_logo">
           <img
-            src="/static/svg-icons/gear-svgrepo-com.svg"
-            alt="settings-icon"
-            class="home_icon gear"
+            src="/static/svg-icons/ausma.ai_simple_logo_final_003.svg"
+            alt="ausma.ai logo"
           />
-        </a>
-        <a href="/knowledge-base"><img src="/static/svg-icons/book-svgrepo-com.svg" alt="knowledge-base-button" class="home_icon" ></a>
         </div>
+        <h1>Welcome to <span class="brand-colors">ausma.ai </span>!</h1>
+        <h2 class="lobby_messages start-a-chat">Start a chat!</h2>
+        <h2 class="lobby_messages">
+          <a href="/settings">Go to Settings</a>
+        </h2>
+        <h2 class="lobby_messages">
+          <a href="/knowledge-base">Go to Knowledge Base Settings</a>
+        </h2>
+        <h2 class="lobby_messages">
+          <a href="https://ausma.ai/en/about_ausma.ai/"
+            >About ausma. ai Documents</a
+          >
+        </h2>
       </div>
-        <h2 id="rooms_heading">Available Rooms</h2>
-      <ul id="rooms-list"></ul>
-    </div>
+    </main>
+
     <script src="/static/socket.io.js"></script>
+    <script src="/static/side_bar.js"></script>
     <script>
-      const socket = io();
+      const startAChat = document.querySelector(".start-a-chat");
 
-      document.getElementById("new-room-form").onsubmit = function (e) {
-        e.preventDefault();
-        const name = document.getElementById("room-name").value.trim();
-        if (name) {
-          fetch("/create_room", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: name }),
-          })
-            .then((res) => res.json())
-            .then((room) => {
-              document.getElementById("room-name").value = "";
-            });
-        }
-      };
+      startAChat.addEventListener("click", function () {
+        const navBarToggleBTN = document.querySelector(".toggle_button");
+        const sideBar = document.querySelector(".side_bar");
+        const name = document.getElementById("room-name");
 
-      // Listen for live updates
-      socket.on("rooms_list", function (rooms) {
-        renderRooms(rooms);
-      });
+        const validateInput = () => {
+          if (!name.value.trim()) {
+            name.classList.add("highlight");
+            name.reportValidity();
+            name.addEventListener(
+              "animationend",
+              function () {
+                name.classList.remove("highlight");
+              },
+              { once: true }
+            );
+            name.focus();
+          } else {
+            alert("Click the '+' button next to the input field to continue.");
+          }
+        };
 
-      function removeRoom(event) {
-        var room = event.target.getAttribute("data-value");
-        socket.emit("remove_room", { room_id: room });
-      }
+        if (sideBar.classList.contains("close")) {
+          sideBar.classList.remove("close");
+          navBarToggleBTN.classList.toggle("button_rotation");
+          navBarToggleBTN.classList.toggle("at-start");
 
-      function renderRooms(rooms) {
-        let ul = document.getElementById("rooms-list");
-        ul.innerHTML = "";
-        // calculating the number of times each name is repeated
-        let nameFreq = {};
-        for (let room of rooms) {
-          let name = room.name;
-          let old = nameFreq[name];
-          nameFreq[name] = old ? old + 1 : 1;
-        }
-
-        rooms.forEach((room) => {
-          let li = document.createElement("li");
-          // only show the id prefix if the name is not unique
-          let suffix =
-            nameFreq[room.name] > 1 ? " @" + room.id.substring(0, 5) : "";
-          let fullName = room.name + suffix;
-          li.innerHTML = `<div class="room-item">${fullName}</div>
-                <button onclick="window.location.href='/chat/${room.id}'">Join</button>
-                <img src='/static/svg-icons/waste-bin.svg' class="remove_room_image" data-value="${room.id}"
-                style='height:30px;cursor:pointer;width:30px;margin-right:5px;vertical-align:middle;'>`;
-          ul.appendChild(li);
-        });
-        document
-          .querySelectorAll(".remove_room_image")
-          .forEach(function (click_image) {
-            click_image.addEventListener("click", removeRoom);
+          sideBar.addEventListener("transitionend", function handler() {
+            validateInput();
+            sideBar.removeEventListener("transitionend", handler);
           });
-      }
-
-      // Call this just after DOM loads (before any socket logic)
-      function fetchRooms() {
-        fetch("/rooms")
-          .then((r) => r.json())
-          .then(renderRooms);
-      }
-
-      // On page load
-      window.onload = fetchRooms;
-
-      // Socket.IO: will overwrite live as rooms_list arrives
-      socket.on("rooms_list", renderRooms);
+        } else {
+          validateInput();
+        }
+      });
     </script>
   </body>
 </html>

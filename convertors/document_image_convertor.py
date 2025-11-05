@@ -1,9 +1,12 @@
 import pathlib
+import subprocess
 
 from convertors.convertor_result import ConvertorResult
 from convertors.convertor import Convertor
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, List
+
+from convertors.llm_contexts import DocumentContext
 from logger import logger
 from utils import compute_folder_hash
 from convertors.document_file import PDFDocumentFile
@@ -16,18 +19,18 @@ class DocumentImageConvertor(Convertor):
         self.images = None
 
     @abstractmethod
-    def image_to_text(self, input_data):
+    def image_to_text(self, input_data, context: DocumentContext):
         pass
 
-    def convert(self, doc: PDFDocumentFile) -> Optional[ConvertorResult]:
+    def convert(self, doc: PDFDocumentFile, context: DocumentContext) -> Optional[ConvertorResult]:
         # TODO: add check if zero pages is intended as in complete
         conversion_result = self.get_or_init_conversion(doc)
         if len(conversion_result.pages) == 0:
-            return self.convert_image_document(doc, conversion_result.document_metadata)
+            return self.convert_image_document(doc, conversion_result.document_metadata, context)
         else:
             return conversion_result
 
-    def convert_image_document(self, document: PDFDocumentFile, metadata: dict) -> Optional[ConvertorResult]:
+    def convert_image_document(self, document: PDFDocumentFile, metadata: dict, context: DocumentContext) -> Optional[ConvertorResult]:
         try:
             if document.needs_images:
                 # Check if you need to generate temp images for image conversion
@@ -41,7 +44,10 @@ class DocumentImageConvertor(Convertor):
                         image_filename = pathlib.Path(image_path).name
                         with open(os.path.join(output_path, image_filename.split('-')[-1].replace(".png", ".txt")),
                                   "w") as fh:
-                            fh.write(self.image_to_text(image_path))
+                            converted_text = self.image_to_text(image_path, context)
+                            if converted_text is None:
+                                return None
+                            fh.write(converted_text)
                     extra_string_list = []
                     if self.conversion_type in ["ocr_llm", "llm"]:
                         extra_string_list = [self.model]
@@ -69,3 +75,32 @@ class DocumentImageConvertor(Convertor):
             logger.error(f"[{self.conversion_type}] failed!")
             logger.error(e)
             return None
+
+    @staticmethod
+    def tesseract_convert(tesseract_path: str, image_path: str, character_sets: List[str] = None) -> Optional[str]:
+        if character_sets is None or len(character_sets) == 0:
+            character_sets = ["eng"]
+
+        args = ["-l", "+".join(character_sets)]
+        process = subprocess.run(
+            [tesseract_path] + args + [image_path, "stdout"],
+            text=True,
+            capture_output=True,
+        )
+        if process.returncode != 0:
+            logger.error(f"Error converting {image_path} with tesseract ocr. Error: {process.stderr}")
+            return None
+        return process.stdout
+
+    @staticmethod
+    def get_tesseract_langs() -> Optional[List[str]]:
+        process = subprocess.run(
+            [os.environ.get("TESSERACT_PATH", "tesseract"), "--list-langs"],
+            text=True,
+            capture_output=True,
+        )
+        if process.returncode != 0:
+            logger.error(process.stderr)
+            return None
+        return [x for x in process.stdout.split("\n") if
+                not x.startswith("List of available languages") and x not in ["osd", ""]]

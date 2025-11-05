@@ -4,7 +4,7 @@ import glob
 import shutil
 
 from langchain_core.embeddings import Embeddings
-from typing import Optional, Any, List, Tuple, Callable
+from typing import Optional, Any, List, Tuple, Callable, Dict, Union
 
 from typing_extensions import Self
 from langchain_core.documents import Document
@@ -13,7 +13,7 @@ from convertors.convertor_result import ConvertorResult
 from convertors.document_file import DocumentFile
 from domain import MessageProgress
 from knowledge_base_service import KnowledgeBaseService
-from knowledge_base import KBStore, KnowledgeBase, DocSource, to_posix_path, SuperKBStore
+from knowledge_base import KBStore, KnowledgeBase, DocSource, to_posix_path
 from llm_runners.llm_runner import LLMRunner
 
 class MockKnowledgeBase(KnowledgeBase):
@@ -38,6 +38,10 @@ class MockKnowledgeBase(KnowledgeBase):
 
 
 class MockLLMRunner(LLMRunner):
+    @staticmethod
+    def from_dict(config: dict):
+        return MockLLMRunner()
+
     def pull_model(self, model) -> bool:
         return True
 
@@ -99,9 +103,35 @@ class MockDocSource(DocSource):
     def __init__(self, source_type: str, name: str):
         super().__init__(source_type, name)
         self.root_path = 'documents'
-    def list(self, pattern: str) -> List[str]:
-        return [to_posix_path(os.path.relpath(x, self.root_path)) for x in glob.glob(os.path.join(self.root_path, pattern),
-                                                                                     recursive=True) if os.path.isfile(x)]
+    def _list(self, pattern: str) -> List[Dict[str, Union[str, bool]]]:
+        _pattern = to_posix_path(pattern)
+        if pattern.startswith(self.name):
+            _pattern = _pattern[len(self.name):].lstrip(os.sep)
+        paths = []
+        dir_to_crawl = self.root_path if _pattern == "" else os.path.join(self.root_path, _pattern)
+        if not DocSource._is_glob_pattern(_pattern):
+            if os.path.isdir(dir_to_crawl):
+                # Pattern that lists the directory
+                dir_to_crawl = os.path.join(dir_to_crawl, "*")
+            if os.path.isfile(dir_to_crawl):
+                # Listing path to a file it returns path to this file
+                return [
+                    {
+                        "path": to_posix_path(pattern),
+                        "is_file": True,
+                        "is_dir": False
+                    }
+                ]
+        for x in glob.glob(os.path.join(dir_to_crawl), recursive=True):
+            paths.append(
+                {
+                    "path": to_posix_path(self.name + os.sep + os.path.relpath(x, self.root_path)),
+                    "is_file": os.path.isfile(x),
+                    "is_dir": os.path.isdir(x)
+                }
+            )
+        paths = [x for x in paths if not x["path"].endswith('/.')]
+        return paths
     def get(self, path: str) -> Optional[DocumentFile]:
         pass
 

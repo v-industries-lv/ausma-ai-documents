@@ -7,19 +7,18 @@ from langchain_ollama import OllamaEmbeddings
 from ollama import ChatResponse, Client
 
 from domain import MessageProgress
-from llm_runners.llm_runner import LLMRunner
+from llm_runners.llm_runner import LLMRunner, RANDOM_SEED
 from utils import utc_now
 from logger import logger
-from config import RANDOM_SEED
 
 
 class OllamaRunner(LLMRunner):
     @staticmethod
-    def from_settings(settings: dict):
+    def from_dict(config: dict):
         runner = None
         try:
-            if settings.get('type') == 'ollama':
-                runner = OllamaRunner(settings['host'])
+            if config.get('type') == 'ollama':
+                runner = OllamaRunner(config['host'])
         except Exception as e:
             logger.error(f"Could not create Ollama runner from config. Reason: {e}")
         return runner
@@ -59,6 +58,7 @@ class OllamaRunner(LLMRunner):
         assistant_text = ''
         num_chunks = 0
         last_timestamp: Optional[datetime.datetime] = None
+        # TODO: better speed visualisation?
         for chunk in response:
             current_timestamp = utc_now()
             assistant_text += chunk['message']['content']

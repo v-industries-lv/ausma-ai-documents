@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="/static/settings-style.css" />
+    <link rel="stylesheet" href="/static/side-bar-style.css" />
     <link
       rel="shortcut icon"
       href="/static/svg-icons/ausma.ai_simple_logo_final_006.svg"
@@ -11,19 +12,7 @@
     <title>ausma.ai: settings</title>
   </head>
   <body>
-    <header>
-      <nav>
-        <div>
-          <a href="/">
-            <img
-              src="/static/svg-icons/home-svgrepo-com.svg"
-              alt="home-icon"
-              class="home_icon"
-            />
-          </a>
-        </div>
-      </nav>
-    </header>
+    <header></header>
     <main>
       <h1 class="main-heading">Settings</h1>
       <section class="settings-list-section">
@@ -64,11 +53,12 @@
                 <option selected value=""></option>
                 <option value="ollama">ollama</option>
                 <option value="huggingface">huggingface</option>
+                <option value="openai">openai</option>
                 <option value="debug">debug</option>
               </select>
 
               <button
-                class="llm-runner-button"
+                class="llm-runner-button button-style"
                 name="llm-runner-add-button"
                 disabled
               >
@@ -76,10 +66,14 @@
               </button>
             </div>
             <div class="llm-runner-save-control">
-              <button class="new-llm-runner-button llm-save-control">
+              <button
+                class="new-llm-runner-button button-style llm-save-control"
+              >
                 Save
               </button>
-              <button class="new-llm-runner-button llm-cancel-control">
+              <button
+                class="new-llm-runner-button button-style llm-cancel-control"
+              >
                 Cancel
               </button>
             </div>
@@ -97,10 +91,10 @@
               </div>
               <div class="option-fields"></div>
               <div class="edit-buttons">
-                <button class="remove-llm-runner-button">
+                <button class="remove-llm-runner-button button-style">
                   Remove &#x2212;
                 </button>
-                <button class="move-up">
+                <button class="move-up button-style">
                   Move Up
                   <span class="small-arrows up">
                     <svg
@@ -118,7 +112,7 @@
                     </svg>
                   </span>
                 </button>
-                <button class="move-down">
+                <button class="move-down button-style">
                   Move Down
                   <span class="small-arrows">
                     <svg
@@ -165,6 +159,16 @@
               <input class="llm-runner-input-name" id="api" name="api_token" />
             </div>
           </template>
+          <template id="openai-llm">
+            <div class="llm-runner-form-name">
+              <label for="api-name"> Name:</label>
+              <input class="llm-runner-input-name" id="api-name" name="name" />
+            </div>
+            <div class="llm-runner-form-api-key">
+              <label for="api-key">API key:</label>
+              <input class="llm-runner-input-name" id="api-key" name="api_key" />
+            </div>
+          </template>
         </div>
       </section>
       <section class="settings-list-section">
@@ -204,8 +208,10 @@
               ></textarea>
 
               <div class="prompt-item-button-div">
-                <button class="prompt_save_button">Save</button>
-                <button class="prompt_cancel_button">Cancel</button>
+                <button class="prompt_save_button button-style">Save</button>
+                <button class="prompt_cancel_button button-style">
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
@@ -233,12 +239,16 @@
         <div class="setting-list">
           <p>Reset all settings to their defaults.</p>
           <div id="restore-default-settings" class="container setting-buttons">
-            <button onclick="restoreToDefault()">Reset To Defaults</button>
+            <button onclick="restoreToDefault()" class="button-style">
+              Reset To Defaults
+            </button>
           </div>
         </div>
       </section>
     </main>
     <footer></footer>
+    <script src="/static/socket.io.js"></script>
+    <script src="/static/side_bar.js"></script>
     <script>
       async function restoreToDefault() {
         await fetch("/config/restore_default_settings", { method: "GET" })
@@ -339,6 +349,18 @@
           );
           llmRunnerAPITokenInput.value = llmRunner.api_token;
           optionFields.appendChild(llmRunnerForm);
+        } else if (llmRunner.type == "openai") {
+          const llmRunnerForm = document
+            .getElementById("openai-llm")
+            .content.cloneNode(true);
+          const llmRunnerNameInput =
+            llmRunnerForm.querySelector("input[name=name]");
+          llmRunnerNameInput.value = llmRunner.name;
+          const llmRunnerAPITokenInput = llmRunnerForm.querySelector(
+            "input[name=api_key]"
+          );
+          llmRunnerAPITokenInput.value = llmRunner.api_key;
+          optionFields.appendChild(llmRunnerForm);
         } else {
           optionFields.innerHTML = llmRunner;
         }
@@ -355,19 +377,25 @@
         if (type == "ollama") {
           addLLMRunner({
             type: "ollama",
-            name: "",
+            name: "new_ollama_runner",
             host: "http://localhost:11434",
           });
         } else if (type == "huggingface") {
           addLLMRunner({
             type: "huggingface",
-            name: "",
-            api_token: "",
+            name: "new_huggingface_runner",
+            api_token: "hf_[rest of your token here]",
+          });
+        } else if (type == "openai") {
+          addLLMRunner({
+            type: "openai",
+            name: "new_openai_runner",
+            api_key: "sk-proj-[rest of your key here]",
           });
         } else if (type == "debug") {
           addLLMRunner({
             type: "debug",
-            name: "debug",
+            name: "new_debug_runner",
           });
         }
       });

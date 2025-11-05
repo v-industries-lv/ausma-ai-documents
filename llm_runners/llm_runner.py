@@ -1,20 +1,16 @@
 import json
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Tuple
+
+from convertors.llm_contexts import ChatContext
 from domain import RoomMessage, MessageProgress
 from langchain_core.embeddings import Embeddings
+
 from logger import logger
-from knowledge_base import KnowledgeBase
+from settings import Settings
 from utils import utc_now
 
-
-class ChatContext:
-    def __init__(self, llm_model: str, system_prompt: str, rag_document_count: int, kb: KnowledgeBase):
-        self.llm_model = llm_model
-        self.system_prompt = system_prompt
-        self.rag_document_count = rag_document_count
-        self.kb = kb
-
+RANDOM_SEED = 42
 
 class LLMRunner(ABC):
     @abstractmethod
@@ -41,7 +37,9 @@ class LLMRunner(ABC):
 
     def chat(self, ctx: ChatContext, room_id: str, user_input: str,
              update_callback: Optional[Callable] = None,
-             history: Optional[List[RoomMessage]] = None) -> Tuple[str, str, str]:
+             history: Optional[List[RoomMessage]] = None) -> Tuple[str, str]:
+        context_text_no_rag = "RAG did not find any relevant documents..."
+        context_text_rag =  "\n\nThe following text is context provided by RAG: \n"
         if history is None:
             history = []
         try:
@@ -58,12 +56,13 @@ class LLMRunner(ABC):
                     ctx.rag_document_count
                 )
                 if len(relevant_documents) > 0:
-                    context += "\n\nThe following text is context provided by RAG: \n" + '\n'.join(
+                    context += context_text_rag + '\n'.join(
                         [document[0].page_content for document in relevant_documents])
                     logger.info(f"RAG used in room {room_id}! Document count: {str(len(relevant_documents))}")
                 else:
+                    context += context_text_no_rag
                     logger.info(f"RAG used in room {room_id}! No relevant documents found!")
-                    context += "RAG did not find any relevant documents..."
+
             user_message = {
                 'role': 'user',
                 'content': user_input + context,
@@ -77,31 +76,37 @@ class LLMRunner(ABC):
             else:
                 messages = []
                 for message_item in history:
+                    context = ""
+                    if message_item.rag_sources is not None:
+                        rag_sources = json.loads(message_item.rag_sources)
+                        if len(rag_sources) > 0:
+                            context += context_text_rag + '\n'.join(
+                                [document_fragment["content"] for document_fragment in rag_sources])
+                        else:
+                            context += context_text_no_rag
                     messages.append(
                         {
                             "role": message_item.role,
-                            "content": message_item.content,
+                            "content": message_item.content + context,
                         }
                     )
                 messages.append(user_message)
-            rag_sources = json.dumps(
-                [{"id": x[0].id, "similarity_score": x[1], "metadata": x[0].metadata, "content": x[0].page_content} for
-                 x in
-                 relevant_documents])
-
-            # TODO: thinking handling think=True, temperature handling
+            rag_sources = None
+            if len(relevant_documents) > 0:
+                rag_sources = json.dumps(
+                    [{"id": x[0].id, "similarity_score": x[1], "metadata": x[0].metadata, "content": x[0].page_content}
+                     for
+                     x in
+                     relevant_documents])
+            # TODO: thinking handling think=True
             assistant_text = self.run_text_completion_streaming(llm_model, messages, update_callback)
-            # TODO: handle thinking
-            train_of_thought = ''
-            # if hasattr(response, "thinking"):
-            #     train_of_thought = response['message']['thinking']
             messages.append({"role": "assistant", "content": assistant_text})
         except Exception as e:
             logger.error(f"[CHAT_FATAL]{room_id}", e)
             # TODO: better exception handling
             raise()
 
-        return assistant_text, rag_sources, train_of_thought
+        return assistant_text, rag_sources
 
     @abstractmethod
     def run_text_completion_streaming(self, model: str, messages: List[dict], update_callback: Callable[[MessageProgress], None], options: dict = None):
@@ -120,19 +125,25 @@ class LLMRunner(ABC):
         pass
 
     @staticmethod
-    def from_settings_list(settings: List[dict]):
+    @abstractmethod
+    def from_dict(config: dict):
+        pass
+
+    @staticmethod
+    def from_settings(settings: Settings):
         result = []
 
         # importing locally to avoid cyclic imports
         from llm_runners.ollama_runner import OllamaRunner
         from llm_runners.debug_runner import DebugRunner
         from llm_runners.hf_runner import HFRunner
-        runner_classes = [OllamaRunner, HFRunner, DebugRunner]
+        from llm_runners.openai_runner import OpenAIRunner
+        runner_classes = [OllamaRunner, HFRunner, DebugRunner, OpenAIRunner]
 
-        for item in settings:
+        for item in settings.get_llm_runners():
             for runner_cls in runner_classes:
                 try:
-                    runner = runner_cls.from_settings(item)
+                    runner = runner_cls.from_dict(item)
                 except Exception as e:
                     logger.error(f"An error occured while making a LLM runner from settings. Error: {e}")
                     continue
@@ -142,6 +153,23 @@ class LLMRunner(ABC):
 
 
 class SuperRunner(LLMRunner):
+    @staticmethod
+    def from_dict(config: dict) -> Optional[LLMRunner]:
+        from llm_runners.debug_runner import DebugRunner
+        from llm_runners.hf_runner import HFRunner
+        from llm_runners.ollama_runner import OllamaRunner
+        from llm_runners.openai_runner import OpenAIRunner
+
+        if config["type"] == "ollama":
+            return OllamaRunner.from_dict(config)
+        elif config["type"] == "huggingface":
+            return HFRunner.from_dict(config)
+        elif config["type"] == "openai":
+            return OpenAIRunner.from_dict(config)
+        elif config["type"] == "debug":
+            return DebugRunner.from_dict(config)
+        return None
+
     def remove_model(self, model) -> bool:
         model_removed = False
         for runner in self.runners:

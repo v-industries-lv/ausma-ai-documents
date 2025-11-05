@@ -1,7 +1,6 @@
 .idea
 instance
 logs
-chroma
 text
 images
 .venv
@@ -11,7 +10,7 @@ test/images
 email_credentials.yaml
 __pycache__
 current.conf
-
+openai_models.json
 package-lock.json
 node_modules/
 /dist
@@ -21,3 +20,7 @@ node_modules/
 .hf_model_cache
 /processed
 /documents
+/knowledge_bases
+/lib
+/bin
+/chroma

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 import os
 from pypdf import PdfReader
-from pdf2image import convert_from_path
+from pdf_to_png import convert_from_path
 from typing import List
 from utils import compute_file_hash
 from logger import logger
@@ -119,11 +119,8 @@ class PDFDocumentFile(DocumentFile):
         try:
             images = convert_from_path(
                 pdf_path=self.file_path,
-                dpi=300,
-                poppler_path=PDFDocumentFile.POPPLER_PATH,
+                xpdf_path=os.environ.get("XPDF_PATH", os.path.join(os.getcwd(), "bin", "linux", "pdftopng")),
                 output_folder=self.temp_image_path,
-                paths_only=True,
-                fmt="png",
             )
         except Exception as e:
             logger.error(f"Error processing document: {self.file_name}")

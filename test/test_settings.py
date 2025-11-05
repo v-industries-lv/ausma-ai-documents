@@ -2,7 +2,7 @@ import os
 import unittest
 
 from settings import Settings
-from settings import LLM_RUNNERS, DEFAULT_SYSTEM_PROMPT, SUPPORTED_LLM_RUNNERS
+from settings import LLM_RUNNERS, DEFAULT_SYSTEM_PROMPT, SUPPORTED_LLM_RUNNERS, KBSTORES, DOC_SOURCES
 
 # test file
 def tf(name: str) -> str:
@@ -91,19 +91,48 @@ class SettingTestCase(unittest.TestCase):
         settings["unknown_setting"] = None
         self.assertIsNone(settings["unknown_setting"])
 
-    def test_get_runners(self):
+    def test_get_llm_runners(self):
         settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
-        runners = settings.get_runners()
+        runners = settings.get_llm_runners()
         self.assertEqual(runners, settings[LLM_RUNNERS])
 
-    def test_get_runners_modify_return(self):
+    def test_get_llm_runners_modify_return(self):
         settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
-        runners = settings.get_runners()
+        runners = settings.get_llm_runners()
         runners.pop()
         self.assertNotEqual(runners, settings[LLM_RUNNERS])
-        runners = settings.get_runners()
+        runners = settings.get_llm_runners()
         runners[0] = {}
         self.assertNotEqual(runners, settings[LLM_RUNNERS])
+
+    def test_get_kbstores(self):
+        settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
+        runners = settings.get_kbstores()
+        self.assertEqual(runners, settings[KBSTORES])
+
+    def test_get_kbstores_modify_return(self):
+        settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
+        runners = settings.get_kbstores()
+        runners.pop()
+        self.assertNotEqual(runners, settings[KBSTORES])
+        runners = settings.get_kbstores()
+        runners[0] = {}
+        self.assertNotEqual(runners, settings[KBSTORES])
+
+    def test_get_doc_sources(self):
+        settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
+        runners = settings.get_doc_sources()
+        self.assertEqual(runners, settings[DOC_SOURCES])
+
+    def test_get_doc_sources_modify_return(self):
+        settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
+        runners = settings.get_doc_sources()
+        runners.pop()
+        self.assertNotEqual(runners, settings[DOC_SOURCES])
+        runners = settings.get_doc_sources()
+        runners[0] = {}
+        self.assertNotEqual(runners, settings[DOC_SOURCES])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,13 +4,14 @@ import glob
 import shutil
 
 from logger import logger
-from typing import List, Optional, Tuple, Callable
+from typing import List, Optional, Tuple, Callable, Dict, Union
 from abc import ABC, abstractmethod
 from convertors.convertor_result import ConvertorResult
 from convertors.document_file import DocumentFile
 import datetime
 
-from utils import compute_folder_hash
+from settings import Settings, DEFAULT_KNOWLEDGE_BASE
+from utils import compute_folder_hash, from_posix_path, to_posix_path
 from pathlib import Path
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_chroma import Chroma
@@ -20,12 +21,31 @@ from langchain_core.embeddings import Embeddings
 
 
 class DocSource(ABC):
+    FORBIDDEN_NAME_SYMBOLS = [
+        "/",
+        "\\",
+        "*",
+        "?",
+        "[",
+        "]",
+    ]
     def __init__(self, source_type: str, name: str):
         self.type: str = source_type
+        for x in DocSource.FORBIDDEN_NAME_SYMBOLS:
+            if x in name:
+                raise(ValueError(f"DocSource name cannot contain {DocSource.FORBIDDEN_NAME_SYMBOLS} characters! Given name: {name}"))
         self.name: str = name
+
     @abstractmethod
-    def list(self, pattern: str) -> List[str]:
+    def _list(self, pattern: str) -> List[Dict[str, Union[str, bool]]]:
         pass
+
+    def list_items(self, pattern: str) -> List[Dict[str, Union[str, bool]]]:
+        # Filtering files and folder. Symlink and other behaviour not implemented.
+        return [x for x in self._list(pattern) if x["is_file"] == True or x["is_dir"] == True]
+
+    def list_files(self, pattern: str) -> List[str]:
+        return [x["path"] for x in self._list(pattern) if x["is_file"] == True]
 
     @abstractmethod
     def get(self, path: str) -> Optional[DocumentFile]:
@@ -37,48 +57,98 @@ class DocSource(ABC):
             "name": self.name
         }
 
+    @staticmethod
+    def _is_glob_pattern(path_str):
+        return any(char in path_str for char in ['*', '?', '['])
 
-def to_posix_path(path):
-    if os.sep != "/":
-        return path.replace(os.sep, "/")
-    return path
-
-def from_posix_path(path):
-    if os.sep != "/":
-        return path.replace("/", os.sep)
-    return path
+    @staticmethod
+    def from_settings(settings: Settings):
+        doc_sources = []
+        for doc_source_config in settings.get_doc_sources():
+            if doc_source_config["doc_source_type"] == "local_fs":
+                doc_sources.append(
+                    LocalFileSystemSource(name=doc_source_config["name"], root_path=doc_source_config["root_path"])
+                )
+        return doc_sources
 
 class LocalFileSystemSource(DocSource):
     def __init__(self, name: str, root_path: str):
         super().__init__("local_fs", name)
         self.root_path: str = root_path
+        os.makedirs(from_posix_path(self.root_path), exist_ok=True)
 
-    def list(self, pattern: str) -> List[str]:
-        return [to_posix_path(self.name + '/' + os.path.relpath(x, self.root_path)) for x in glob.glob(os.path.join(self.root_path, pattern),
-                                                                                     recursive=True) if os.path.isfile(x)]
+    def _list(self, pattern: str) -> List[Dict[str, Union[str, bool]]]:
+        posix_pattern = to_posix_path(pattern)
+        if pattern.startswith(self.name):
+            posix_pattern = posix_pattern[len(self.name):].lstrip("/")
+        paths = []
+        dir_to_crawl = self.root_path if posix_pattern == "" else os.path.join(self.root_path, from_posix_path(posix_pattern))
+        dir_to_crawl = from_posix_path(dir_to_crawl)
+        if not DocSource._is_glob_pattern(posix_pattern):
+            if os.path.isdir(dir_to_crawl):
+                # Pattern that lists the directory
+                dir_to_crawl = os.path.join(dir_to_crawl, "*")
+            if os.path.isfile(dir_to_crawl):
+                # Listing path to a file it returns path to this file
+                return [
+                    {
+                        "path": to_posix_path(pattern),
+                        "is_file": True,
+                        "is_dir": False
+                    }
+                ]
+        for x in glob.glob(os.path.join(dir_to_crawl), recursive=True):
+            paths.append(
+                {
+                    "path": to_posix_path(self.name + os.sep + os.path.relpath(x, self.root_path)),
+                    "is_file": os.path.isfile(x),
+                    "is_dir": os.path.isdir(x)
+                }
+            )
+        paths = [x for x in paths if not x["path"].endswith('/.')]
+        return paths
+
     def get(self, path: str) -> DocumentFile:
-        _, split_path = path.split("/", maxsplit=1)
-        new_path = os.path.join(self.root_path, from_posix_path(split_path))
-        return DocumentFile.from_path(self.name, self.root_path, new_path)
+        _, split_path = to_posix_path(path).split("/", maxsplit=1)
+        new_path = os.path.join(from_posix_path(self.root_path), from_posix_path(split_path))
+        return DocumentFile.from_path(self.name, from_posix_path(self.root_path), str(new_path))
 
     def to_dict(self) -> dict:
         output_dict = super().to_dict()
-        output_dict["root_path"] = self.root_path
+        output_dict["root_path"] = to_posix_path(self.root_path)
         return output_dict
 
 class SuperDocSource(DocSource):
     def __init__(self, name: Optional[str]="", doc_sources: Optional[List[DocSource]] = None):
         super().__init__("super_type", "" if name is None else name)
-        self.doc_sources = [] if doc_sources is None else doc_sources
+        self.doc_sources = [] if doc_sources is None else [x for x in doc_sources if x.name is not None or x.name != ""]
 
-    def list(self, pattern: str) -> List[str]:
+    def _list(self, pattern: str) -> List[Dict[str, Union[str, bool]]]:
+        if pattern == "*":
+            return [{"path": x.name, "is_file": False, "is_dir": True} for x in self.doc_sources]
         paths = []
+        if len(to_posix_path(pattern).split("/")) == 1 and not DocSource._is_glob_pattern(pattern):
+            for doc_source in self.doc_sources:
+                if doc_source.name == pattern:
+                    return doc_source._list("*")
+            return []
+
         for doc_source in self.doc_sources:
-            paths+= [self.name + os.sep + x if len(self.name) > 0 else x for x in doc_source.list(pattern)]
+            first_level = to_posix_path(pattern).split("/")[0]
+            if first_level != doc_source.name and first_level != "**":
+                continue
+            paths+= [
+                {
+                    "path": self.name + "/" + to_posix_path(x["path"]) if len(self.name) > 0 else to_posix_path(x["path"]),
+                    "is_file": x["is_file"],
+                    "is_dir": x["is_dir"]
+                } for x in doc_source._list(pattern)
+            ]
+        paths = [x for x in paths if not x["path"].endswith('/.')]
         return paths
 
     def get(self, path: str) -> Optional[DocumentFile]:
-        doc_path = path.split("/", maxsplit=1)[1] if len(self.name) > 0 else path
+        doc_path = to_posix_path(path).split("/", maxsplit=1)[1] if len(self.name) > 0 else path
         for doc_source in self.doc_sources:
             return doc_source.get(doc_path)
         return None
@@ -95,6 +165,7 @@ class KnowledgeBase(ABC):
         self.convertor_configs: List[dict] = kb_dict["convertors"]
         self.embedding_config: dict = kb_dict["embedding"]
         self.kb_store_folder = kb_dict.get("kb_store_folder", os.path.join("knowledge_bases", "chroma"))
+        self.languages = kb_dict.get("languages", ["eng"])
 
     def _create_embedding(self, embedding_source: Callable[[dict], Embeddings]):
         return embedding_source(self.embedding_config)
@@ -312,8 +383,10 @@ class KBStore(ABC):
     def __init__(self, store_type: str, name: str, kb_store_folder: str):
         self.type = store_type
         self.name = name
-        self.kb_store_folder = kb_store_folder
+        self.kb_store_folder = from_posix_path(kb_store_folder)
         self.kb_list = self.list()
+        self.is_initialized = os.path.exists(self.kb_store_folder)
+
 
     def list(self) -> List[KnowledgeBase]:
         kb_list = []
@@ -334,6 +407,7 @@ class KBStore(ABC):
             except Exception as e:
                 logger.error(f"Could not create knowledge base from {config_file_path}. Error: {e}")
         return kb_list
+
 
     def upsert(self, kb: KnowledgeBase) -> bool:
         try:
@@ -390,6 +464,18 @@ class KBStore(ABC):
     def _save_kb_config(self, kb: KnowledgeBase) -> bool:
         pass
 
+    @staticmethod
+    def from_settings(settings: Settings):
+        kb_stores = []
+        for kb_store_config in settings.get_kbstores():
+            if kb_store_config["store_type"] == "chroma":
+                kb_store = ChromaKBStore(name=kb_store_config["name"], kb_store_folder=kb_store_config["kb_store_folder"])
+                if not kb_store.is_initialized:
+                    # Ensures kb_store.kb_store_folder and knowledge base config
+                    kb_store.upsert(KnowledgeBase.from_dict(settings[DEFAULT_KNOWLEDGE_BASE]))
+                kb_stores.append(kb_store)
+        return kb_stores
+
 
 class ChromaKBStore(KBStore):
     def __init__(self, name: str = "chroma_store", kb_store_folder: str = "knowledge_bases/chroma"):
@@ -415,13 +501,14 @@ class ChromaKBStore(KBStore):
             self.kb_list = self.list()
         return False
 
+    # TODO: Knowledge base type depends on its config anyway and will not initialize under different KBStore types. Move to KBStore level?
     def _save_kb_config(self, kb: ChromaKnowledgeBase) -> bool:
         if isinstance(kb, ChromaKnowledgeBase):
             try:
                 config = kb.to_dict()
-                os.makedirs(kb.db_folder, exist_ok=True)
                 config_path = os.path.join(kb.db_folder, "config.json")
                 temp_config_path = os.path.join(kb.db_folder, "config.json.temp")
+                os.makedirs(kb.db_folder, exist_ok=True)
                 with open(temp_config_path, "w") as fh:
                     json.dump(config, fh)
                 shutil.move(temp_config_path, config_path)

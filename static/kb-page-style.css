@@ -10,17 +10,25 @@ html {
 
 body {
   width: 100%;
-  background-color: #121212;
+  background-color: #212121;
   padding-bottom: 10rem;
+  display: flex;
 }
 
 main {
+  flex: 1;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   color: #8b8b8b;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+}
+
+.side_bar.close ~ main {
+  margin-left: 0;
 }
 
 section {
@@ -42,21 +50,15 @@ section {
   width: 100%;
 }
 
-.home_icon {
-  height: 50px;
-  width: 50px;
-  padding: 1rem 0 0 1rem;
-}
-
-.home_icon:hover {
-  filter: brightness(2);
-  transition: all 0.3s ease;
-}
-
 .main-heading {
   color: #8b8b8b;
   word-break: break-all;
   margin: 1rem;
+  font-size: 26px;
+}
+
+h1 {
+  font-size: 20px;
 }
 
 .add_button_cnt {
@@ -74,8 +76,12 @@ section {
   align-items: center;
   justify-content: space-between;
   border-radius: 15px;
-  padding: 1rem;
+  padding: 0.7rem;
   cursor: pointer;
+}
+
+.kb_container span {
+  font-size: 20px;
 }
 
 .kb_container:hover,
@@ -87,7 +93,7 @@ section {
 .kb_service-container {
   border-radius: 15px;
   margin: 0.5rem;
-  padding: 1rem;
+  padding: 0 1rem 0 1rem;
 }
 
 .kb_service-container > * {
@@ -114,9 +120,9 @@ section {
   fill: #8b8b8b;
 }
 
-button {
-  width: 110px;
-  height: 35px;
+.button-style {
+  width: 100px;
+  height: 30px;
   color: #282828;
   background: #717171;
   border: none;
@@ -131,13 +137,12 @@ button {
   box-shadow: inset 2px 2px 2px 0px rgba(61, 61, 61, 0.5),
     7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
 }
-
-button:hover {
+.button-style:hover {
   background: #8b8b8b;
 }
 
-button:disabled,
-button[disabled] {
+.button-style:disabled,
+.button-style[disabled] {
   background-color: #8b8b8b;
   color: #545454;
 }
@@ -226,11 +231,16 @@ input[type="number"] {
   border-bottom: 1px groove #3f3f3f;
 }
 
+.kb_service-container .item {
+  border-bottom: none;
+  padding: 0;
+}
+
 select {
   background-color: #8b8b8b;
   color: #282828;
   font-size: 14px;
-  height: 35px;
+  height: 30px;
   border-radius: 5px;
   padding: 7px 9px;
   border: none;

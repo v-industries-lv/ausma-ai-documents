@@ -3,6 +3,7 @@ from typing import Optional
 from convertors.convertor_result import ConvertorResult
 from convertors.convertor import Convertor
 from convertors.document_file import DocumentFile
+from convertors.llm_contexts import DocumentContext
 from utils import compute_folder_hash
 from logger import logger
 
@@ -12,7 +13,7 @@ class RawConvertor(Convertor):
         conversion_type = 'raw'
         super().__init__(conversion_type, None)
 
-    def convert(self, doc: DocumentFile) -> Optional[ConvertorResult]:
+    def convert(self, doc: DocumentFile, context: DocumentContext) -> Optional[ConvertorResult]:
         conversion_result = self.get_or_init_conversion(doc)
         # TODO: add check if zero pages is intended as in complete
         if len(conversion_result.pages) == 0:

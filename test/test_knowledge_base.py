@@ -16,7 +16,7 @@ from mock_classes import MockChroma, mock_embeddings_source
 class KnowledgeBaseTest(unittest.TestCase):
     chroma = None
     real_chroma = None
-    LLM_RUNNER = OllamaRunner.from_settings({"type": "ollama"})
+    LLM_RUNNER = OllamaRunner.from_dict({"type": "ollama"})
 
     @classmethod
     def setUpClass(cls):

@@ -38,7 +38,7 @@ git clone [gitrepo]
 * Run the setup from the project directory:
 ```bash
 cd ausma-ai-documents &&
-./setup.sh
+./setup_linux.sh
 ```
 
 ## How to use

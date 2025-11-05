@@ -1,14 +1,13 @@
-import os
-import shutil
-
+import json
 from typing import Dict, Any
 
 from flask import request, Flask
-import json
 
+from convertors.document_image_convertor import DocumentImageConvertor
 from knowledge_base import KnowledgeBase
 from knowledge_base_service import KnowledgeBaseService
 from logger import logger
+
 
 class KBModule:
     def __init__(self, kb_service: KnowledgeBaseService):
@@ -179,11 +178,38 @@ class KBModule:
                 mimetype='application/json'
             )
 
+        @app.route('/kb/tesseract_languages')
+        def kb_languages():
+            langs = DocumentImageConvertor.get_tesseract_langs()
+            if langs is None:
+                return app.response_class(
+                    response=json.dumps({"status": "error", "text": "Could not list languages!"}, indent=2),
+                    mimetype='application/json'
+                )
+            else:
+                return app.response_class(
+                    response=json.dumps(langs, indent=2),
+                    mimetype='application/json'
+                )
+
         # Documents
-        @app.route('/doc/<path>')
+        @app.route('/doc/')
+        def docs_all():
+            return app.response_class(
+                response=json.dumps(sorted(self.kb_service.doc_source.list_items('*'), key=lambda x: x["path"]), indent=2),
+                mimetype='application/json'
+            )
+
+        @app.route('/doc/<path:path>')
         def doc_path(path):
-            return sorted(self.kb_service.doc_source.list(path))
+            return app.response_class(
+                response=json.dumps(sorted(self.kb_service.doc_source.list_items(path), key=lambda x: x["path"]), indent=2),
+                mimetype='application/json'
+            )
 
         @app.route('/doc_sources')
         def doc_sources():
-            return self.kb_service.doc_source.to_dict()
+            return app.response_class(
+                response=json.dumps(self.kb_service.doc_source.to_dict(), indent=2),
+                mimetype='application/json'
+            )

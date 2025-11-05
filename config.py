@@ -6,11 +6,7 @@ from settings import Settings
 
 RAG_DOCUMENT_COUNT = 10
 RAG_DOCUMENT_TOKEN_LEN = 1000
-EMBEDDING_TEMPERATURE = 0.7
-LLM_NUM_PREDICT = 4096
-RANDOM_SEED = 42
 COOKIE_USERNAME = 'username'
-EMBEDDING_MODEL = "bge-m3:latest"
 
 class KBServiceStatusFilter(logging.Filter):
     def filter(self, record):

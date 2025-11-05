@@ -11,7 +11,9 @@ def logger_setup():
     os.makedirs(LOG_DIR, exist_ok=True)
     logger = logging.getLogger('llm_logger')
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(message)s')
+    formatter = logging.Formatter(
+        fmt='%(asctime)s - %(filename)s:%(lineno)-3d (%(thread)d) - %(levelname)-7s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
 
     tr_fh = TimedRotatingFileHandler(LOG_FILE, when="midnight", backupCount=30)
     tr_fh.suffix = "%Y%m%d"

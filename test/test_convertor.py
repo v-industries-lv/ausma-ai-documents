@@ -3,6 +3,7 @@ import shutil
 import unittest
 from convertors.convertor_result import ConvertorResult
 from convertors.convertor import Convertor
+from convertors.llm_contexts import DocumentContext
 from convertors.raw_convertor import RawConvertor
 from convertors.ocr_convertor import OcrConvertor
 from convertors.ocr_with_llm_convertor import OcrLlmConvertor
@@ -11,10 +12,13 @@ from convertors.convertor import DocumentFile
 import json
 
 from llm_runners.ollama_runner import OllamaRunner
+from test.mock_classes import MockKnowledgeBase
 
 
 class ConvertorTest(unittest.TestCase):
-    LLM_RUNNER = OllamaRunner.from_settings({"type": "ollama", "host": "http://localhost:11434"})
+    ollama_host = os.environ.get('TEST_OLLAMA_HOST', "http://localhost:11434")
+    LLM_RUNNER = OllamaRunner.from_dict({"type": "ollama", "host": ollama_host})
+
     def setUp(self):
         if os.path.exists("processed"):
             shutil.rmtree("processed")
@@ -48,7 +52,18 @@ class ConvertorTest(unittest.TestCase):
             print(convertor_type)
             with open(os.path.join(config_path, convertor_type + ".json")) as fh:
                 convertor = Convertor.from_config(json.load(fh), ConvertorTest.LLM_RUNNER)
-                result = convertor.convert(document)
+                context = DocumentContext(
+                    MockKnowledgeBase.from_dict(
+                        {
+                            "name": "new_kb",
+                            "store": "chroma",
+                            "selection": [],
+                            "convertors": [{"model": "test_convertor"}],
+                            "embedding": {"model": "test_embedding"}
+                        }
+                    )
+                )
+                result = convertor.convert(document, context)
                 self.assertTrue(isinstance(result, ConvertorResult))
                 self.assertEqual(len(result.pages), 3)
 

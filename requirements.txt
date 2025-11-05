@@ -55,6 +55,7 @@ importlib_resources==6.5.2
 iniconfig==2.1.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
+jiter==0.11.0
 joblib==1.5.1
 jsonpatch==1.33
 jsonpointer==3.0.0
@@ -64,9 +65,10 @@ kubernetes==33.1.0
 langchain==0.3.27
 langchain-chroma==0.2.5
 langchain-community==0.3.27
-langchain-core==0.3.72
+langchain-core==0.3.77
 langchain-huggingface==0.3.1
 langchain-ollama==0.3.6
+langchain-openai==0.3.34
 langchain-text-splitters==0.3.9
 langsmith==0.4.8
 Markdown==3.8.2
@@ -84,6 +86,7 @@ numpy==2.3.2
 oauthlib==3.3.1
 ollama==0.5.1
 onnxruntime==1.22.1
+openai==2.0.1
 opentelemetry-api==1.33.1
 opentelemetry-exporter-otlp-proto-common==1.33.1
 opentelemetry-exporter-otlp-proto-grpc==1.33.1
@@ -120,6 +123,7 @@ pypdf==5.9.0
 PyPika==0.48.9
 pyproject_hooks==1.2.0
 pytesseract==0.3.13
+pytest==8.4.2
 pytest-integration==0.2.3
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
@@ -150,6 +154,7 @@ starlette==0.47.2
 sympy==1.14.0
 tenacity==9.1.2
 threadpoolctl==3.6.0
+tiktoken==0.11.0
 tokenizers==0.21.4
 torch==2.8.0+cpu
 torchvision==0.23.0+cpu

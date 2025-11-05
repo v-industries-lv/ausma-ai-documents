@@ -1,7 +1,8 @@
-import pytesseract
-from PIL import Image
+import os
 from convertors.document_image_convertor import DocumentImageConvertor
 from bs4 import BeautifulSoup
+
+from convertors.llm_contexts import DocumentContext
 from llm_runners.llm_runner import LLMRunner
 
 
@@ -22,12 +23,16 @@ class OcrLlmConvertor(DocumentImageConvertor):
         self.user_text: str = user_text
         self.options: dict = options if options is not None else OcrLlmConvertor.OPTIONS
 
-    def image_to_text(self, input_data: str) -> str:
+    def image_to_text(self, input_data: str, context: DocumentContext) -> str:
         system_message = {
             'role': 'system',
             'content': self.system_text,
         }
-        input_text = pytesseract.image_to_string(Image.open(input_data))
+        input_text = DocumentImageConvertor.tesseract_convert(
+            tesseract_path=os.environ.get("TESSERACT_PATH", "tesseract"),
+            image_path=input_data,
+            character_sets=context.character_sets
+        )
         # TODO: Sanitize input_text.
         user_message = {
             'role': 'user',
@@ -46,4 +51,4 @@ class OcrLlmConvertor(DocumentImageConvertor):
             except Exception as e:
                 print(e)
             content = soup.get_text()
-        return content.replace("<text>", "").replace("</text>", "")
+        return content.replace("<text>", "").replace("</text>", "").replace("<Text>", "").replace("</Text>", "")

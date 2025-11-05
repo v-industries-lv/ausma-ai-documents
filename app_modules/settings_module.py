@@ -4,7 +4,7 @@ from typing import Callable
 from flask import request, Flask
 
 from settings import Settings
-from settings import LLM_RUNNERS
+from settings import RESTORE_DEFAULT
 
 
 class SettingsModule:
@@ -45,7 +45,7 @@ class SettingsModule:
         def restore_default_settings():
             try:
                 self.settings.restore_defaults()
-                update_callback(LLM_RUNNERS)
+                update_callback(RESTORE_DEFAULT)
                 return app.response_class(
                     response=json.dumps({"text": "Settings restored to defaults!"}),
                     mimetype='application/json'

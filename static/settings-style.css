@@ -10,35 +10,38 @@ html {
 
 body {
   width: 100%;
-  background-color: #121212;
+  background-color: #212121;
+  display: flex;
 }
 
 main {
+  flex: 1;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.home_icon {
-  height: 50px;
-  width: 50px;
-  padding: 1rem 0 0 1rem;
-}
-
-.home_icon:hover {
-  filter: brightness(2);
   transition: all 0.3s ease;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+}
+
+.side_bar.close ~ main {
+  margin-left: 0;
 }
 
 section {
-  width: 60%;
+  width: 80%;
 }
 
 .main-heading {
   color: #8b8b8b;
   margin: 1rem;
+  font-size: 26px;
+}
+
+.settings-option {
+  font-size: 20px;
 }
 
 .settings-option:hover,
@@ -56,7 +59,7 @@ section {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 1rem;
+  padding: 0.7rem;
   cursor: pointer;
 }
 
@@ -148,7 +151,7 @@ section {
   background-color: #8b8b8b;
   color: #282828;
   font-size: 14px;
-  height: 35px;
+  height: 30px;
   border-radius: 5px;
   padding: 7px 9px;
   border: none;
@@ -197,28 +200,9 @@ input:focus {
   outline: none;
 }
 
-/* input:autofill,
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:autofill,
-textarea:-webkit-autofill,
-textarea:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus,
-select:autofill,
-select:-webkit-autofill,
-select:-webkit-autofill:hover,
-select:-webkit-autofill:focus {
-  caret-color: #8b8b8b !important;
-  -webkit-text-fill-color: #8b8b8b !important;
-  -webkit-box-shadow: 0 0 0px 1000px #3f3f3f inset !important;
-  box-shadow: 0 0 0px 1000px #3f3f3f inset !important;
-  transition: background-color 5000s ease-in-out 0s !important;
-} */
-
-button {
-  width: 110px;
-  height: 35px;
+.button-style {
+  width: 100px;
+  height: 30px;
   color: #282828;
   background: #717171;
   border: none;
@@ -234,12 +218,12 @@ button {
     7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
 }
 
-button:hover {
+.button-style:hover {
   background: #8b8b8b;
 }
 
-button:disabled,
-button[disabled] {
+.button-style:disabled,
+.button-style[disabled] {
   background-color: #8b8b8b;
   color: #545454;
 }
@@ -305,7 +289,7 @@ button[disabled] {
 .system-prompt-input {
   width: 100%;
   min-height: 7rem;
-  max-height: 20rem;
+  max-height: 50rem;
   background: #3f3f3f;
   border: none;
   color: #8b8b8b;
