@@ -126,8 +126,9 @@ def download_rag_sources(msg_id):
     if not msg:
         abort(404)
     # Download as text, safe headers
+    rag_sources = None if msg.rag_sources is None else json.loads(msg.rag_sources)
     return Response(
-        json.dumps(json.loads(msg.rag_sources), indent=2),
+        json.dumps(rag_sources, indent=2),
         mimetype='text/plain',
         headers={"Content-Disposition": f"attachment;filename=rag_sources_{msg_id}.json"}
     )

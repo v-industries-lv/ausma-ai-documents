@@ -21,7 +21,7 @@
     <div id="Rag-llm">
 
                 <div id="knowledge_base" class="select-ctn">
-                    <p>Knowledge base:</p>
+                    <Label>Knowledge base:
                     <select name="kb_name" id="kb" class="select">
                         {% if kb_list|length == 1 %}
                         <option value="{{kb_list[0]}}" selected>{{kb_list[0]}}</option>
@@ -34,11 +34,11 @@
                         <option value="No knowldege bases found!" selected>No knowldege bases found!</option>
                         {% endif %}
                     </select>
-
+                    </Label>
                 </div>
 
                 <div id="llm_" class="select-ctn">
-                    <p>LLM model:</p>
+                    <label>LLM model:
                     <select name="llm" id="llm_model" class="select">
                         {% if llm_list|length == 1 %}
                         <option value="{{llm_list[0]}}" selected>{{llm_list[0]}}</option>
@@ -51,12 +51,13 @@
                         <option value="No models found!" selected>No models found!</option>
                         {% endif %}
                     </select>
+                    </label>
 
                 </div>
             </div>
             <div class="background_ctn">
         <div id="background">
-            <h1 id="input-heading"><span id="l-outfit">ausma.ai</span> : {{room_name}}</h1>
+            <h1 id="input-heading" class="room_heading"><span id="l-outfit" >ausma.ai</span> : {{room_name}}</h1>
             
 
             <div id="communication">
@@ -120,6 +121,10 @@
             <script src="../static/chat_handler.js"></script>
               <script src="/static/socket.io.js"></script>
     <script src="/static/side_bar.js"></script>
+    <script>
+    let roomHeading = document.querySelector(".room_heading");
+    roomHeading.title = roomHeading.textContent;
+    </script>
         </div>
         </div>
     </main>

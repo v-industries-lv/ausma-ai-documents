@@ -108,10 +108,18 @@ class LocalFileSystemSource(DocSource):
         paths = [x for x in paths if not x["path"].endswith('/.')]
         return paths
 
-    def get(self, path: str) -> DocumentFile:
-        _, split_path = to_posix_path(path).split("/", maxsplit=1)
-        new_path = os.path.join(from_posix_path(self.root_path), from_posix_path(split_path))
-        return DocumentFile.from_path(self.name, from_posix_path(self.root_path), str(new_path))
+    def get(self, path: str) -> Optional[DocumentFile]:
+        target_doc_source_name, doc_path = to_posix_path(path).split("/", maxsplit=1)
+        if target_doc_source_name != self.name:
+            return None
+        new_path = os.path.join(from_posix_path(self.root_path), from_posix_path(doc_path))
+        document = None
+        try:
+            document = DocumentFile.from_path(self.name, from_posix_path(self.root_path), str(new_path))
+        except Exception as e:
+            logger.error(f"Failed while retrieving document {doc_path} from DocSource {self.name}. Error: {e}")
+        finally:
+            return document
 
     def to_dict(self) -> dict:
         output_dict = super().to_dict()
@@ -148,10 +156,14 @@ class SuperDocSource(DocSource):
         return paths
 
     def get(self, path: str) -> Optional[DocumentFile]:
-        doc_path = to_posix_path(path).split("/", maxsplit=1)[1] if len(self.name) > 0 else path
+        # FIXME: returning first doc path with get() is wrong. Tries to create DocumentFile, but crashes when path is wrong.
+        _, doc_path = to_posix_path(path).split("/", maxsplit=1) if len(self.name) > 0 else (None, path)
+        document = None
         for doc_source in self.doc_sources:
-            return doc_source.get(doc_path)
-        return None
+            document = doc_source.get(doc_path)
+            if document is not None:
+                return document
+        return document
 
     def to_dict(self) -> List[dict]:
         return [x.to_dict() for x in self.doc_sources]

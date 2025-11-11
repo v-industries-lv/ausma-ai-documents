@@ -18,10 +18,19 @@ loadHTML();
 function afterLoading() {
   const navBarToggleBTN = document.querySelector(".toggle_button");
   const sideBar = document.querySelector(".side_bar");
+
+  const isClosed = sideBar.classList.contains("close");
+  navBarToggleBTN.title = isClosed ? "Open sidebar" : "Close sidebar";
+  navBarToggleBTN.setAttribute("aria-label", navBarToggleBTN.title);
+
   navBarToggleBTN.addEventListener("click", function () {
     sideBar.classList.toggle("close");
     navBarToggleBTN.classList.toggle("button_rotation");
     navBarToggleBTN.classList.toggle("at-start");
+
+    const isClosedNow = sideBar.classList.contains("close");
+    navBarToggleBTN.title = isClosedNow ? "Open sidebar" : "Close sidebar";
+    navBarToggleBTN.setAttribute("aria-label", navBarToggleBTN.title);
   });
 
   const socket = io();
@@ -70,9 +79,9 @@ function afterLoading() {
       let suffix =
         nameFreq[room.name] > 1 ? " @" + room.id.substring(0, 5) : "";
       let fullName = room.name + suffix;
-      li.innerHTML = `<div class="room-item">${fullName}</div>
+      li.innerHTML = `<div class="room-item" title="room: ${fullName}">${fullName}</div>
                 <img src='/static/svg-icons/trash-bin-trash-svgrepo-com.svg' class="remove_room_image" data-value="${room.id}" data-name="${fullName}" 
-                style='height:30px;cursor:pointer;width:30px;vertical-align:middle;'>`;
+                style='height:30px;cursor:pointer;width:30px;vertical-align:middle;' title='Remove room'>`;
       const roomItem = li.querySelector(".room-item");
       roomItem.addEventListener("click", function () {
         window.location.href = `/chat/${room.id}`;
