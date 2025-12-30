@@ -1,0 +1,66 @@
+.kb_service-container h1 {
+  font-size: 20px;
+}
+
+.add_button_cnt {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 0 0 0;
+}
+
+.heading_name {
+  font-size: 20px;
+}
+
+.kb_service-container {
+  width: 80%;
+  border-radius: 15px;
+  margin: 0.5rem;
+  padding: 0 1rem 0 1rem;
+  background-color: #282828;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.kb_service-container > * {
+  margin: 1rem;
+}
+
+.status__container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #3f3f3f;
+  font-size: 16px;
+  width: 100%;
+  padding: 8px 1rem;
+  border-radius: 15px;
+}
+.item {
+  width: 100%;
+  padding: 0 0 2rem 0;
+  border-bottom: 1px groove #3f3f3f;
+}
+
+.item h1 {
+  text-align: center;
+}
+
+.kb_service-container .item {
+  border-bottom: none;
+  padding: 0;
+}
+
+.convertors {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.convertors > h1 {
+  margin: 2rem 0 1rem 0;
+  font-size: 20px;
+}

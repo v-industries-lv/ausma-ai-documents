@@ -1,0 +1,15 @@
+@keyframes highlight {
+  0% {
+    box-shadow: 0 0 0px 0px rgba(240, 54, 48, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 10px 5px rgba(240, 54, 48, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0px 0px rgba(240, 54, 48, 0);
+  }
+}
+
+.highlight {
+  animation: highlight 0.8s ease-out;
+}

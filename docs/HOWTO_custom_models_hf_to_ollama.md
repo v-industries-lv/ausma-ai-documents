@@ -9,7 +9,7 @@ utter-project/EuroLLM-9B-Instruct
 ```
 2. Get the model. Pull the model using ausma.ai app:
 ```bash
-curl -X POST --data '{"model":"utter-project/EuroLLM-9B-Instruct"}' http://127.0.0.1:5000/llm_runners/models/pull -H "Content-Type: application/json"
+curl -X POST --data '{"model":"utter-project/EuroLLM-9B-Instruct"}' http://127.0.0.1:5000/api/llm_runners/models/pull -H "Content-Type: application/json"
 ```
 
 3. You can run the model as-is right now in the app.

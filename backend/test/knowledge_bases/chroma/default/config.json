@@ -1,0 +1,14 @@
+{
+  "name": "default",
+  "selection": [
+    "**/*"
+  ],
+  "convertors": [
+    {
+      "conversion": "raw"
+    }
+  ],
+  "embedding": {
+    "model": "bge-m3:latest"
+  }
+}

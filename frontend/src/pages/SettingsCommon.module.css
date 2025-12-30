@@ -1,0 +1,177 @@
+/* ===================Main_layout=================== */
+
+.settings_main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #8b8b8b;
+  transition: all 0.3s ease;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+  padding-bottom: 2rem;
+}
+
+.main-heading {
+  word-break: break-all;
+  margin: 1rem;
+  font-size: 26px;
+}
+
+/* ===================Button=================== */
+
+.button_group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.button-row-two-sides {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2rem 0 1rem 0;
+}
+
+.button-row-right {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  margin: 2rem 0 1rem 0;
+}
+
+.button-row-left {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.button-row-center {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-style {
+  color: #282828;
+  background: #717171;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: inset 2px 2px 2px 0px rgba(61, 61, 61, 0.5),
+    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+}
+
+.button-dimensions {
+  width: 100px;
+  height: 30px;
+  font-size: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 5px;
+  margin: 0;
+  padding: 0;
+}
+
+.button-style:hover {
+  background: #8b8b8b;
+}
+
+.button-style:disabled,
+.button-style[disabled] {
+  background-color: #8b8b8b;
+  color: #545454;
+}
+
+.list_item_btn_group {
+  margin: 2rem 0 0 0;
+  padding: 0 0 2rem 0;
+  border-bottom: 1px groove #3f3f3f;
+  width: 100%;
+  gap: 0.7rem;
+}
+
+.button-style svg {
+  fill: currentColor;
+}
+
+.up svg {
+  transform: rotate(180deg);
+}
+
+.move-up span,
+.move-down span {
+  margin: 0 0 0 3px;
+}
+
+/* ===================Input=================== */
+
+.settings_main textarea:focus,
+.settings_main input:focus {
+  outline: none;
+  word-break: break-all;
+}
+
+.settings_main label {
+  display: inline-block;
+  margin: 0.5rem 0 0.5rem 0;
+}
+
+.settings_main input::-webkit-outer-spin-button,
+.settings_main input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.settings_main input[type="number"] {
+  -moz-appearance: textfield;
+}
+.settings_main input {
+  background-color: #3f3f3f;
+  width: 100%;
+  height: 2rem;
+  border: none;
+  color: #8b8b8b;
+  border-radius: 15px;
+  font-size: 16px;
+  padding: 1rem 1rem;
+  white-space: normal;
+}
+
+.settings_main input[type="checkbox"] {
+  height: 1rem;
+  accent-color: #717171;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  width: 5%;
+  flex-direction: column;
+}
+
+.select-setting {
+  background-color: #8b8b8b;
+  color: #282828;
+  font-size: 14px;
+  height: 30px;
+  border-radius: 5px;
+  padding: 7px 9px;
+  border: none;
+  outline: none;
+  box-shadow: inset 2px 2px 2px 0px rgba(61, 61, 61, 0.5),
+    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+}
+
+.wrapper {
+  position: relative;
+}

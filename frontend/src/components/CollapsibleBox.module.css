@@ -1,0 +1,69 @@
+.settings-list-section {
+  width: 80%;
+  color: #8b8b8b;
+  background-color: #282828;
+  border-radius: 15px;
+  margin: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.settings-cnt {
+  border: 1px solid #282828;
+  background-color: #282828;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.7rem;
+  cursor: pointer;
+}
+
+.settings-cnt:hover,
+.settings-cnt:active {
+  background-color: #3f3f3f;
+}
+
+.settings-option {
+  font-size: 20px;
+}
+
+.settings-option:hover,
+.settings-option:active {
+  background-color: #3f3f3f;
+  transition: all 0.3s ease;
+}
+
+.arrow svg {
+  transition: transform 0.15s ease-out;
+  fill: #8b8b8b;
+  margin-left: 1rem;
+}
+
+.arrow svg.rotated {
+  transform: rotate(180deg);
+  /* transition: transform 0.15s ease-in; */
+}
+
+.setting-list {
+  background-color: #282828;
+  color: #8b8b8b;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  border-radius: 15px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  padding: 0 1rem 0 1rem;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.setting-list.open {
+  max-height: 500rem;
+  opacity: 1;
+}

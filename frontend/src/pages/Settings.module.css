@@ -1,0 +1,67 @@
+.setting-list p {
+  padding: 1rem 0 0 0;
+  margin: 0 0 1rem 0;
+}
+
+.setting,
+.llm-runners-list {
+  width: 100%;
+}
+
+.reset-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.reset-button button {
+  width: 140px;
+  height: 35px;
+  margin: 2rem 0rem 1rem 0rem;
+  padding: 0;
+}
+
+.system-prompt-input {
+  width: 100%;
+  min-height: 7rem;
+  max-height: 50rem;
+  background: #3f3f3f;
+  border: none;
+  color: #8b8b8b;
+  border-radius: 15px;
+  font-size: 16px;
+  padding: 1rem 1rem;
+  field-sizing: content;
+  resize: vertical;
+  overflow: auto;
+  scrollbar-color: #282828 #8b8b8b;
+  white-space: normal;
+}
+
+.select-ctn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.select-ctn span,
+.select-ctn select {
+  width: 100%;
+}
+
+.select-ctn select {
+  background-color: #8b8b8b;
+  color: #282828;
+  height: 30px;
+  border-radius: 5px;
+  padding: 7px 9px;
+  box-shadow: inset 2px 2px 2px 0px rgba(61, 61, 61, 0.5),
+    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+}
+
+.warning {
+  color: #f03630;
+  margin: 1rem 0 1rem 0;
+}

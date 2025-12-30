@@ -1,0 +1,282 @@
+.chat_main {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.3s ease;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+}
+
+.background_ctn {
+  width: 80%;
+  height: 93%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#background {
+  width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.l-outfit {
+  font-family: "Outfit", sans-serif;
+  font-weight: 400;
+  color: #8b8b8b;
+  font-size: 30px;
+}
+
+.room_heading {
+  color: #8b8b8b;
+  word-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 53rem;
+  font-size: 30px;
+  margin: 1rem 0 1rem 0;
+}
+
+.Rag-llm-class {
+  color: #8b8b8b;
+  font-weight: bold;
+  width: 85%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  margin: 10px 0 0 0;
+}
+#Rag-llm p {
+  margin: 0;
+}
+
+.rags {
+  display: none;
+}
+
+.rag_button:hover {
+  background: #3f3f3f;
+}
+
+.select-ctn {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  border-radius: 12px;
+  transition: background-color 0.2s;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.select-ctn:hover {
+  background-color: #282828;
+}
+
+.select-ctn span,
+.select-ctn select {
+  width: 11rem;
+  background: transparent;
+  color: #8b8b8b;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 2px 0 0 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select-ctn option {
+  color: #8b8b8b;
+  background-color: #313131;
+}
+
+#input {
+  width: 105%;
+  display: flex;
+  flex-direction: row;
+  padding: 0 0 1rem 0;
+  margin: 20px 0 0 0;
+}
+
+#u_i {
+  display: none;
+}
+
+#user_input {
+  width: 95%;
+  min-height: 3rem;
+  max-height: 30rem;
+  background: #282828;
+  border: 0.5px solid #3f3f3f;
+  color: white;
+  border-radius: 15px;
+  font-size: 20px;
+  padding: 0.8rem 1rem 0.8rem 1rem;
+  box-sizing: border-box;
+  resize: none;
+  scrollbar-color: #8b8b8b transparent;
+  scrollbar-width: thin;
+  overflow: auto;
+  line-height: 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+#input textarea:focus,
+#input input:focus {
+  outline: none;
+}
+
+#user_input:disabled {
+  background: #282828;
+  color: white;
+}
+
+.button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.button img {
+  width: 50px;
+  height: 35px;
+  margin: 1px 0 0 0;
+  display: flex;
+}
+
+.button img:hover,
+.button img:active {
+  filter: brightness(2);
+  transition: all 0.3s ease;
+}
+
+.assistant-icon,
+.user-icon {
+  height: 20px;
+  width: 20px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.user-message {
+  font-size: 16px;
+  color: #fa994a;
+  white-space: normal;
+  margin-bottom: 3rem;
+}
+
+.message_ctn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 1rem 0 1rem 0;
+}
+
+.assistant-message .assistant {
+  font-family: "Outfit", sans-serif;
+  font-size: 18px;
+  letter-spacing: -1px;
+  font-weight: 400;
+  color: #41b8aa;
+  white-space: normal;
+}
+
+.message {
+  font-family: "Lato", sans-serif;
+  white-space: normal;
+  color: #8b8b8b;
+  word-wrap: break-word;
+  word-break: break-word;
+  margin-bottom: 3rem;
+}
+
+.message p,
+.message ul,
+.message ol,
+.message li,
+.message h1,
+.message h2,
+.message h3,
+.message h4,
+.message h5,
+.message h6 {
+  margin-bottom: 1rem;
+}
+.message ul,
+.message ol,
+.message li {
+  margin-bottom: 0.5rem;
+}
+
+.message li:last-child {
+  margin-bottom: 1rem;
+}
+
+.button.disabled {
+  background: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+#chat {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0rem 2rem;
+  word-wrap: break-word;
+  scrollbar-color: #8b8b8b transparent;
+  scrollbar-width: thin;
+}
+
+#communication {
+  width: 85%;
+  max-height: 90%;
+  display: flex;
+  flex-direction: column;
+}
+
+.assistant-utils-download:hover {
+  filter: brightness(2);
+  transition: all 0.3s ease;
+}
+
+.processing {
+  color: #8b8b8b;
+  margin: 1rem 0 1rem 0;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message a:link {
+  color: #41b8aaff;
+}
+
+.message a:visited {
+  color: #fa994aff;
+}
+
+.message pre {
+  background: #313131;
+  border: solid 1px #3f3f3f;
+  border-radius: 15px;
+  padding: 1rem;
+  white-space: pre-wrap;
+  box-shadow: none;
+  margin-bottom: 1rem;
+}

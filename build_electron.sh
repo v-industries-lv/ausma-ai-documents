@@ -2,5 +2,10 @@
 cd frontend || exit 1
 ./build.sh
 cd - || exit 1
+
 cd backend || exit 1
-./run_app.sh
+./build_bundled.sh
+cd - || exit 1
+
+cd electron || exit 1
+./build.sh

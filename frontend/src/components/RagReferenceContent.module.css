@@ -1,0 +1,51 @@
+.list-content {
+  max-height: 20rem;
+}
+
+.list-content div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.content-style {
+  color: #41b8aa;
+}
+
+.content-style a {
+  text-decoration: none;
+  color: #41b8aa;
+  word-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content-style a:last-child {
+  padding: 0 0 1rem 0;
+}
+
+.no-ref-msg {
+  padding: 0 0 1rem 0;
+}
+
+.content-style a:hover,
+.content-style a:active {
+  color: #53e9d7;
+}
+
+.list-content a:before {
+  content: "\002023";
+  padding-right: 15px;
+}
+
+.content-style div p {
+  margin: 0.5rem 0 0 0;
+}
+
+.reference-wrapper {
+  max-height: 40rem;
+  overflow-x: auto;
+  scrollbar-color: #8b8b8b transparent;
+  scrollbar-width: thin;
+}

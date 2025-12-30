@@ -6,7 +6,6 @@ Knowledge base contains information about the type of vector store used for docu
 To create a knowledge base we have to make a configuration for it through UI in the main app. Optionally, one can add a .json config directly to folder *knowledge_bases/configs* by following this pattern:  
 ```json
 {
-  "store": <vector_store>,
   "name": <knowledge_base_name>,
   "selection": [<pattern>, <pattern>, ...],
   "convertors": [<convertor>, <convertor>, ...],
