@@ -53,7 +53,7 @@ cd ausma-ai-documents &&
 
 ## How to use
 
-- Put documents inside "documents" folder of the project. This folder is then used for knowledge base creation. See docs.
+- Put documents inside "backend/documents" folder of the project. This folder is then used for knowledge base creation. See docs.
 
 - Run the web-app and open in browser (see the URL in terminal):
 
@@ -62,12 +62,12 @@ cd ausma-ai-documents &&
 ```
 
 - Create a room. You can also think of a room as a session or a conversion. The LLM will remember what you've talked about earlier. However, the longer the conversion goes the longer it will take to generate each consecutive answer. We recommend creating a separate room for each topic or unrelated question.
-- When first joining the room you will be prompted to enter a username. This will be the name associated with the questions you ask from this browser.
-- Join the room, by clicking "Join".
+- You can change the username from the settings or by clicking it on the top right corner. This will be the name associated with the questions you ask from this browser.
+- Join the room, by clicking it.
 - Select knowledge base:
   - `None` - **does not use the documents you've loaded**, just runs the model in chat mode.
   - `<knowledge base name>` - model uses RAG approach - receives relevant documents from vectorstore based on your query. This enhances the response with document aware context.
-- Choose a LLM model from the installed models and you are ready to ask your questions.
+- Choose a LLM model from the installed models and you are ready to ask your questions. Note that you won't be able to change it after the conversion starts. Mixing models can destabilize the output.
 
 ### Examples
 

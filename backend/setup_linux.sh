@@ -31,27 +31,28 @@ then
     esac
 fi
 
-# BROKEN for now
-# mkdir -p bin/linux
-# url="https://dl.xpdfreader.com/xpdf-tools-linux-4.05.tar.gz"
-# archive="xpdf-tools-linux-4.05.tar.gz"
-# archive_root="xpdf-tools-linux-4.05"
-# curl -LO "$url"
+read -r -p "This application can use either poppler or xpdf-tools to process pdf files. Install xpdf-tools (Y/n)?" xpdf_answer
+if [[ $ollama_answer == [Yy] ]]; then
+   mkdir -p bin/linux
+   url="https://dl.xpdfreader.com/xpdf-tools-linux-4.06.tar.gz"
+   archive="xpdf-tools-linux-4.06.tar.gz"
+   archive_root="xpdf-tools-linux-4.06"
+   curl -LO "$url"
 
-# bits=$(getconf LONG_BIT | tr -d '[:space:]')
-# if [[ "$bits" == "32" ]]; then
-#   pdftopng_bin="$archive_root/bin32/pdftopng"
-# elif [[ "$bits" == "64" ]]; then
-#   pdftopng_bin="$archive_root/bin64/pdftopng"
-# else
-#   echo "Unknown architecture: $bits"
-#   exit 1
-# fi
+   bits=$(getconf LONG_BIT | tr -d '[:space:]')
+   if [[ "$bits" == "32" ]]; then
+     pdftopng_bin="$archive_root/bin32/pdftopng"
+   elif [[ "$bits" == "64" ]]; then
+     pdftopng_bin="$archive_root/bin64/pdftopng"
+   else
+     echo "Unknown architecture: $bits"
+     exit 1
+   fi
 
-# tar -xzf "$archive" "$pdftopng_bin" || { echo "Extraction has failed"; exit 1; }
-# mv "$pdftopng_bin" "bin/linux/pdftopng" || { echo "Failed to move file"; exit 1; }
-# rm $archive_root -r
-
+   tar -xzf "$archive" "$pdftopng_bin" || { echo "Extraction has failed"; exit 1; }
+   mv "$pdftopng_bin" "bin/linux/pdftopng" || { echo "Failed to move file"; exit 1; }
+   rm $archive_root -r
+fi
 
 # Install virtual environment
 python3 -m venv .venv

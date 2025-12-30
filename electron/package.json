@@ -1,6 +1,6 @@
 {
   "name": "ausma-ai-documents",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "## Summary Ausma.ai Documents is a locally hosted document retrieval and summarizing tool accessible via an AI assistant chat interface.",
   "main": "main.js",
   "scripts": {
