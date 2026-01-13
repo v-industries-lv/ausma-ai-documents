@@ -13,6 +13,17 @@ const docSources = {
       root_path: "documents",
     },
   },
+  mail_imap: {
+    component: IMAPMailSource,
+    defaultValue: {
+      doc_source_type: "mail_imap",
+      name: "imap_email",
+      host: "",
+      port: 993,
+      email: "",
+      password: "",
+    },
+  },
 };
 
 function LocalFileSystem({ value, onChange }) {
@@ -50,6 +61,81 @@ function LocalFileSystem({ value, onChange }) {
           name="root_path"
           value={value.root_path}
           onChange={updateValue}
+        />
+      </div>
+    </>
+  );
+}
+
+function IMAPMailSource({ value, onChange }) {
+  function updateValue(e) {
+    const target = e.target;
+    const n = target.name;
+    const v = target.value;
+    const newValue = { ...value, [n]: v };
+    onChange?.(newValue);
+  }
+  return (
+    <><div className={styles.setting}>
+        [EXPERIMENTAL]
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="doc_source_type">Type:</label>
+        <input
+          id="doc_source_type"
+          name="doc_source_type"
+          defaultValue={value.doc_source_type}
+          readOnly
+        />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="name">Name:</label>
+        <input
+          id="name"
+          name="name"
+          value={value.name}
+          onChange={updateValue}
+        />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="host">Host:</label>
+        <input
+          id="host"
+          name="host"
+          value={value.host}
+          onChange={updateValue}
+          placeholder="[imap server host]"
+        />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="port">Port:</label>
+        <input
+          id="port"
+          name="port"
+          value={value.port}
+          onChange={updateValue}
+          placeholder="[imap server port]"
+        />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="email">Email:</label>
+        <input
+          id="email"
+          name="email"
+          value={value.email}
+          onChange={updateValue}
+          placeholder="[your@email.com]"
+        />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="password">Password [IMAP]:</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          value={value.password}
+          onChange={updateValue}
+          placeholder="[email password]"
         />
       </div>
     </>

@@ -92,6 +92,17 @@ class DocSource(ABC):
                 doc_sources.append(
                     LocalFileSystemSource(name=doc_source_config["name"], root_path=doc_source_config["root_path"])
                 )
+            elif doc_source_config["doc_source_type"] == "mail_imap":
+                from doc_sources.mail_imap import IMAPMailSource
+                doc_sources.append(
+                    IMAPMailSource(
+                        host=doc_source_config["host"],
+                        port=doc_source_config["port"],
+                        email=doc_source_config["email"],
+                        pw=doc_source_config["password"],
+                        name=doc_source_config["name"]
+                    )
+                )
         return doc_sources
 
 

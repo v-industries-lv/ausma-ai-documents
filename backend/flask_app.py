@@ -17,7 +17,6 @@ from kb.knowledge_base import SuperKBStore, KBStore
 from doc_sources.doc_source import DocSource, SuperDocSource
 from knowledge_base_service import KnowledgeBaseService
 from generation_guard import GenerationGuard
-from llm_runners.debug_runner import DebugRunner
 from llm_runners.llm_runner import ChatContext, LLMRunner, SuperRunner
 from logger import logger
 from settings import DEFAULT_SYSTEM_PROMPT, LLM_RUNNERS, KBSTORES, DOC_SOURCES, RESTORE_DEFAULT, GENERATION_GUARD, RAGSettings
