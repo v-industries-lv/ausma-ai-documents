@@ -16,13 +16,13 @@
 
 .current_list li:active,
 .current_list li:hover {
-  background-color: #3f3f3f;
+  background-color: var(--color-bg-hover);
   border-radius: 15px;
 }
 
 .current_list img:active,
 .current_list img:hover {
-  filter: brightness(2);
+  filter: var(--color-filter);
 }
 
 .modal {
@@ -46,8 +46,8 @@
   padding: 0.3rem;
   display: grid;
   grid-template-rows: 2rem calc(80vh - 16rem - 0.6rem) 2rem;
-  background-color: #212121;
-  border: #8b8b8b solid 1px;
+  background-color: var(--color-bg-primary);
+  border: var(--color-border-secondary) solid 1px;
   border-radius: 15px;
 }
 

@@ -7,6 +7,16 @@ import { socket } from "../socket";
 import { NavLink, useNavigate } from "react-router-dom";
 import Username from "./UserName";
 import FullScreenModal from "./FullScreenModal";
+import {
+  AusmaIcon,
+  KBIcon,
+  SettingsIcon,
+  AboutIcon,
+  CreateRoomIcon,
+  RenameIcon,
+  RemoveIcon,
+  ToggleButtonIcon,
+} from "./Icons/ComponentIcons";
 
 const styles = { ..._styles, ..._styles2 };
 
@@ -76,36 +86,44 @@ export default function Layout({ username, children }) {
       >
         <aside className={styles["content"]}>
           <div className={styles["navigation"]}>
-            <NavLink to="/">
-              <img
-                src="/static/svg-icons/ausma3-gray.svg"
+            <NavLink to="/" onDragStart={(e) => e.preventDefault()}>
+              <AusmaIcon
                 className={`${styles["ausma_ai_logo"]} ${styles["hover_btn"]}`}
               />
             </NavLink>
-            <div className={styles["option_buttons"]}>
-              <NavLink to="/knowledge-base">
-                <img
-                  src="/static/svg-icons/notebook-minimalistic-svgrepo-com.svg"
-                  alt="knowledge-base-button"
-                  className={`${styles["home_icon"]} ${styles["hover_btn"]}`}
+            <div className={styles["navigation_options"]}>
+              <NavLink
+                to="/knowledge-base"
+                onDragStart={(e) => e.preventDefault()}
+              >
+                {" "}
+                <div
+                  className={styles["nav_option_btn"]}
                   title="Knowledge Base Settings"
-                />
+                >
+                  <KBIcon
+                    className={`${styles["home_icon"]} ${styles["bg_hover_btn"]}`}
+                  />
+                </div>
               </NavLink>
-              <NavLink to="/settings">
-                <img
-                  src="/static/svg-icons/settings-svgrepo-com.svg"
-                  alt="settings-icon"
-                  className={`${styles["home_icon"]} ${styles["gear"]} ${styles["hover_btn"]}`}
-                  title="Settings"
-                />
+
+              <NavLink to="/settings" onDragStart={(e) => e.preventDefault()}>
+                <div className={styles["nav_option_btn"]} title="Settings">
+                  <SettingsIcon
+                    className={`${styles["home_icon"]} ${styles["bg_hover_btn"]}`}
+                  />
+                </div>
               </NavLink>
-              <NavLink to="/about">
-                <img
-                  src="/static/svg-icons/question-square-svgrepo-com.svg"
-                  alt="faq-button"
-                  className={`${styles["home_icon"]} ${styles["gear"]} ${styles["hover_btn"]}`}
+
+              <NavLink to="/about" onDragStart={(e) => e.preventDefault()}>
+                <div
+                  className={styles["nav_option_btn"]}
                   title="About ausma.ai"
-                />
+                >
+                  <AboutIcon
+                    className={`${styles["home_icon"]} ${styles["bg_hover_btn"]}`}
+                  />
+                </div>
               </NavLink>
             </div>
           </div>
@@ -130,7 +148,7 @@ export default function Layout({ username, children }) {
               type="submit"
               title="Create Room"
             >
-              <img src="/static/svg-icons/createRoom.svg" />
+              <CreateRoomIcon onDragStart={(e) => e.preventDefault()} />
             </button>
           </form>
         </div>
@@ -151,8 +169,8 @@ export default function Layout({ username, children }) {
                 >
                   {fullName}
                 </div>
-                <img
-                  src="/static/svg-icons/pen-svgrepo-com.svg"
+                <RenameIcon
+                  onDragStart={(e) => e.preventDefault()}
                   className={`${styles["rename_room_image"]} ${styles["hover_btn"]}`}
                   data-value="${room.id}"
                   data-name="${fullName}"
@@ -162,11 +180,10 @@ export default function Layout({ username, children }) {
                     width: "30px",
                     verticalAlign: "middle",
                   }}
-                  title="Rename Room"
                   onClick={() => setCurrentRenameRoom(room)}
                 />
-                <img
-                  src="/static/svg-icons/trash-bin-trash-svgrepo-com.svg"
+                <RemoveIcon
+                  onDragStart={(e) => e.preventDefault()}
                   className={`${styles["remove_room_image"]} ${styles["hover_btn"]}`}
                   data-value="${room.id}"
                   data-name="${fullName}"
@@ -176,7 +193,6 @@ export default function Layout({ username, children }) {
                     width: "30px",
                     verticalAlign: "middle",
                   }}
-                  title="Remove Room"
                   onClick={() => removeRoom(room.id, fullName)}
                 />
               </li>
@@ -184,16 +200,22 @@ export default function Layout({ username, children }) {
           })}
         </ul>
       </aside>
-      <div
-        className={`${styles.toggle_button} ${styles.home_icon} ${
-          styles.hover_btn
-        } ${styles.position_left} ${
-          isClosed ? `${styles.button_rotation} ${styles["at-start"]}` : ""
-        }`}
-        onClick={() => setClosed((closed) => !closed)}
-        title={isClosed ? "Open Sidebar" : "Close Sidebar"}
-      >
-        <img src="/static/svg-icons/send-square-svgrepo-com.svg" />
+      <div>
+        <button
+          onClick={() => setClosed((closed) => !closed)}
+          title={isClosed ? "Open Sidebar" : "Close Sidebar"}
+          className={`${styles.toggle_button} ${
+            styles.nav_option_btn
+          } ${styles.position_left} ${
+            isClosed ? `${styles.button_rotation} ${styles["at-start"]}` : ""
+          }`}
+        >
+          <ToggleButtonIcon
+            onDragStart={(e) => e.preventDefault()}
+            className={styles.home_icon}
+            title={isClosed ? "Open Sidebar" : "Close Sidebar"}
+          />
+        </button>
       </div>
       <Username />
       {inner}

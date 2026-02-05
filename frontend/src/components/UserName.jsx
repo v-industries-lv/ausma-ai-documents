@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import styles from "./Username.module.css";
 import FullScreenModal from "./FullScreenModal";
+import { UserIcon } from "./Icons/ComponentIcons";
 
 export const UsernameContext = createContext({});
 
@@ -32,7 +33,8 @@ export default function Username() {
         onClick={() => setPanelClosed(false)}
         className={styles.username_ctn}
       >
-        <img src="/static/svg-icons/user-circle-svgrepo-com.svg"></img>
+        <UserIcon onDragStart={(e) => e.preventDefault()} />
+
         <h1>{username}</h1>
       </div>
       <FullScreenModal

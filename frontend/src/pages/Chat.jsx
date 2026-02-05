@@ -8,12 +8,17 @@ import ModelSelector from "../components/ModelSelector";
 import Spinner from "../components/Spinner";
 import { MarkdownHooks } from "react-markdown";
 import rehypeStarryNight from "rehype-starry-night";
-import "@wooorm/starry-night/style/both";
 import { UsernameContext } from "../components/UserName";
 import onigurumaURL from "vscode-oniguruma/release/onig.wasm?url";
 import ChatCToolbar from "../components/ChatToolbar";
 import { RagReferenceModal } from "../components/RagReferenceContent";
 import { renderNewLines } from "../utils/jsxUtils";
+import {
+  SendIcon,
+  StopIcon,
+  ChatUserIcon,
+  ChatAusmaIcon,
+} from "../components/Icons/ComponentIcons";
 
 export default function ChatWrapper() {
   const params = useParams();
@@ -57,7 +62,7 @@ function Chat({ roomId }) {
       const json = await req.json();
       if (json) {
         setProgress((progress) =>
-          progress.status === "initial" ? json : progress
+          progress.status === "initial" ? json : progress,
         );
       }
     }
@@ -307,12 +312,11 @@ function ChatMessage({ msg, setReference }) {
     return (
       <div className={styles["user-message"]} key={msg.id}>
         <div className={styles["message_ctn"]}>
-          <img
-            src="/static/svg-icons/square-bubble-user-svgrepo-com.svg"
+          <ChatUserIcon
+            onDragStart={(e) => e.preventDefault()}
             className={styles["user-icon"]}
             style={iconStyle}
           />
-
           <span className={styles["user"]}>{msg.username}:</span>
         </div>
         <div className={styles["message"]}>{renderNewLines(msg.content)}</div>
@@ -322,12 +326,11 @@ function ChatMessage({ msg, setReference }) {
     return (
       <div className={styles["assistant-message"]} key={msg.id}>
         <div className={styles["message_ctn"]}>
-          <img
-            src="/static/svg-icons/ausma.ai_simple_logo_final_006.svg"
+          <ChatAusmaIcon
+            onDragStart={(e) => e.preventDefault()}
             className={styles["user-icon"]}
             style={iconStyle}
           />
-
           <span className={styles["assistant"]}>ausma.ai:</span>
         </div>
         <div className={styles["message"]}>
@@ -388,7 +391,7 @@ function ChatInput({ onEnter, onStop, disabled, generating }) {
           onClick={onStop}
           style={{ display: generating ? "block" : "none" }}
         >
-          <img src="/static/svg-icons/close-square-svgrepo-com.svg" />
+          <StopIcon onDragStart={(e) => e.preventDefault()} alt="Stop" />
         </button>
       ) : (
         <button
@@ -397,7 +400,11 @@ function ChatInput({ onEnter, onStop, disabled, generating }) {
           onClick={onSubmit}
           disabled={disabled || inputEmpty}
         >
-          <img src="/static/svg-icons/send.svg" />
+          <SendIcon
+            onDragStart={(e) => e.preventDefault()}
+            alt="Send Icon"
+            title="Send"
+          />
         </button>
       )}
     </div>

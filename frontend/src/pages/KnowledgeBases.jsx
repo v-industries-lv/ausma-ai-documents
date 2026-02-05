@@ -23,7 +23,7 @@ export default function KnowledgeBases() {
       // keep the newly created (fresh) knowledge bases unless there is a newer version from the server
       const freshKnowledgeBases = knowledgeBases.filter((kb) => kb.fresh);
       const relevantFreshKnowledgeBases = freshKnowledgeBases.filter(
-        (kb) => !names.has(kb.name)
+        (kb) => !names.has(kb.name),
       );
       return [...kbs, ...relevantFreshKnowledgeBases];
     });
@@ -105,7 +105,11 @@ export default function KnowledgeBases() {
   return (
     <>
       <div className={styles["settings_main"]}>
-        <h1 className={styles["main-heading"]}>Knowledge Base Settings</h1>
+        <h1
+          className={`${styles["main-heading"]} ${styles["main-heading-color"]}`}
+        >
+          Knowledge Base Settings
+        </h1>
         <KBService />
         {knowledgeBases.map((kb) => (
           <KBEditor
@@ -584,7 +588,7 @@ function KBEditor({ kb, onSave, onRemove, onClear }) {
   }
   const [value, edited, { upsert, reset }] = useObjectState(
     addKeys(kb),
-    kb.fresh
+    kb.fresh,
   );
 
   async function save() {

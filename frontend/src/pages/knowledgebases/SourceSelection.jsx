@@ -8,6 +8,7 @@ import _styles4 from "./SourceSelection.module.css";
 import Spinner from "../../components/Spinner";
 import { uniqueValues } from "../../utils/listTools";
 import { useStringListState } from "../../components/useResetableState";
+import { RemoveIcon } from "../../components/Icons/ComponentIcons";
 
 const styles = { ..._styles, ..._styles2, ..._styles3, ..._styles4 };
 
@@ -85,8 +86,8 @@ export default function SourceSelection({ value: _values, onChange }) {
               {value.map((path, i) => (
                 <li key={path}>
                   {path}
-                  <img
-                    src="/static/svg-icons/trash-bin-trash-svgrepo-com.svg"
+                  <RemoveIcon
+                    onDragStart={(e) => e.preventDefault()}
                     className={`${styles["remove_room_image"]} ${styles["hover_btn"]}`}
                     data-value="${room.id}"
                     data-name="${fullName}"

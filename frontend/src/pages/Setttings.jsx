@@ -1,8 +1,8 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import "./Index.css";
 import _styles from "./Settings.module.css";
 import _styles2 from "./SettingsCommon.module.css";
-import { useState } from "react";
+import _styles3 from "../components/ThemeSelector.module.css";
 import CollapsibleBox from "../components/CollapsibleBox";
 import DocumentSources from "./settings/DocumentSources";
 import LLMRunners from "./settings/LLMRunners";
@@ -17,8 +17,9 @@ import ModelSelector from "../components/ModelSelector";
 import Spinner from "../components/Spinner";
 import { UsernameContext } from "../components/UserName";
 import SpinnerButtons from "../components/SpinnerButtons";
+import { THEMES } from "../../src/styles/themeList.js";
 
-const styles = { ..._styles, ..._styles2 };
+const styles = { ..._styles, ..._styles2, ..._styles3 };
 
 export default function Settings() {
   const [isLoading, setLoading] = useState(true);
@@ -65,7 +66,11 @@ export default function Settings() {
   return (
     <>
       <div className={styles["settings_main"]}>
-        <h1 className={styles["main-heading"]}>Settings</h1>
+        <h1
+          className={`${styles["main-heading"]} ${styles["main-heading-color"]}`}
+        >
+          Settings
+        </h1>
         {isLoading ? (
           <>
             <div>
@@ -129,41 +134,102 @@ function GeneralSettings() {
   const { username, setUsername } = useContext(UsernameContext);
   return (
     <CollapsibleBox className={styles["setting-list"]} title="General Settings">
-      <UsernameEditor initial={username} onSave={setUsername} />
+      <GeneralSettingOptions initial={username} onSave={setUsername} />
     </CollapsibleBox>
   );
 }
 
-function UsernameEditor({ initial, onSave }) {
+function GeneralSettingOptions({ initial, onSave }) {
   const [value, edited, { edit, reset }] = useStringState(initial);
+
+  const savedTheme = localStorage.getItem("theme");
+  const browserPrefersDark = window.matchMedia(
+    "(prefers-color-scheme: dark)",
+  ).matches;
+  const defaultTheme = savedTheme || (browserPrefersDark ? "dark" : "light");
+
+  const [theme, setTheme] = useState(defaultTheme);
+  const [themeEdited, setThemeEdited] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+
+    return () => {
+      const stored =
+        localStorage.getItem("theme") ||
+        (browserPrefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", stored);
+    };
+  }, [theme, browserPrefersDark]);
+
+  function onThemeChange(newTheme) {
+    setTheme(newTheme);
+    setThemeEdited(true);
+  }
+
   function save() {
     onSave?.(value);
     reset();
+
+    localStorage.setItem("theme", theme);
+    setThemeEdited(false);
+  }
+
+  function resetAll() {
+    reset();
+    const stored = savedTheme || (browserPrefersDark ? "dark" : "light");
+    setTheme(stored);
+    setThemeEdited(false);
   }
 
   return (
     <>
-      <p>
-        Your username is associated with the messages you write in the
-        chatrooms. It is set per browser. I.e. if you open ausma.ai from Firefox
-        and Chrome you may set different usernames.
-      </p>
-      <div className={styles.setting}>
+      <div className={styles["general_settings_section"]}>
+        <h3>Username Settings</h3>
+        <p>
+          Your username is associated with the messages you write in the
+          chatrooms. It is set per browser. I.e. if you open ausma.ai from
+          Firefox and Chrome you may set different usernames.
+        </p>
         {
           // TODO use more generic classes for CSS
         }
         <div className={styles.setting}>
-          <label htmlFor="username"> Username:</label>
+          <label htmlFor="username">Username:</label>
           <input id="username" name="username" value={value} onChange={edit} />
         </div>
-        <div className={styles["button-row-right"]}>
-          <EditButtons
-            edited={edited}
-            onSave={save}
-            onReset={reset}
-            styles={styles}
-          />
-        </div>
+      </div>
+
+      <div className={styles["select-ctn"]}>
+        <h3 className={styles["option-subheading"]}>Theme Settings</h3>
+        <p>Choose a theme from the dropdown.</p>
+        <label htmlFor="theme-select">Theme:</label>
+        <select
+          id="theme-select"
+          value={theme}
+          onChange={(e) => onThemeChange(e.target.value)}
+        >
+          {[...THEMES]
+            .sort((a, b) =>
+              a.label.localeCompare(b.label, undefined, {
+                sensitivity: "base",
+              }),
+            )
+            .map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+        </select>
+      </div>
+
+      <div className={styles["button-row-right"]}>
+        <EditButtons
+          edited={edited || themeEdited}
+          onSave={save}
+          onReset={resetAll}
+          styles={styles}
+        />
       </div>
     </>
   );
@@ -477,7 +543,7 @@ function GenerationGuard({ initial, onSave }) {
   const [value, edited, { upsert, reset }] = useObjectState(initial);
 
   const handleInputChange = (event) => {
-    const { name, value: newValue, validity, min, max} = event.target;
+    const { name, value: newValue, validity, min, max } = event.target;
 
     if (validity.rangeUnderflow) {
       upsert({ ...value, [name]: Number(min) });
@@ -498,11 +564,14 @@ function GenerationGuard({ initial, onSave }) {
       <p>
         Generation Guard detects LLM infinite generation.
         <br />
-        "Safe token threshold" - Starts detecting infinite loop patterns after certain threshold.
+        "Safe token threshold" - Starts detecting infinite loop patterns after
+        certain threshold.
         <br />
-        "Token check interval" - How often, in tokens, to check for infinite loop patterns.
+        "Token check interval" - How often, in tokens, to check for infinite
+        loop patterns.
         <br />
-        "Max repeats" - How many repeating token patterns should be detected to stop generation.
+        "Max repeats" - How many repeating token patterns should be detected to
+        stop generation.
         <br />
         "Window size" - The size of token pattern window.
         <br />
@@ -542,9 +611,7 @@ function GenerationGuard({ initial, onSave }) {
           onChange={handleInputChange}
         />
 
-        <label htmlFor="window_size_id">
-          Window size:
-        </label>
+        <label htmlFor="window_size_id">Window size:</label>
         <input
           type="number"
           min={1}

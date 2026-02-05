@@ -8,7 +8,7 @@
 }
 
 .welcome_message {
-  color: #818181;
+  color: var(--color-welcome);
   flex: 1;
   transition: margin 0.3s ease;
   display: flex;
@@ -21,7 +21,7 @@
 }
 
 .brand-colors {
-  color: #41b8aa;
+  color: var(--color-ausma-light-blue);
   font-family: "Outfit", sans-serif;
   font-weight: 400;
   letter-spacing: -1px;
@@ -34,7 +34,7 @@
 
 .lobby_messages {
   font-size: 14px;
-  background-color: #282828;
+  background-color: var(--color-bg-bubble);
   border-radius: 15px;
   padding: 0.5rem;
   margin: 5px;
@@ -42,11 +42,11 @@
 }
 
 .lobby_messages a {
-  color: #818181;
+  color: var(--color-welcome);
   text-decoration: none;
 }
 
 .lobby_messages:hover,
 .lobby_messages:active {
-  background-color: #3f3f3f;
+  background-color: var(--color-bg-hover);
 }

@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #8b8b8b;
+  color: var(--color-text-primary);
   transition: all 0.3s ease;
   margin-left: 280px;
   transition: margin-left 0.3s ease;
@@ -16,6 +16,10 @@
   word-break: break-all;
   margin: 1rem;
   font-size: 26px;
+}
+
+.main-heading-color {
+  color: var(--color-text-heading);
 }
 
 /* ===================Button=================== */
@@ -62,14 +66,13 @@
 }
 
 .button-style {
-  color: #282828;
-  background: #717171;
+  color: var(--color-button-text-primary);
+  background: var(--color-button-primary);
   border: none;
   cursor: pointer;
   outline: none;
   transition: all 0.3s ease;
-  box-shadow: inset 2px 2px 2px 0px rgba(61, 61, 61, 0.5),
-    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--color-button-box-shadow);
 }
 
 .button-dimensions {
@@ -84,19 +87,19 @@
 }
 
 .button-style:hover {
-  background: #8b8b8b;
+  background: var(--color-button-primary-hover);
 }
 
 .button-style:disabled,
 .button-style[disabled] {
-  background-color: #8b8b8b;
-  color: #545454;
+  background-color: var(--color-button-primary-disabled);
+  color: var(--color-button-primary-text-disabled);
 }
 
 .list_item_btn_group {
   margin: 2rem 0 0 0;
   padding: 0 0 2rem 0;
-  border-bottom: 1px groove #3f3f3f;
+  border-bottom: 1px groove var(--color-border-bottom);
   width: 100%;
   gap: 0.7rem;
 }
@@ -137,11 +140,11 @@
   -moz-appearance: textfield;
 }
 .settings_main input {
-  background-color: #3f3f3f;
+  background-color: var(--color-input-bg);
   width: 100%;
   height: 2rem;
   border: none;
-  color: #8b8b8b;
+  color: var(--color-input-text);
   border-radius: 15px;
   font-size: 16px;
   padding: 1rem 1rem;
@@ -150,7 +153,7 @@
 
 .settings_main input[type="checkbox"] {
   height: 1rem;
-  accent-color: #717171;
+  accent-color: var(--color-checkbox-accent);
 }
 
 .checkbox-wrapper {
@@ -160,16 +163,15 @@
 }
 
 .select-setting {
-  background-color: #8b8b8b;
-  color: #282828;
+  background-color: var(--color-select-bg);
+  color: var(--color-select-text);
   font-size: 14px;
   height: 30px;
   border-radius: 5px;
   padding: 7px 9px;
   border: none;
   outline: none;
-  box-shadow: inset 2px 2px 2px 0px rgba(61, 61, 61, 0.5),
-    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--color-select-box-shadow);
 }
 
 .wrapper {

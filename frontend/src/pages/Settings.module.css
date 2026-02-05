@@ -1,3 +1,12 @@
+.general_settings_section h3 {
+  margin: 1rem 0 0 0;
+}
+
+.general_settings_section {
+  padding: 0 0 2rem 0;
+  border-bottom: 1px groove var(--color-border-bottom);
+}
+
 .setting-list p {
   padding: 1rem 0 0 0;
   margin: 0 0 1rem 0;
@@ -27,16 +36,16 @@
   width: 100%;
   min-height: 7rem;
   max-height: 50rem;
-  background: #3f3f3f;
+  background: var(--color-textarea-bg);
   border: none;
-  color: #8b8b8b;
+  color: var(--color-textarea-text);
   border-radius: 15px;
   font-size: 16px;
   padding: 1rem 1rem;
   field-sizing: content;
   resize: vertical;
   overflow: auto;
-  scrollbar-color: #282828 #8b8b8b;
+  scrollbar-color: var(--color-scrollbar-color);
   white-space: normal;
 }
 
@@ -52,16 +61,17 @@
 }
 
 .select-ctn select {
-  background-color: #8b8b8b;
-  color: #282828;
-  height: 30px;
+  background-color: var(--color-select-bg);
+  color: var(--color-select-text);
+  /* height: 30px; */
   border-radius: 5px;
   padding: 7px 9px;
-  box-shadow: inset 2px 2px 2px 0px rgba(61, 61, 61, 0.5),
-    7px 7px 20px 0px rgba(0, 0, 0, 0.1), 4px 4px 5px 0px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--color-select-box-shadow);
+  border: none;
+  outline: none;
 }
 
 .warning {
-  color: #f03630;
+  color: var(--color-warning);
   margin: 1rem 0 1rem 0;
 }

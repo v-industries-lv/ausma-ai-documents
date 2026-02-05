@@ -9,12 +9,12 @@
 }
 
 .content-style {
-  color: #41b8aa;
+  color: var(--color-text-reference);
 }
 
 .content-style a {
   text-decoration: none;
-  color: #41b8aa;
+  color: var(--color-text-reference);
   word-wrap: break-word;
   white-space: nowrap;
   overflow: hidden;

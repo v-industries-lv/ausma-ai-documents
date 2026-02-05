@@ -16,10 +16,11 @@
 
 .kb_service-container {
   width: 80%;
+  border: 1px solid var(--color-border-primary);
   border-radius: 15px;
   margin: 0.5rem;
   padding: 0 1rem 0 1rem;
-  background-color: #282828;
+  background-color: var(--color-bg-secondary);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -33,7 +34,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  background: #3f3f3f;
+  background: var(--color-input-bg);
   font-size: 16px;
   width: 100%;
   padding: 8px 1rem;
@@ -42,7 +43,7 @@
 .item {
   width: 100%;
   padding: 0 0 2rem 0;
-  border-bottom: 1px groove #3f3f3f;
+  border-bottom: 1px groove var(--color-border-bottom);
 }
 
 .item h1 {

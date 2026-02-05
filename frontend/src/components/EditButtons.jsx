@@ -14,7 +14,11 @@ export default function EditButtons({
       <div className={styles2.buttons}>
         <button
           className={`${styles["button-dimensions"]} ${styles["button-style"]}`}
-          style={edited ? { backgroundColor: "#fa994a" } : {}}
+          style={
+            edited
+              ? { backgroundColor: "var(--color-button-text-confirm)" }
+              : {}
+          }
           onClick={onSave}
         >
           Save

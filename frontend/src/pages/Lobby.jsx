@@ -16,7 +16,7 @@ export default function Lobby({ setClosed }) {
           function () {
             name.classList.remove("highlight");
           },
-          { once: true }
+          { once: true },
         );
         name.focus();
       } else {
@@ -43,6 +43,7 @@ export default function Lobby({ setClosed }) {
           <div className={styles["ausma_logo"]}>
             <img
               src="/static/svg-icons/ausma.ai_simple_logo_final_003.svg"
+              onDragStart={(e) => e.preventDefault()}
               alt="ausma.ai logo"
             />
           </div>

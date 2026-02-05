@@ -30,12 +30,12 @@
 .l-outfit {
   font-family: "Outfit", sans-serif;
   font-weight: 400;
-  color: #8b8b8b;
+  color: var(--color-text-secondary-heading);
   font-size: 30px;
 }
 
 .room_heading {
-  color: #8b8b8b;
+  color: var(--color-text-heading);
   word-wrap: break-word;
   white-space: nowrap;
   overflow: hidden;
@@ -46,7 +46,7 @@
 }
 
 .Rag-llm-class {
-  color: #8b8b8b;
+  color: var(--color-select-text);
   font-weight: bold;
   width: 85%;
   display: flex;
@@ -64,7 +64,7 @@
 }
 
 .rag_button:hover {
-  background: #3f3f3f;
+  background: var(--color-bg-hover);
 }
 
 .select-ctn {
@@ -79,14 +79,14 @@
 }
 
 .select-ctn:hover {
-  background-color: #282828;
+  background-color: var(--color-bg-hover);
 }
 
 .select-ctn span,
 .select-ctn select {
   width: 11rem;
   background: transparent;
-  color: #8b8b8b;
+  color: var(--color-text-primary);
   font-weight: bold;
   cursor: pointer;
   padding: 2px 0 0 5px;
@@ -95,8 +95,8 @@
 }
 
 .select-ctn option {
-  color: #8b8b8b;
-  background-color: #313131;
+  color: var(--color-text-primary);
+  background-color: var(--color-select-option-bg-primary);
 }
 
 #input {
@@ -115,15 +115,15 @@
   width: 95%;
   min-height: 3rem;
   max-height: 30rem;
-  background: #282828;
-  border: 0.5px solid #3f3f3f;
-  color: white;
+  background: var(--color-bg-secondary);
+  border: 0.5px solid var(--color-border-bottom);
+  color: var(--color-user-input);
   border-radius: 15px;
   font-size: 20px;
   padding: 0.8rem 1rem 0.8rem 1rem;
   box-sizing: border-box;
   resize: none;
-  scrollbar-color: #8b8b8b transparent;
+  scrollbar-color: var(--color-scrollbar-primary) transparent;
   scrollbar-width: thin;
   overflow: auto;
   line-height: 20px;
@@ -138,8 +138,8 @@
 }
 
 #user_input:disabled {
-  background: #282828;
-  color: white;
+  background: var(--color-bg-secondary);
+  color: var(--color-user-input);
 }
 
 .button {
@@ -150,16 +150,16 @@
   padding: 0;
 }
 
-.button img {
+.button svg {
   width: 50px;
   height: 35px;
   margin: 1px 0 0 0;
   display: flex;
 }
 
-.button img:hover,
-.button img:active {
-  filter: brightness(2);
+.button svg:hover,
+.button svg:active {
+  filter: var(--color-filter);
   transition: all 0.3s ease;
 }
 
@@ -173,7 +173,7 @@
 
 .user-message {
   font-size: 16px;
-  color: #fa994a;
+  color: var(--color-text-heading-accent);
   white-space: normal;
   margin-bottom: 3rem;
 }
@@ -190,14 +190,14 @@
   font-size: 18px;
   letter-spacing: -1px;
   font-weight: 400;
-  color: #41b8aa;
+  color: var(--color-ausma-light-blue);
   white-space: normal;
 }
 
 .message {
   font-family: "Lato", sans-serif;
   white-space: normal;
-  color: #8b8b8b;
+  color: var(--color-text-primary);
   word-wrap: break-word;
   word-break: break-word;
   margin-bottom: 3rem;
@@ -226,8 +226,8 @@
 }
 
 .button.disabled {
-  background: #ccc;
-  color: #666;
+  background: var(--color-button-secondary-disabled);
+  color: var(--color-button-secondary-text-disabled);
   cursor: not-allowed;
 }
 
@@ -236,7 +236,7 @@
   overflow-x: hidden;
   padding: 0rem 2rem;
   word-wrap: break-word;
-  scrollbar-color: #8b8b8b transparent;
+  scrollbar-color: var(--color-scrollbar-primary) transparent;
   scrollbar-width: thin;
 }
 
@@ -248,12 +248,12 @@
 }
 
 .assistant-utils-download:hover {
-  filter: brightness(2);
+  filter: var(--color-filter);
   transition: all 0.3s ease;
 }
 
 .processing {
-  color: #8b8b8b;
+  color: var(--color-text-primary);
   margin: 1rem 0 1rem 0;
 }
 
@@ -264,16 +264,16 @@
 }
 
 .message a:link {
-  color: #41b8aaff;
+  color: var(--color-ausma-light-blue);
 }
 
 .message a:visited {
-  color: #fa994aff;
+  color: var(--color-ausma-light-orange);
 }
 
 .message pre {
-  background: #313131;
-  border: solid 1px #3f3f3f;
+  background: var(--color-bg-pre);
+  border: solid 1px var(--color-pre-border);
   border-radius: 15px;
   padding: 1rem;
   white-space: pre-wrap;

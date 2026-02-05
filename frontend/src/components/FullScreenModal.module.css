@@ -5,15 +5,15 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: var(--color-bg-modal);
   display: flex;
   align-items: center;
   justify-content: center;
   position: fixed;
 }
 .modal > div {
-  background-color: #282828;
-  border: 1px solid black;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
   padding: 1rem;
   border-radius: 10px;
   max-width: 60%;
