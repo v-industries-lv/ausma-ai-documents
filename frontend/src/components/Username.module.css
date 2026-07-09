@@ -18,6 +18,13 @@
   min-width: 0;
 }
 
+@media (max-width: 870px) {
+  .username_ctn {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
 .username_ctn:hover,
 .username_ctn:active {
   background: var(--color-bg-hover);

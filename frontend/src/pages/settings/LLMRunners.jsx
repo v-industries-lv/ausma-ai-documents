@@ -20,15 +20,9 @@ const llmRunners = {
       type: "ollama",
       name: "new_ollama_runner",
       host: "http://localhost:11434",
-    },
-  },
-  huggingface: {
-    component: HuggingFaceRunner,
-    defaultValue: {
-      active: true,
-      type: "huggingface",
-      name: "new_huggingface_runner",
-      api_token: "hf_[rest of your token here]",
+      seed: 42,
+      num_predict: 8000,
+      num_ctx: 16000,
     },
   },
   openai: {
@@ -38,6 +32,15 @@ const llmRunners = {
       type: "openai",
       name: "new_openai_runner",
       api_key: "sk-proj-[rest of your key here]",
+    },
+  },
+  remote: {
+    component: RemoteRunner,
+    defaultValue: {
+      active: true,
+      type: "remote",
+      name: "new_remote_runner",
+      url: "http://localhost:5101/api",
     },
   },
 };
@@ -99,7 +102,21 @@ function OllamaRunner({ value, onChange }) {
     const v = target.value;
     const checked = target.checked;
     const type = target.type;
-    const newValue = { ...value, [n]: type === "checkbox" ? checked : v };
+    let parsedValue;
+    switch (type) {
+      case "checkbox":
+        parsedValue = checked;
+        break;
+
+      case "number":
+        parsedValue = parseInt(v);
+        if (Number.isNaN(parsedValue)) {
+          return;
+        }
+      default:
+        parsedValue = v;
+    }
+    const newValue = { ...value, [n]: parsedValue };
     onChange?.(newValue);
   }
   return (
@@ -130,56 +147,41 @@ function OllamaRunner({ value, onChange }) {
         />
       </div>
 
-      <div className={styles["checkbox-wrapper"]}>
-        <label htmlFor="active">Active:</label>
-        <input
-          className={styles["checkbox"]}
-          id="active"
-          name="active"
-          type="checkbox"
-          checked={Boolean(value.active)}
-          onChange={updateValue}
-          title="Active / Inactive"
-        />
-      </div>
-    </>
-  );
-}
-
-function HuggingFaceRunner({ value, onChange }) {
-  function updateValue(e) {
-    const target = e.target;
-    const n = target.name;
-    const v = target.value;
-    const checked = target.checked;
-    const type = target.type;
-    const newValue = { ...value, [n]: type === "checkbox" ? checked : v };
-    onChange?.(newValue);
-  }
-  return (
-    <>
       <div className={styles.setting}>
-        <label htmlFor="type" name="type">
-          Type:
-        </label>
-        <input name="type" id="type" defaultValue={value.type} readOnly />
-      </div>
-      <div className={styles.setting}>
-        <label htmlFor="api_name"> Name:</label>
+        <label htmlFor="seed">seed (0 for random):</label>
         <input
-          id="api_name"
-          name="name"
-          value={value.name}
+          id="seed"
+          name="seed"
+          value={value.seed}
+          type="number"
+          min={0}
+          step={1}
           onChange={updateValue}
         />
       </div>
 
       <div className={styles.setting}>
-        <label htmlFor="api">API token:</label>
+        <label htmlFor="num_predict">num_predict:</label>
         <input
-          id="api"
-          name="api_token"
-          value={value.api_token}
+          id="num_predict"
+          name="num_predict"
+          value={value.num_predict}
+          type="number"
+          min={0}
+          step={1}
+          onChange={updateValue}
+        />
+      </div>
+
+      <div className={styles.setting}>
+        <label htmlFor="num_ctx">num_ctx:</label>
+        <input
+          id="num_ctx"
+          name="num_ctx"
+          value={value.num_ctx}
+          type="number"
+          min={0}
+          step={1}
           onChange={updateValue}
         />
       </div>
@@ -199,6 +201,7 @@ function HuggingFaceRunner({ value, onChange }) {
     </>
   );
 }
+
 
 function OpenAIRunner({ value, onChange }) {
   function updateValue(e) {
@@ -235,6 +238,7 @@ function OpenAIRunner({ value, onChange }) {
           id="api"
           name="api_key"
           value={value.api_key}
+          type="password"
           onChange={updateValue}
         />
       </div>
@@ -270,6 +274,61 @@ export default function LLMRunners({ initial, onSave }) {
           </p>
         }
       />
+    </>
+  );
+}
+
+function RemoteRunner({ value, onChange }) {
+  function updateValue(e) {
+    const target = e.target;
+    const n = target.name;
+    const v = target.value;
+    const checked = target.checked;
+    const type = target.type;
+    const newValue = { ...value, [n]: type === "checkbox" ? checked : v };
+    onChange?.(newValue);
+  }
+  return (
+    <>
+      {"Custom remote runner. See docs on how to implement. (BETA)"}
+      <div className={styles.setting}>
+        <label htmlFor="type" name="type">
+          Type:
+        </label>
+        <input name="type" id="type" defaultValue={value.type} readOnly />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="name">Name:</label>
+        <input
+          id="name"
+          name="name"
+          value={value.name}
+          onChange={updateValue}
+        />
+      </div>
+
+      <div className={styles.setting}>
+        <label htmlFor="url">API url:</label>
+        <input
+          id="url"
+          name="url"
+          value={value.url}
+          onChange={updateValue}
+        />
+      </div>
+
+      <div className={styles["checkbox-wrapper"]}>
+        <label htmlFor="active">Active:</label>
+        <input
+          className={styles["checkbox"]}
+          id="active"
+          name="active"
+          type="checkbox"
+          checked={Boolean(value.active)}
+          onChange={updateValue}
+          title="Active / Inactive"
+        />
+      </div>
     </>
   );
 }

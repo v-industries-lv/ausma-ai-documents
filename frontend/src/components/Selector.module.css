@@ -4,3 +4,47 @@
   outline: none;
   font-size: 14px;
 }
+
+.model-select-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.static-wrapper {
+  width: 100%;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1200px) {
+  .model-select-wrapper {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.select-ctn {
+  display: flex;
+  align-items: center;
+  align-items: flex-start;
+}
+
+.dynamic-select {
+  min-width: 8ch;
+  max-width: 25ch;
+  white-space: nowrap;
+}
+
+.static-select {
+  width: 100%;
+  overflow: hidden;
+}
+
+.measure-span {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+
+  font: inherit;
+  font-weight: bold;
+}

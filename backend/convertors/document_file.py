@@ -10,6 +10,7 @@ from pdf_to_png import convert_pdf
 from typing import List, Optional
 from utils import compute_file_hash
 from logger import logger
+from globals import PROJECT_DATA_PATH
 
 class DocumentFile(ABC):
     PDF_EXT = [".pdf"]
@@ -28,12 +29,13 @@ class DocumentFile(ABC):
         self._file_hash: Optional[str] = precalc_file_hash
         self.processed_path: str = str(
             os.path.join(
+                PROJECT_DATA_PATH,
                 "processed",
                 self.get_output_path()
             )
         )
         self.image_based = image_based
-        self.temp_image_path = os.path.join(os.getcwd(), "temp_images")
+        self.temp_image_path = os.path.join(os.getcwd(), PROJECT_DATA_PATH, "temp_images")
         self.has_changed = False
         self.last_modified = last_modified
         self.file_size = file_size

@@ -9,6 +9,7 @@ from flask_socketio import emit, join_room, leave_room
 from markupsafe import escape
 
 from app_modules.llm_module import LLMModule
+from app_modules.multimodal_chat_module import MMChatModule
 from app_modules.settings_module import SettingsModule
 from app_modules.kb_module import KBModule
 from config import app, db, settings, socketio
@@ -70,6 +71,10 @@ def host_frontend(base_path):
 
 
 frontend_path = None
+instance_path = ""
+logger.info(f"Starting in: {os.getcwd()}")
+
+# TODO: from_posix_path() for paths? If we are going to bundle for multiple platforms
 if os.path.isdir("frontend"):
     # bundled
     # working directory is the root of the bundle, but paths are relative to the flask_app.py
@@ -77,6 +82,9 @@ if os.path.isdir("frontend"):
 elif os.path.isdir("../frontend/dist"):
     # running in development
     frontend_path = '../frontend/dist'
+elif os.path.isdir("../frontend"):
+    frontend_path = '../../frontend'
+    instance_path = '../'
 if frontend_path is not None:
     host_frontend(frontend_path)
 else:
@@ -204,49 +212,96 @@ def stop_chat_generation(room_id):
     room_state_register.get(room_id).stop()
     return f"Stopping LLM in room {room_id}..."
 
+def sanitize_image_name(raw):
+    return raw.replace("/","").replace("\\","")
+
+class InputData:
+    def __init__(self, data):
+        self.room_id = data['room_id']
+        self.username = data.get('username', 'Anonymous')
+        self.user_input = data.get('user_input')
+        if self.user_input is None:
+            raise ValueError("Missing user input parameter!")
+        self.user_text = self.user_input.get("content")
+        self.kb_name = data.get('kb_name', None)
+        self.model = data.get('llm_model')
+
+        self.images = self.user_input.get("images", [])
+        self.images = [sanitize_image_name(f) for f in self.images]
+
+    def to_log_dict(self):
+        return {
+            "room_id": self.room_id,
+            "username": self.username,
+            "user_text": self.user_text,
+            "images": self.images,
+            "kb_name": self.kb_name,
+            "model": self.model,
+        }
+
+    def to_chat_input(self):
+        return {
+            "content": self.user_text,
+            "images": self.images,
+        }
+
+    def to_room_message(self):
+        return RoomMessage(room_id=self.room_id, username=self.username, role='user', content=json.dumps(self.to_chat_input()))
+
 @socketio.on('message')
-def handle_message(data):
-    room_id = data['room_id']
-    room_state: RoomState = room_state_register.get(room_id)
+def handle_message(message_data):
+    data = InputData(message_data)
+
+    room_state: RoomState = room_state_register.get(data.room_id)
     room_state.start()
     try:
-        username = data.get('username', 'Anonymous')
-        user_text = data.get('user_input', '')
-        kb_name = data.get('kb_name', None)
-        model = data.get('llm_model')
-        # send temporary use message (id=null)
-        raw_user_message = RoomMessage(room_id=room_id, username=username, role='user', content=user_text)
 
-        emit_progress(MessageProgress('started', 0, 0, 0), room_id)
-        emit('message', (raw_user_message.as_dict(), room_id), to=room_id)
-        log_llm_request(data, 'user')
+        # send temporary user message (id=null)
+        raw_user_message = data.to_room_message()
 
-        history_query = chat_store.messages_by_room(room_id)
+        emit_progress(MessageProgress('started', 0, 0, 0), data.room_id)
+        emit('message', (raw_user_message.as_dict(), data.room_id), to=data.room_id)
+        log_llm_request(data.to_log_dict(), 'user')
+
+        history_query = chat_store.messages_by_room(data.room_id)
         cleaned_history = [x for x in history_query if not x.failed]
-        system_prompt = settings.get(DEFAULT_SYSTEM_PROMPT, '')
+        system_prompt_history = [x for x in cleaned_history if x.role == "system"]
 
-        user_input = data.get('user_input', None)
-        gen_guard = GenerationGuard.from_settings(settings[GENERATION_GUARD])
-        if user_input is None:
-            raise ValueError("Missing user input parameter!")
-        if not super_runner.is_model_installed(model=model):
-            raise ValueError(f"Did not find model: {model}! Check if model is installed and the LLM runner is enabled!")
+        llm_model = data.model
+        if len(system_prompt_history) > 0:
+            sys_message = system_prompt_history[0]
+            sys_content = sys_message.get_json_content()
+            ctx = ChatContext(
+                llm_model,
+                None,
+                kb_service.kb_store.get(data.kb_name),
+                sys_content.get("options", None)
+            )
+        else:
+            default_system_prompt = settings.get(DEFAULT_SYSTEM_PROMPT, '')
+            llm_runner_options = super_runner.get_options(llm_model)
+            ctx = ChatContext(
+                llm_model,
+                default_system_prompt,
+                kb_service.kb_store.get(data.kb_name),
+                llm_runner_options
+            )
+
+        if not super_runner.is_model_installed(model=llm_model):
+            raise ValueError(f"Did not find model: {llm_model}! Check if model is installed and the LLM runner is enabled!")
         try:
-            system_text, assistant_text, rag_sources = super_runner.chat(
-                ChatContext(
-                    model,
-                    system_prompt,
-                    kb_service.kb_store.get(kb_name)
-                ),
+            gen_guard = GenerationGuard.from_settings(settings[GENERATION_GUARD])
+            assistant_text, rag_sources = super_runner.chat(
+                ctx,
                 room_state,
-                user_input,
+                data.user_input,
                 gen_guard=gen_guard,
-                update_callback=lambda msg: emit_progress(msg, room_id),
+                update_callback=lambda msg: emit_progress(msg, data.room_id),
                 history=cleaned_history,
                 rag_settings=RAGSettings.from_settings(settings),
             )
         except Exception as e:
-            emit_progress(MessageProgress('error', 0, 0, 0, message=f"{e}"), room_id)
+            emit_progress(MessageProgress('error', 0, 0, 0, message=f"{e}"), data.room_id)
             logger.error(f"LLM runner chat failed. Error: {e}")
             room_state.stop()
             return
@@ -254,22 +309,22 @@ def handle_message(data):
 
         # Adding only if generating message was a success. Otherwise, it would show previous user message that did not contribute to chat.
         # Adding rag_sources to both user and assistant. User message requires it for correct chat history,
-        # assitant needs it to have a reference in its chat message in frontend
+        # assistant needs it to have a reference in its chat message in frontend
         has_system_prompt_history = any([x.role == "system" for x in cleaned_history])
         if not has_system_prompt_history:
-            system_message = RoomMessage(room_id=room_id, username="__system__", role="system",
-                                         content=system_text,
+            system_message = RoomMessage(room_id=data.room_id, username="__system__", role="system",
+                                         content=json.dumps(ctx.to_system_content()),
                                          rag_sources=None,
                                          failed=room_state.failed
                                          )
             chat_store.add_message(system_message)
-        user_message = RoomMessage(room_id=room_id, username=username, role='user',
-                                   content=user_text,
+        user_message = RoomMessage(room_id=data.room_id, username=data.username, role='user',
+                                   content=json.dumps(data.to_chat_input()),
                                    rag_sources=rag_sources,
                                    failed=room_state.failed
                                    )
-        assistant_msg = RoomMessage(room_id=room_id, username=data.get('llm_model'), role='assistant',
-                                    content=assistant_text,
+        assistant_msg = RoomMessage(room_id=data.room_id, username=llm_model, role='assistant',
+                                    content=json.dumps({"content": assistant_text,}),
                                     rag_sources=rag_sources,
                                     failed=room_state.failed
                                     )
@@ -278,13 +333,13 @@ def handle_message(data):
         message_id = chat_store.add_message(assistant_msg)
         assistant_msg.id = message_id
 
-        emit('message', (user_message.as_dict(), room_id), to=room_id)
-        emit('message', (assistant_msg.as_dict(), room_id), to=room_id)
+        emit('message', (user_message.as_dict(), data.room_id), to=data.room_id)
+        emit('message', (assistant_msg.as_dict(), data.room_id), to=data.room_id)
         if not room_state.failed:
-            emit_progress(MessageProgress('finished', 0, 0, 0), room_id)
+            emit_progress(MessageProgress('finished', 0, 0, 0), data.room_id)
     except Exception as e:
         logger.error(f"Error occurred while handling message. Error: {e}")
-        emit_progress(MessageProgress('error', 0, 0, 0, message=f"{e}"), room_id)
+        emit_progress(MessageProgress('error', 0, 0, 0, message=f"{e}"), data.room_id)
     finally:
         room_state.stop()
 
@@ -341,6 +396,7 @@ def update_module_deps():
 if __name__ == '__main__':
     args = parse_args()
     SettingsModule(settings).apply_routes(app, handle_settings_updated)
+    MMChatModule.apply_routes(app, base_path=instance_path)
     if args.production:
         print("Running in production mode.")
     else:
@@ -350,6 +406,11 @@ if __name__ == '__main__':
     update_module_deps()
     kb_module.apply_routes(app)
     llm_module.apply_routes(app)
+
+    # Cache models before launching app.
+    logger.info(f"Loading models...")
+    llm_module.llm_runners.list_chat_models()
+
     logger.info(f"App starting at {utc_now().isoformat()}")
     host = "127.0.0.1" if args.localhost else "0.0.0.0"
     socketio.run(app, debug=(not args.production), use_reloader=False, allow_unsafe_werkzeug=True, host=host)

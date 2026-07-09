@@ -14,10 +14,12 @@ import ChatCToolbar from "../components/ChatToolbar";
 import { RagReferenceModal } from "../components/RagReferenceContent";
 import { renderNewLines } from "../utils/jsxUtils";
 import {
+  UploadImageIcon,
   SendIcon,
   StopIcon,
   ChatUserIcon,
   ChatAusmaIcon,
+  CreateRoomIcon, // Temp placeholder for adding images as input
 } from "../components/Icons/ComponentIcons";
 
 export default function ChatWrapper() {
@@ -142,10 +144,14 @@ function Chat({ roomId }) {
   const generating = ["started", "generating"].includes(progress.status);
   const inputDisabled = model === null || generating;
 
-  function sendMessage(input) {
+  function sendMessage(input, images = []) {
     if (input.trim() !== "") {
+      var input_data = { content: input };
+      if (images.length > 0) {
+        input_data["images"] = images;
+      }
       socket.send({
-        user_input: input,
+        user_input: input_data,
         llm_model: model,
         kb_name: kb,
         room_id: roomId,
@@ -192,7 +198,8 @@ function Chat({ roomId }) {
               setKb={setKb}
               disabled={inputDisabled}
               className={styles["select-ctn"]}
-              maxWidth={30}
+              maxWidth="20ch"
+              dynamicWidth
             />
 
             <ModelSelector
@@ -201,7 +208,8 @@ function Chat({ roomId }) {
               lockedModel={lockedModel}
               disabled={inputDisabled}
               className={styles["select-ctn"]}
-              maxWidth={30}
+              maxWidth="20ch"
+              dynamicWidth
             />
           </div>
           <div className={styles["background_ctn"]}>
@@ -307,20 +315,50 @@ function ChatMessage({ msg, setReference }) {
     marginRight: "0.7rem",
     verticalAlign: "middle",
   };
+  let msgContent;
+  try {
+    msgContent = JSON.parse(msg.content);
+  } catch (e) {
+    msgContent = { content: msg.content };
+  }
 
   if (msg.role === "user") {
     return (
-      <div className={styles["user-message"]} key={msg.id}>
-        <div className={styles["message_ctn"]}>
-          <ChatUserIcon
-            onDragStart={(e) => e.preventDefault()}
-            className={styles["user-icon"]}
-            style={iconStyle}
-          />
-          <span className={styles["user"]}>{msg.username}:</span>
+      <>
+        <div className={styles["user-message"]} key={msg.id}>
+          <div className={styles["message_ctn"]}>
+            <ChatUserIcon
+              onDragStart={(e) => e.preventDefault()}
+              className={styles["user-icon"]}
+              style={iconStyle}
+            />
+            <span className={styles["user"]}>{msg.username}:</span>
+          </div>
+          <div className={styles["message"]}>
+            {renderNewLines(msgContent.content)}
+          </div>
+          {msgContent.images?.map((image, index) => (
+            <div
+              key={msg.id + `-` + index}
+              style={{
+                position: "relative",
+                margin: "5px",
+                display: "inline-block",
+              }}
+            >
+              <img
+                key={msg.id + `-` + index + `-` + image}
+                src={`/instance/blobs/multimodal_input/` + image}
+                style={{
+                  maxWidth: "150px",
+                  maxHeight: "150px",
+                  borderRadius: "4px",
+                }}
+              />
+            </div>
+          ))}
         </div>
-        <div className={styles["message"]}>{renderNewLines(msg.content)}</div>
-      </div>
+      </>
     );
   } else if (msg.role === "assistant") {
     return (
@@ -339,7 +377,7 @@ function ChatMessage({ msg, setReference }) {
               [rehypeStarryNight, { getOnigurumaUrlFetch: () => onigurumaURL }],
             ]}
           >
-            {msg.content}
+            {msgContent.content}
           </MarkdownHooks>
         </div>
         <ChatCToolbar msg={msg} setReference={setReference} />
@@ -350,15 +388,93 @@ function ChatMessage({ msg, setReference }) {
 
 function ChatInput({ onEnter, onStop, disabled, generating }) {
   const [input, setInput] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   useEffect(adjustHeight, [input]);
   const inputArea = useRef(null);
   const inputEmpty = input === "";
   function onSubmit() {
     if (!inputEmpty && !disabled) {
+      let images = uploadedFiles.map((file) => file.new_filename);
       setInput("");
-      onEnter?.(input);
+      onEnter?.(input, images);
+      setUploadedFiles([]);
     }
     adjustHeight();
+  }
+
+  function handlePaste(e) {
+    const items = e.clipboardData.items;
+    const imageFiles = Array.from(items)
+      .filter((item) => item.type.startsWith("image/"))
+      .map((item, index) => {
+        const blob = item.getAsFile();
+
+        return new File([blob], `pasted-${Date.now()}-${index}.png`, {
+          type: blob.type,
+        });
+      });
+
+    if (!imageFiles.length) return;
+    const dataTransfer = new DataTransfer();
+    imageFiles.forEach((file) => dataTransfer.items.add(file));
+
+    const fakeEvent = {
+      target: {
+        files: dataTransfer.files,
+        value: "",
+      },
+    };
+    handleChange(fakeEvent);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+
+    const fakeEvent = {
+      target: {
+        files,
+        value: "",
+      },
+    };
+
+    handleChange(fakeEvent);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+  }
+
+  async function handleChange(e) {
+    setUploading(true);
+    const files = Array.from(e.target.files);
+    if (!files.length) {
+      setUploading(false);
+      return;
+    }
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    try {
+      const res = await fetch(`/api/upload_chat_files`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      const doneFiles = data.files;
+
+      setUploadedFiles((prev) => [...prev, ...doneFiles]);
+    } catch (err) {
+      console.error("Upload error:", err);
+    }
+    e.target.value = "";
+    setUploading(false);
   }
 
   function handleKeyPress(e) {
@@ -367,6 +483,11 @@ function ChatInput({ onEnter, onStop, disabled, generating }) {
       e.preventDefault();
     }
   }
+
+  function handleRemove(rm_file) {
+    setUploadedFiles((prev) => prev.filter((f) => f.path !== rm_file.path));
+  }
+
   function adjustHeight() {
     // adjust the height when adding new lines via Shift+Enter
     inputArea.current.style.height = "auto";
@@ -374,39 +495,89 @@ function ChatInput({ onEnter, onStop, disabled, generating }) {
   }
 
   return (
-    <div id={styles["input"]} onKeyDown={handleKeyPress}>
-      <textarea
-        id={styles["user_input"]}
-        name="user_input"
-        rows="1"
-        placeholder="Ask me anything!"
-        onChange={(e) => setInput(e.target.value)}
-        value={input}
-        disabled={disabled}
-        ref={inputArea}
-      />
-      {generating ? (
-        <button
-          className={styles["button"]}
-          onClick={onStop}
-          style={{ display: generating ? "block" : "none" }}
-        >
-          <StopIcon onDragStart={(e) => e.preventDefault()} alt="Stop" />
-        </button>
-      ) : (
-        <button
-          id={styles["send_button"]}
-          className={styles["button"]}
-          onClick={onSubmit}
-          disabled={disabled || inputEmpty}
-        >
-          <SendIcon
-            onDragStart={(e) => e.preventDefault()}
-            alt="Send Icon"
-            title="Send"
+    <div className={styles["input_group"]}>
+      <div id={styles["input"]} onKeyDown={handleKeyPress}>
+        <textarea
+          id={styles["user_input"]}
+          name="user_input"
+          rows="1"
+          placeholder="Ask me anything!"
+          onChange={(e) => setInput(e.target.value)}
+          onPaste={handlePaste}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          value={input}
+          disabled={disabled}
+          ref={inputArea}
+        />
+        {generating ? (
+          <button
+            className={styles["button"]}
+            onClick={onStop}
+            style={{ display: generating ? "block" : "none" }}
+          >
+            <StopIcon onDragStart={(e) => e.preventDefault()} alt="Stop" />
+          </button>
+        ) : (
+          <button
+            id={styles["send_button"]}
+            className={styles["button"]}
+            onClick={onSubmit}
+            disabled={disabled || inputEmpty || uploading}
+          >
+            <SendIcon
+              onDragStart={(e) => e.preventDefault()}
+              alt="Send Icon"
+              title="Send"
+            />
+          </button>
+        )}
+      </div>
+      <>
+        <div>
+          <input
+            type="file"
+            multiple
+            ref={fileInputRef}
+            onChange={handleChange}
+            disabled={uploading}
+            accept=".jpg, .jpeg, .png"
+            style={{ display: "none" }}
           />
-        </button>
-      )}
+
+          <button
+            onClick={() => fileInputRef.current.click()}
+            className={`${styles["button"]} ${styles["add_btn"]}`}
+            disabled={generating}
+          >
+            <UploadImageIcon />
+          </button>
+
+          <div className={styles["upload-wrapper"]}>
+            {uploadedFiles.map((file, index) => (
+              <div
+                key={index + `-` + file.original_clean_filename}
+                className={styles["preview"]}
+              >
+                {/* Remove button */}
+                <button
+                  onClick={() => handleRemove(file)}
+                  className={styles["image_remove_button"]}
+                >
+                  ×
+                </button>
+
+                {/* Image preview */}
+                <img
+                  src={`/instance/blobs/multimodal_input/` + file.new_filename}
+                  alt={file.original_clean_filename}
+                  className={styles["image_preview"]}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
     </div>
   );
 }

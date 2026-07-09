@@ -14,7 +14,10 @@ class LocalFileSystemSource(DocSource):
                  cache_dir: str = DocSource.DEFAULT_CACHE_DIR):
         super().__init__("local_fs", name, cache_hashes, cache_dir)
         self.root_path: str = root_path
-        os.makedirs(from_posix_path(self.root_path), exist_ok=True)
+        if not os.path.exists(self.root_path):
+            er_message = f"Error: DocSource {name} path {self.root_path} does not exist!"
+            logger.error(er_message)
+            raise ValueError(er_message)
 
     def _list(self, pattern: str) -> List[Dict[str, Union[str, bool]]]:
         posix_pattern = to_posix_path(pattern)

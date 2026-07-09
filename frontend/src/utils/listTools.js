@@ -7,6 +7,15 @@ export function addKey(value) {
   return { ...value, key };
 }
 
+export function removeKey(value) {
+  const {key,...cleaned} = value
+  return cleaned;
+}
+
+export function removeKeys(value) {
+  return value.map(removeKey);
+}
+
 export function uniqueValues(arr) {
   let arr2 = [];
   for (let i = 0; i < arr.length; i++) {

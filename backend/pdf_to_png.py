@@ -6,7 +6,7 @@ from typing import List, Optional
 from pdf2image import convert_from_path
 
 from logger import logger
-
+from globals import PROJECT_DATA_PATH
 
 def make_absolute_path(path):
     if os.path.isabs(path):
@@ -17,7 +17,7 @@ def make_absolute_path(path):
 
 def convert_pdf(pdf_path: str, output_folder: str = "temp_images") -> Optional[List[str]]:
     pdf_path = make_absolute_path(pdf_path)
-    temp_folder = os.path.join(os.getcwd(), output_folder)
+    temp_folder = os.path.join(os.getcwd(), PROJECT_DATA_PATH, output_folder)
     paths = None
     if not get_xpdf_path() == "__disabled__":
         try:
@@ -61,13 +61,31 @@ def xpdf_convert(pdf_path: str, output: str) -> List[str]:
     if os.path.exists(output):
         shutil.rmtree(output)
     os.makedirs(output, exist_ok=True)
-
+    abs_pdf_path = make_absolute_path(pdf_path)
     args = ["-r", "300"]
-    subprocess.run(
-        [xpdf_path] + args + [pdf_path, prefix],
-        cwd=output,
-        stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL
-    )
+    try:
+        subprocess.run(
+            [xpdf_path] + args + [abs_pdf_path, prefix],
+            check=True,
+            cwd=output,
+        )
+    except:
+        # Try for empty password
+        try:
+            subprocess.run(
+                [xpdf_path] + args + ["-opw", "", abs_pdf_path, prefix],
+                check=True,
+                cwd=output,
+            )
+        except:
+            try:
+                subprocess.run(
+                    [xpdf_path] + args + ["-upw", "", abs_pdf_path, prefix],
+                    check=True,
+                    cwd=output,
+                )
+            except:
+                raise ValueError("Failed to convert! Possible causes: invalid file, encrypted PDF")
 
     return sorted([os.path.join(output, x) for x in os.listdir(output)])
 

@@ -4,7 +4,7 @@ import CollapsibleBox from "../../components/CollapsibleBox";
 import { useListState } from "../../components/useResetableState";
 import _styles from "../Settings.module.css";
 import _styles2 from "../SettingsCommon.module.css";
-import { addInitialKeys, addKey } from "../../utils/listTools";
+import { addInitialKeys, addKey, removeKeys } from "../../utils/listTools";
 import EditButtons from "../../components/EditButtons";
 import ListEditButtons from "../../components/ListEditButtons";
 
@@ -29,7 +29,7 @@ export default function ListSetting({
   }
 
   function save() {
-    onSave?.(value);
+    onSave?.(removeKeys(value));
     reset();
   }
 

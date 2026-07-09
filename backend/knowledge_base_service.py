@@ -8,7 +8,7 @@ from convertors.document_image_convertor import DocumentImageConvertor
 from convertors.convertor_result import ConvertorResult
 import threading
 from convertors.document_file import DocumentFile
-from settings import RAG_SETTINGS, RAGSettings
+from settings import RAGSettings
 from utils import utc_now
 from typing import Optional, List, Dict, Any
 from config import settings
@@ -73,53 +73,68 @@ class KnowledgeBaseService:
             for kb_num, kb in enumerate(kb_list, 1):
                 checkpoint()
                 self._status_update(status="processing", kb_num=kb_num, kb_name=kb.name, kb_total=len(kb_list))
-                documents: list = []
-                for pattern in kb.selection:
-                    checkpoint()
-                    documents += self.doc_source.list_files(pattern)
-                documents = list(set(documents))
-                documents = sorted(documents)
-                convertors: List[Convertor] = [Convertor.from_config(x, self.llm_runner) for x in kb.convertor_configs]
-                convertors = [x for x in convertors if x is not None]
-                document_context = DocumentContext(kb)
-                for doc_num, document_path in enumerate(documents, 1):
-                    checkpoint()
-                    self._status_update(status="processing", kb_num=kb_num, kb_name=kb.name, kb_total=len(kb_list),
-                                        doc_num=doc_num, doc_path=document_path, doc_total=len(documents))
-                    # TODO: binary in DocumentFile
-                    document: DocumentFile = self.doc_source.get(document_path)
-                    if document is None:
-                        logger.warning(f"Could not get document {document_path}")
-                        error_block["error"] = True
-                        continue
-
-                    # Check if a document with same content (same file hash) is in knowledge base
-                    # If there is such a document, then try to add current document path to existing entry metadata.
-                    # This prevents duplicate documents from being loaded into knowledge base and polluting query results
-                    # with same content. Duplicate documents are documents with exactly the same content,
-                    # but with different file name, different file location or different file source.
-                    if kb.has_full_document(self.llm_runner.get_embedding, document):
-                        kb.add_doc_path(self.llm_runner.get_embedding, document)
-                        self.doc_source.update_cache(document)
-                        kb.update_checked(document)
-                        continue
-                    convertor_result = None
-                    for convertor in convertors:
+                try:
+                    documents: list = []
+                    for pattern in kb.selection:
                         checkpoint()
-                        if isinstance(convertor, DocumentImageConvertor) and not document.image_based:
-                            continue
+                        try:
+                            documents += self.doc_source.list_files(pattern)
+                        except Exception as e:
+                            if isinstance(e, InterruptedError):
+                                raise e
+                            logger.error(f"Error encountered while processing pattern {pattern} knowledge base {kb.name}. Error: {e}")
+                    documents = list(set(documents))
+                    documents = sorted(documents)
+                    convertors: List[Convertor] = [Convertor.from_config(x, self.llm_runner) for x in kb.convertor_configs]
+                    convertors = [x for x in convertors if x is not None]
+                    document_context = DocumentContext(kb)
+                    for doc_num, document_path in enumerate(documents, 1):
+                        checkpoint()
                         self._status_update(status="processing", kb_num=kb_num, kb_name=kb.name, kb_total=len(kb_list),
-                                            doc_num=doc_num, doc_path=document_path, doc_total=len(documents),
-                                            convertor=convertor.conversion_type)
-                        convertor_result: Optional[ConvertorResult] = convertor.convert(document, document_context)
-                        if convertor_result is not None:
-                            kb.store_convertor_result(self.llm_runner.get_embedding, convertor_result, RAGSettings.from_settings(settings))
-                            self.doc_source.update_cache(document)
-                            kb.update_checked(document)
-                            break
-                    if convertor_result is None:
-                        logger.error(f"Could not convert document {document.file_path}")
-                        error_block["error"] = True
+                                            doc_num=doc_num, doc_path=document_path, doc_total=len(documents))
+                        try:
+                            # TODO: binary in DocumentFile
+                            document: DocumentFile = self.doc_source.get(document_path)
+                            if document is None:
+                                logger.warning(f"Could not get document {document_path}")
+                                error_block["error"] = True
+                                continue
+
+                            # Check if a document with same content (same file hash) is in knowledge base
+                            # If there is such a document, then try to add current document path to existing entry metadata.
+                            # This prevents duplicate documents from being loaded into knowledge base and polluting query results
+                            # with same content. Duplicate documents are documents with exactly the same content,
+                            # but with different file name, different file location or different file source.
+                            if kb.has_full_document(self.llm_runner.get_embedding, document):
+                                kb.add_doc_path(self.llm_runner.get_embedding, document)
+                                self.doc_source.update_cache(document)
+                                kb.update_checked(document)
+                                continue
+                            convertor_result = None
+                            for convertor in convertors:
+                                checkpoint()
+                                if isinstance(convertor, DocumentImageConvertor) and not document.image_based:
+                                    continue
+                                self._status_update(status="processing", kb_num=kb_num, kb_name=kb.name, kb_total=len(kb_list),
+                                                    doc_num=doc_num, doc_path=document_path, doc_total=len(documents),
+                                                    convertor=convertor.conversion_type)
+                                convertor_result: Optional[ConvertorResult] = convertor.convert(document, document_context)
+                                if convertor_result is not None:
+                                    kb.store_convertor_result(self.llm_runner.get_embedding, convertor_result, RAGSettings.from_settings(settings))
+                                    self.doc_source.update_cache(document)
+                                    kb.update_checked(document)
+                                    break
+                            if convertor_result is None:
+                                logger.error(f"Could not convert document {document.file_path}")
+                                error_block["error"] = True
+                        except Exception as e:
+                            if isinstance(e, InterruptedError):
+                                raise e
+                            logger.error(f"Error encountered while processing document {document_path} in knowledge base {kb.name}. Error: {e}")
+                except Exception as e:
+                    if isinstance(e, InterruptedError):
+                        raise e
+                    logger.error(f"Error encountered while processing knowledge base {kb.name}. Error: {e}")
         except InterruptedError as e:
             logger.error(e)
             error_block["status"] = "cancelled"

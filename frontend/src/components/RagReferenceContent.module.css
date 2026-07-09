@@ -31,7 +31,7 @@
 
 .content-style a:hover,
 .content-style a:active {
-  color: #53e9d7;
+  color: var(--color-text-reference-hover);
 }
 
 .list-content a:before {

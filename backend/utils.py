@@ -4,6 +4,11 @@ import os
 from typing import List
 import re
 import ipaddress
+import base64
+
+from PIL import Image
+from PIL.ImageFile import ImageFile
+
 
 def utc_now():
     return datetime.datetime.now(datetime.UTC)
@@ -112,3 +117,28 @@ def from_posix_path(path: str) -> str:
     if os.sep != "/":
         return path.replace("/", os.sep)
     return path
+
+
+def list_of_b64_from_paths(files: list):
+    output = []
+    for image_file in files:
+        with open(image_file, "rb") as fh:
+            output.append(base64.b64encode(fh.read()).decode('ascii'))
+    return output
+
+
+def resize_image_with_limits(img: ImageFile, max_pixels=2_000_000, max_side=2000):
+    w, h = img.size
+
+    scale_pixels = (max_pixels / (w * h)) ** 0.5 if w * h > max_pixels else 1.0
+    scale_side = min(max_side / w, max_side / h) if max(w, h) > max_side else 1.0
+
+    scale = min(scale_pixels, scale_side)
+
+    if scale < 1.0:
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        img = img.resize((new_w, new_h), resample=Image.Resampling.LANCZOS)
+
+    return img
+

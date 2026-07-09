@@ -39,9 +39,15 @@ class OcrLlmConvertor(DocumentImageConvertor):
             'content': f"{self.user_text}\n\n<text>{input_text}</text>",
         }
         messages = [system_message, user_message]
+
         thinking_support = self.llm_runner.supports_thinking(self.model)
 
-        content = self.llm_runner.run_text_completion_simple(self.model,messages, self.options)
+        # No thinking required in models doing document recognition
+        think_mode = None
+        if thinking_support is not None:
+            think_mode = False
+
+        content = self.llm_runner.run_text_completion_simple(self.model,messages, self.options, think_mode=think_mode)
 
         # Filtering for models with baked-in thinking and content integrity check to see if input intended to contain <think> tags or not.
         if content.startswith("<think>") and not thinking_support and not input_text.startswith("<think>"):

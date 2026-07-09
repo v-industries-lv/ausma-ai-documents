@@ -1,0 +1,103 @@
+[data-theme="midnight_blue_soft"] {
+  /* Background */
+  --color-bg-primary: #0b1120;
+  --color-bg-secondary: #111827;
+  --color-bg-bubble: #172554;
+  --color-bg-hover: #1e3a5f;
+  --color-bg-dark: #0a0f1c;
+
+  --color-bg-modal: rgba(11, 17, 32, 0.72);
+
+  /* Text */
+  --color-text-primary: #8a9ada;
+  --color-text-secondary: #93c5fd;
+  --color-welcome: #8a9ada;
+  --color-text-alternative: #8a9ada;
+
+  --color-text-heading: #bfd9fc;
+  --color-text-secondary-heading: #8a9ada;
+  --color-text-heading-accent: #4c7de6;
+  --color-text-reference: #60a5fa;
+  --color-text-reference-hover: #93c5fd;
+
+  /* Button */
+  --color-button-primary: #2563eb;
+  --color-button-primary-hover: #3b82f6;
+  --color-button-text-primary: #e0e7ff;
+  --color-button-text-confirm: #6082a9;
+
+  --color-button-primary-disabled: #1e293b;
+  --color-button-primary-text-disabled: #64748b;
+
+  --color-button-secondary-disabled: #1e293b;
+  --color-button-secondary-text-disabled: #64748b;
+
+  --color-button-secondary: #2563eb;
+  --color-button-secondary-hover: #3b82f6;
+
+  --color-button-box-shadow:
+    inset 1px 1px 2px rgba(255, 255, 255, 0.1),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.5), 0 4px 10px rgba(0, 0, 0, 0.35);
+
+  /* Input */
+  --color-input-bg: #1e293b;
+  --color-input-text: #8a9ada;
+
+  /* User Input */
+  --color-user-input: #8a9ada;
+
+  /* Checkbox */
+  --color-checkbox-accent: #1e293b;
+
+  /* Select */
+  --color-select-bg: #1e293b;
+  --color-select-text: #8a9ada;
+  --color-select-option-bg-primary: #111827;
+
+  --color-select-box-shadow:
+    inset 1px 1px 2px rgba(0, 0, 0, 0.35),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.04);
+
+  /* Text area */
+  --color-textarea-bg: #1e293b;
+  --color-textarea-text: #8a9ada;
+
+  /* Pre */
+  --color-bg-pre: #1e293b;
+
+  /* Scrollbar */
+  --color-scrollbar-color: #8a9ada #8b8b8b;
+  --color-scrollbar-primary: #8a9ada;
+
+  /* Other */
+  /* Warning */
+  --color-warning: #f03630;
+  /* ausma */
+  --color-ausma-light-dark-blue: #194454;
+  --color-ausma-light-blue: #2e9e93;
+  --color-ausma-light-yellow: #f2c658;
+  --color-ausma-light-orange: #e27c2d;
+  --color-ausma-light-red: #f03630;
+
+  /* Borders */
+  --color-border-primary: #111827;
+  --color-border-secondary: #e5e7eb;
+  --color-border-bottom: #1e293b;
+
+  --color-pre-border: #111827;
+
+  /* Highlight Warning*/
+  --color-box-shadow-highlight-primary: 0 0 0px 0px rgba(240, 54, 48, 0.8);
+  --color-box-shadow-highlight-secondary: 0 0 10px 5px rgba(240, 54, 48, 0.6);
+  --color-box-shadow-highlight-dark: 0 0 0px 0px rgba(240, 54, 48, 0);
+
+  /* SVG */
+  --color-svg-fill-primary: #c7d2fe;
+  --color-svg-fill-secondary: #93c5fd;
+  --color-svg-fill-atention: #f03630;
+  --color-svg-fill-accent: #4c7de6;
+  --color-svg-fill-neutral: #8a9ada;
+
+  /* SVG Filter */
+  --color-filter: brightness(1.6);
+}

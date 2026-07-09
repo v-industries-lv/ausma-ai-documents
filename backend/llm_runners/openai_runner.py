@@ -16,7 +16,7 @@ from llm_runners.llm_runner import LLMRunner, MAX_TOKENS_LIMIT
 from logger import logger
 
 from utils import utc_now
-
+from globals import PROJECT_DATA_PATH
 
 class OpenAIRunner(LLMRunner):
     @staticmethod
@@ -29,10 +29,14 @@ class OpenAIRunner(LLMRunner):
             logger.error(f"Could not create Ollama runner from config. Reason: {e}")
         return runner
 
+    def get_options(self, model):
+        # No specific options yet
+        return None
+
     def __init__(self, api_key: str):
         self.host_api = "https://api.openai.com/v1"
         self.api_key = api_key
-        self._model_list_file = "openai_models.json"
+        self._model_list_file = os.path.join(PROJECT_DATA_PATH, "openai_models.json")
         if os.path.exists(self._model_list_file):
             with open(self._model_list_file, "r") as fh:
                 self.models: List[str] = sorted(set(json.load(fh)))
@@ -98,7 +102,7 @@ class OpenAIRunner(LLMRunner):
 
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
                                       gen_guard: GenerationGuard,
-                                      update_callback: Callable[[MessageProgress], None], options: dict = None) -> Tuple[Optional[str], bool]:
+                                      update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
         failed_status = False
         if options is None:
             options = {}
@@ -193,7 +197,7 @@ class OpenAIRunner(LLMRunner):
         return assistant_text, failed_status
 
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
         if options is None:
             options = {}
         _options = {"max_output_tokens": MAX_TOKENS_LIMIT}
@@ -225,5 +229,11 @@ class OpenAIRunner(LLMRunner):
     def supports_thinking(self, model: str) -> Optional[bool]:
         """
         OpenAI library does not provide a way to tell programmatically if the model is reasoning (thinking) or not.
+        """
+        return None
+
+    def supports_vision(self, model: str) -> Optional[bool]:
+        """
+        OpenAI library does not provide a way to tell programmatically if the model is multimodal (vision) or not.
         """
         return None

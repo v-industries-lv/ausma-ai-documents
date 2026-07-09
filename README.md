@@ -2,22 +2,25 @@
 
 ## Summary
 
-Ausma.ai Documents is a locally hosted document retrieval and summarizing tool accessible via an AI assistant chat interface.
+Ausma.ai Documents is a locally hosted chatbot application for working with documents using LLMs (Large Language Models).
 
 This tool was developed by ["V-Industries" SIA](https://v-industries.lv/en) for internal use before it was published to open source. It is actively being developed and major parts of it may be subject to change.
 
 Homepage: <https://ausma.ai>
 
+![ausma.ai_rag_screenshot](screenshots/ligh_enterpr_1200x1200.png)
+
 ## Features
 
 - Locally hosted - data does not leave your machine
-- More than traditional text search - use RAG + vector database to get more context-relevant results and gain insights on your queries
+- More than traditional text search - use RAG (Retrieval Augmented Generation) to get more context-relevant results and gain better insights on your prompts
 - Document ingestion pipeline
   - Supports .pdf, .md, .txt formats.
-  - Supports email loading (unstable)
+  - Supports email loading (experimental)
 - Customizable chatbot - use your preferred LLM for chatting.
-- Uses Ollama - a locally deployed AI model runner. Features automatic setup for use with AMD and NVIDIA cards as well as running on CPU.
+- Default LLM runner (Ollama) - a locally deployed AI model runner. Features automatic setup for use with AMD and NVIDIA cards as well as running on CPU.
 - User friendly web-interface
+- Packaging - build and install the app yourself or run it as a project
 
 ### Coming soon:
 
@@ -51,23 +54,61 @@ cd ausma-ai-documents &&
 ./setup_linux.sh
 ```
 
-## How to use
-
-- Put documents inside "backend/documents" folder of the project. This folder is then used for knowledge base creation. See docs.
+## Quick start
 
 - Run the web-app and open in browser (see the URL in terminal):
 
 ```bash
 ./run_app.sh
 ```
+### \> For simple chat:
 
-- Create a room. You can also think of a room as a session or a conversion. The LLM will remember what you've talked about earlier. However, the longer the conversion goes the longer it will take to generate each consecutive answer. We recommend creating a separate room for each topic or unrelated question.
-- You can change the username from the settings or by clicking it on the top right corner. This will be the name associated with the questions you ask from this browser.
+- Create a room
+- Choose an installed model
+- Start chatting!
+
+### \> To use chatbot with your documents:
+
+- Prepare an existing document folder on your machine
+- Define your input document folder as a Document Source in Settings page
+- Create a Knowledge Base in the Knowledge Base Settings page
+  - More info in the docs: docs/HOWTO_knowledge_base.md
+- Run the Knowledge Base Service to process your documents
+  - This may take a while depending on document amount
+- Create a room (think of a room as a session or a conversion)
 - Join the room, by clicking it.
 - Select knowledge base:
-  - `None` - **does not use the documents you've loaded**, just runs the model in chat mode.
-  - `<knowledge base name>` - model uses RAG approach - receives relevant documents from vectorstore based on your query. This enhances the response with document aware context.
-- Choose a LLM model from the installed models and you are ready to ask your questions. Note that you won't be able to change it after the conversion starts. Mixing models can destabilize the output.
+  - `None` - Same as the simple chat - no document context used.
+  - `<knowledge base name>` - model uses RAG - receives relevant documents from vectorstore based on your query. This enhances the response with document aware context.
+- Choose a LLM model from the installed models and you are ready to ask your questions. Note that the model gets locked-in for this room.
+
+### More models and LLM runners:
+
+#### Ollama
+
+If you installed Ollama with the installation script, then you can get more models by installing them on your Ollama instance. For more information, visit: [ollama.com](https://ollama.com/)
+
+You can also add other Ollama instances in the LLM Runners section of the Settings page. LLM Runners have a priority list - first one to be able to run the model gets used.
+
+#### openai
+
+If you prefer to use external service, you may also use openai API:
+
+WARNING! : openai is a paid API. By using such AI inference services, you confirm that you take full responsibility for any costs that it may occur due to use or misuse of this project.
+
+- In Settings page create an openai runner in the section LLM Runners
+- Input credentials
+- By default, an openai_models.json file is created with example models "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"
+  - You can manually add or remove models to this list. Check with your account what models are available to you
+
+#### Remote runner (experimental)
+
+This is a runner that allows for custom AI implementations. For more information, see the docs: docs/HOWTO_remote_llm_runner.md
+
+WARNING! : This option allows for custom wrapping of paid AI inference services. By using this, you confirm that you take full responsibility for any costs that it may occur due to use or misuse of this project.
+
+- In Settings page create a remote runner in the section LLM Runners
+- Fill out the fields and start using
 
 ### Examples
 

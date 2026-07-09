@@ -1,4 +1,5 @@
 import datetime
+import json
 from typing import Optional
 
 import utils
@@ -69,6 +70,9 @@ class RoomMessage:
             "timestamp": self.timestamp.isoformat(),
             "failed": self.failed,
         }
+
+    def get_json_content(self) -> dict:
+        return json.loads(self.content)
 
 
 class MessageProgress:

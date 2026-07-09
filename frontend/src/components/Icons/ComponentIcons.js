@@ -14,3 +14,5 @@ export { default as SendIcon } from "./SendIcon.jsx";
 export { default as StopIcon } from "./StopIcon.jsx";
 export { default as ChatUserIcon } from "./ChatUserIcon.jsx";
 export { default as ChatAusmaIcon } from "./ChatAusmaIcon.jsx";
+export { default as RefreshIcon } from "./RefreshIcon.jsx";
+export { default as UploadImageIcon } from "./UploadImage.jsx";

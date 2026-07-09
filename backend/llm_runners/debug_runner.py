@@ -21,10 +21,10 @@ class DebugRunner(LLMRunner):
 
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
                                       gen_guard: GenerationGuard,
-                                      update_callback: Callable[[MessageProgress], None], options: dict = None) -> Tuple[Optional[str], bool]:
+                                      update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
         return DebugRunner._mock_output()
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None) -> str:
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None) -> str:
         return DebugRunner._mock_output()[0]
 
     @staticmethod
@@ -37,6 +37,13 @@ class DebugRunner(LLMRunner):
             logger.error(f"Could not create Debug runner from config. Reason: {e}")
         return runner
 
+    def get_options(self, model):
+        return {
+            "option1": 123,
+            "option2": "abc",
+            "option3": None,
+        }
+
     def __init__(self):
         pass
 
@@ -47,6 +54,11 @@ class DebugRunner(LLMRunner):
         return None
 
     def supports_thinking(self, model: str) -> Optional[bool]:
+        if self.is_model_installed(model) is not None:
+            return True
+        return None
+
+    def supports_vision(self, model: str) -> Optional[bool]:
         if self.is_model_installed(model) is not None:
             return True
         return None

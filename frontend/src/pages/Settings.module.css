@@ -53,22 +53,18 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-}
-
-.select-ctn span,
-.select-ctn select {
-  width: 100%;
+  min-width: 0;
 }
 
 .select-ctn select {
   background-color: var(--color-select-bg);
   color: var(--color-select-text);
-  /* height: 30px; */
   border-radius: 5px;
   padding: 7px 9px;
   box-shadow: var(--color-select-box-shadow);
   border: none;
   outline: none;
+  min-width: 0;
 }
 
 .warning {

@@ -13,10 +13,10 @@ from convertors.document_file import DocumentFile
 from logger import logger
 from settings import Settings, DEFAULT_KNOWLEDGE_BASE, RAGSettings
 from utils import compute_folder_hash, from_posix_path
-
+from globals import PROJECT_DATA_PATH
 
 class KnowledgeBase(ABC):
-    DEFAULT_CACHE_DIR = os.path.join(".cache", "kb_check_cache")
+    DEFAULT_CACHE_DIR = os.path.join(PROJECT_DATA_PATH, ".cache", "kb_check_cache")
 
     def __init__(self, kb_dict: dict):
         self.name: str = kb_dict["name"]
@@ -25,8 +25,7 @@ class KnowledgeBase(ABC):
         self.convertor_configs: List[dict] = kb_dict["convertors"]
         self.embedding_config: dict = kb_dict["embedding"]
         self.languages = kb_dict.get("languages", ["eng"])
-        cache_dir = os.path.join(".cache", "kb_check_cache")
-        self.cache_file = os.path.join(cache_dir, from_posix_path(self.name) + ".json")
+        self.cache_file = os.path.join(KnowledgeBase.DEFAULT_CACHE_DIR, from_posix_path(self.name) + ".json")
 
     def _create_embedding(self, embedding_source: Callable[[dict], Embeddings]):
         return embedding_source(self.embedding_config)
@@ -213,8 +212,10 @@ class KBStore(ABC):
         for kb_store_config in settings.get_kbstores():
             if kb_store_config["store_type"] == "chroma":
                 from kb.chroma import ChromaKBStore
-                kb_store = ChromaKBStore(name=kb_store_config["name"],
-                                         kb_store_folder=kb_store_config["kb_store_folder"])
+                kb_store = ChromaKBStore(
+                    name=kb_store_config["name"],
+                    kb_store_folder=str(os.path.join(PROJECT_DATA_PATH, from_posix_path(kb_store_config["kb_store_folder"])))
+                )
                 if not kb_store.is_initialized:
                     # Ensures kb_store.kb_store_folder and knowledge base config
                     kb_store.upsert(settings[DEFAULT_KNOWLEDGE_BASE])
@@ -227,7 +228,7 @@ class SuperKBStore(KBStore):
         # Need to initialize first due to SuperKBStore overriding list() from KBStore
         self.kb_stores: List[KBStore] = kb_stores
 
-        super().__init__("super", "super_store", "knowledge_bases")
+        super().__init__("super", "super_store", os.path.join(PROJECT_DATA_PATH, "knowledge_bases"))
         self.refresh()
 
     def _load(self) -> Dict[str, AddressedKnowledgeBase]:

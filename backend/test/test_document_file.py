@@ -13,6 +13,8 @@ class DocumentFileTest(unittest.TestCase):
             shutil.rmtree(path)
 
     def tearDown(self):
+        os.unsetenv("XPDF_PATH")
+        os.unsetenv("POPPLER_PATH")
         path = "processed"
         if os.path.exists(path) and os.path.basename(os.path.normpath(os.getcwd())) == "test":
             shutil.rmtree(path)

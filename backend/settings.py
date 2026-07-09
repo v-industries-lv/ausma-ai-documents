@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from logger import logger
 from utils import is_valid_host, from_posix_path
+from globals import PROJECT_DATA_PATH
 
 # setting keys
 DEFAULT_KNOWLEDGE_BASE = "default_knowledge_base"
@@ -14,7 +15,7 @@ DEFAULT_LLM_RUNNER = 'default_llm_runner'
 DEFAULT_KBSTORE = 'default_kbstore'
 DEFAULT_DOC_SOURCE = 'default_doc_source'
 
-SUPPORTED_LLM_RUNNERS = ["debug", "ollama", "huggingface", "openai"]
+SUPPORTED_LLM_RUNNERS = ["debug", "ollama","openai", "remote"]
 SUPPORTED_KBSTORES = ["chroma"]
 SUPPORTED_DOC_SOURCES = ["local_fs"]
 
@@ -26,7 +27,7 @@ RAG_SETTINGS = "rag_settings"
 GENERATION_GUARD = "generation_guard"
 
 class Settings:
-    def __init__(self, defaults='defaults.conf', active='current.conf'):
+    def __init__(self, defaults='defaults.conf', active=os.path.join(PROJECT_DATA_PATH, 'current.conf')):
         self.active = active
         self.defaults = defaults
         settings = Settings._read_settings(defaults)
@@ -156,7 +157,6 @@ class Settings:
     def initialize_defaults(self):
         self.initialize_default_llm_runner()
         self.initialize_default_kbstore()
-        self.initialize_default_doc_source()
 
     def initialize_default_llm_runner(self):
         default_llm_runner = self.settings.get(DEFAULT_LLM_RUNNER)
@@ -168,19 +168,17 @@ class Settings:
     def initialize_default_kbstore(self):
         default_kbstore = self.settings.get(DEFAULT_KBSTORE)
         if default_kbstore is not None:
-            os.makedirs(from_posix_path(default_kbstore["kb_store_folder"]), exist_ok=True)
+            os.makedirs(
+                os.path.join(
+                    PROJECT_DATA_PATH,
+                    from_posix_path(default_kbstore["kb_store_folder"])
+                ),
+                exist_ok=True
+            )
             self.settings[KBSTORES] = [default_kbstore]
 
         else:
             logger.error(f"Default knowledge base store not defined!")
-
-    def initialize_default_doc_source(self):
-        default_doc_source = self.settings.get(DEFAULT_DOC_SOURCE)
-        if default_doc_source is not None:
-            self.settings[DOC_SOURCES] = [default_doc_source]
-
-        else:
-            logger.error(f"Default document source not defined!")
 
     @staticmethod
     def _read_settings(path):

@@ -253,6 +253,8 @@ function DefaultRoomSettings({ initial, onSave }) {
         kb={value?.knowledge_base ?? {}}
         setKb={(knowledge_base) => upsert({ knowledge_base })}
         className={styles["select-ctn"]}
+        maxWidth="100%"
+        dynamicWidth={false}
       />
       <ModelSelector
         model={value?.model ?? {}}
@@ -262,6 +264,8 @@ function DefaultRoomSettings({ initial, onSave }) {
           }
         }}
         className={styles["select-ctn"]}
+        maxWidth="100%"
+        dynamicWidth={false}
       />
 
       <div className={styles["button-row-right"]}>

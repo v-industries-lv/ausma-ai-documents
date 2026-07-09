@@ -32,7 +32,7 @@ then
 fi
 
 read -r -p "This application can use either poppler or xpdf-tools to process pdf files. Install xpdf-tools (Y/n)?" xpdf_answer
-if [[ $ollama_answer == [Yy] ]]; then
+if [[ $xpdf_answer == [Yy] ]]; then
    mkdir -p bin/linux
    url="https://dl.xpdfreader.com/xpdf-tools-linux-4.06.tar.gz"
    archive="xpdf-tools-linux-4.06.tar.gz"
@@ -59,8 +59,6 @@ python3 -m venv .venv
 
 # Activate virtual environment and install required packages
 source .venv/bin/activate
-# Installs torch and torchvision for use with CPU only. For GPU support, visit pytorch: https://pytorch.org/get-started/locally/
-pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
 pip install -r requirements.txt
 

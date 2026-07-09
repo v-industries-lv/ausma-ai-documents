@@ -19,7 +19,7 @@ from convertors.document_file import DocumentFile
 from kb.knowledge_base import KnowledgeBase, KBStore
 from logger import logger
 from settings import RAGSettings
-
+from globals import PROJECT_DATA_PATH
 
 class ChromaKnowledgeBase(KnowledgeBase):
     def __init__(self, kb_dict: dict, base_path: str, client: ClientAPI):
@@ -211,10 +211,9 @@ class ChromaKnowledgeBase(KnowledgeBase):
         }
 
 
-DEFAULT_CHROMA_FOLDER = os.path.join("knowledge_bases", "chroma")
-
-
 class ChromaKBStore(KBStore):
+    DEFAULT_CHROMA_FOLDER = os.path.join(PROJECT_DATA_PATH, "knowledge_bases", "chroma")
+
     def __init__(self, name: str = "chroma_store", kb_store_folder: str = DEFAULT_CHROMA_FOLDER):
         super().__init__("chroma", name, kb_store_folder)
         db_folder = os.path.join(kb_store_folder, "db")

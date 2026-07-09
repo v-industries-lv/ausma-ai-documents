@@ -1,10 +1,10 @@
 from flask import request, Flask
 import json
-from llm_runners.llm_runner import LLMRunner
+from llm_runners.llm_runner import SuperRunner
 from logger import logger
 
 class LLMModule:
-    def __init__(self, llm_runners: LLMRunner):
+    def __init__(self, llm_runners: SuperRunner):
         self.llm_runners = llm_runners
 
     def apply_routes(self, app: Flask):
@@ -17,6 +17,22 @@ class LLMModule:
                 )
             except Exception as e:
                 logger.error(f"Failed to list models from llm runers. Error: {e}")
+                return app.response_class(
+                    response=json.dumps({"status": "failed", "text": f"{e}"}, indent=2),
+                    mimetype='application/json'
+                )
+
+        @app.route('/api/llm_runners/models/refresh', methods=['GET'])
+        def refresh_llms():
+            try:
+                logger.info("Refreshing models...")
+                self.llm_runners.refresh_model_cache()
+                return app.response_class(
+                    response=json.dumps({"status": "success"}, indent=2),
+                    mimetype='application/json'
+                )
+            except Exception as e:
+                logger.error(f"Failed to refresh models. Error: {e}")
                 return app.response_class(
                     response=json.dumps({"status": "failed", "text": f"{e}"}, indent=2),
                     mimetype='application/json'

@@ -1,4 +1,4 @@
-[data-theme="atlantic_teal"] {
+[data-theme="baltic_teal"] {
   /* Background */
   --color-bg-primary: #153f47;
   --color-bg-secondary: #133542;
@@ -24,7 +24,7 @@
   --color-button-primary: #2ca3a0;
   --color-button-primary-hover: #3ab2af;
   --color-button-text-primary: #133542;
-  --color-button-text-confirm: #fa994a;
+  --color-button-text-confirm: #00fff7;
 
   --color-button-primary-disabled: #165a5c;
   --color-button-primary-text-disabled: #708a8c;
@@ -66,8 +66,8 @@
   --color-bg-pre: #194454;
 
   /* Scrollbar */
-  --color-scrollbar-color: #bfd9db #8b8b8b;
-  --color-scrollbar-primary: #bfd9db;
+  --color-scrollbar-color: #194454 #8b8b8b;
+  --color-scrollbar-primary: #316b80;
 
   /* Other */
   /* Warning */

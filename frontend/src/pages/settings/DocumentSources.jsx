@@ -22,6 +22,7 @@ const docSources = {
       port: 993,
       email: "",
       password: "",
+      skip_verify: false,
     },
   },
 };
@@ -72,13 +73,14 @@ function IMAPMailSource({ value, onChange }) {
     const target = e.target;
     const n = target.name;
     const v = target.value;
-    const newValue = { ...value, [n]: v };
+    const checked = target.checked;
+    const type = target.type;
+    const newValue = { ...value, [n]: type === "checkbox" ? checked : v };
     onChange?.(newValue);
   }
   return (
-    <><div className={styles.setting}>
-        [EXPERIMENTAL]
-      </div>
+    <>
+      <p>[EXPERIMENTAL]</p>
       <div className={styles.setting}>
         <label htmlFor="doc_source_type">Type:</label>
         <input
@@ -136,6 +138,17 @@ function IMAPMailSource({ value, onChange }) {
           value={value.password}
           onChange={updateValue}
           placeholder="[email password]"
+        />
+      </div>
+      <p>Disabling SSL verification is NOT recomended by default. Only disable it when dealing with local servers with self-signed certificates.</p>
+      <div className={styles["checkbox-wrapper"]} style={{width:"15%"}}>
+        <label htmlFor="skip_verify">Skip SSL verification:</label>
+        <input
+          type="checkbox"
+          id="skip_verify"
+          name="skip_verify"
+          checked={Boolean(value.skip_verify)}
+          onChange={updateValue}
         />
       </div>
     </>

@@ -6,7 +6,7 @@ import rehypeStarryNight from "rehype-starry-night";
 import "@wooorm/starry-night/style/both";
 import onigurumaURL from "vscode-oniguruma/release/onig.wasm?url";
 import ReadMe from "../../../README.md?raw";
-import HowToCustomModels from "../../../docs/HOWTO_custom_models_hf_to_ollama.md?raw";
+import HowToRemoteLLMRunner from "../../../docs/HOWTO_remote_llm_runner.md?raw";
 import HowToWorkWithKB from "../../../docs/HOWTO_knowledge_base.md?raw";
 import { useState } from "react";
 
@@ -17,7 +17,7 @@ export default function About() {
 
   const options = [
     { id: "option1", label: "About ausma.ai" },
-    { id: "option2", label: "Custom Models" },
+    { id: "option2", label: "Remote LLM runner" },
     { id: "option3", label: "About Knowledge Base" },
   ];
 
@@ -67,7 +67,7 @@ export default function About() {
                 ],
               ]}
             >
-              {HowToCustomModels}
+              {HowToRemoteLLMRunner}
             </MarkdownHooks>
           )}
 

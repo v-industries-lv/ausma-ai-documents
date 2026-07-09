@@ -48,7 +48,14 @@ async function createWindow(url) {
   ]);
 
   win.setMenuBarVisibility(false);
-  win.setIcon(__dirname + "/icons/ausma.ai.png");
+  const iconPath = path.join(process.resourcesPath, 'icon.png');
+  // Path differs if app is installed or run directly.
+  if (fs.existsSync(iconPath)) {
+    win.setIcon(iconPath);
+  } else {
+    win.setIcon(getParentDir() + '/../resources/icon.png');
+  }
+  console.log(iconPath);
   win.loadURL(url);
   win.maximize();
 
@@ -78,22 +85,35 @@ app.on("window-all-closed", () => {
 });
 
 async function launchLocalServer() {
-  if (fs.existsSync("flask_app/flask_app")) {
+  const packagedBackendPath = path.join(
+    process.resourcesPath,
+    'flask_app'
+  )
+  const packagedExecutablePath = path.join(
+    packagedBackendPath,
+    process.platform === 'win32' ? 'flask_app.exe' : 'flask_app'
+  )
+  if (fs.existsSync(packagedExecutablePath)) {
+    console.log('Running bundled python backend.\n')
     // packaged with bundled python
-    serverProcess = spawn("flask_app/flask_app", [
-      "--production",
-      "--localhost",
-    ]);
+    process.env['AUSMA_AI_DATA_PATH'] = path.join(app.getPath('userData'), 'ausma-ai');
+    process.env['XPDF_PATH'] = path.join(app.getPath('userData'), 'ausma-ai', "resources", "flask_app", "bin", "linux", "pdftopng");
+    serverProcess = spawn(
+      packagedExecutablePath,
+      ["--production", "--localhost",],
+      {'cwd': packagedBackendPath}
+    );
   } else {
     // sets the path to include the virtual python environment
+    console.log('Running virtual environment python backend.\n')
     const env = Object.assign({}, process.env);
-    let parentDir = getParentDir();
-    env["PATH"] = parentDir + "/backend/.venv/bin:" + env["PATH"];
+    let backendDir = getParentDir() + "/../../backend/";
+    env["PATH"] = backendDir + ".venv/bin:" + env["PATH"];
     console.log(env["PATH"]);
     serverProcess = spawn(
       "python3",
-      ["../backend/flask_app.py", "--production", "--localhost"],
-      { env: env, cwd: parentDir + "/backend" }
+      [backendDir + "flask_app.py", "--production", "--localhost"],
+      { env: env, cwd: backendDir }
     );
   }
 

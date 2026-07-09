@@ -12,10 +12,13 @@ from langchain_core.vectorstores import VectorStore, VST
 from convertors.convertor_result import ConvertorResult
 from convertors.document_file import DocumentFile
 from domain import MessageProgress
+from generation_guard import GenerationGuard
+from globals import PROJECT_DATA_PATH
 from knowledge_base_service import KnowledgeBaseService
 from kb.knowledge_base import KBStore, KnowledgeBase
 from doc_sources.doc_source import DocSource
 from llm_runners.llm_runner import LLMRunner
+from settings import RAGSettings
 from utils import to_posix_path
 
 
@@ -30,7 +33,8 @@ class MockKnowledgeBase(KnowledgeBase):
     def rag_lookup(self, embedding_source: Callable[[dict], Embeddings], query: str, document_count: int):
         pass
 
-    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult):
+    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult,
+                               rag_settings: RAGSettings):
         pass
 
     def has_full_document(self, embedding_source: Callable[[dict], Embeddings], doc: DocumentFile) -> bool:
@@ -62,6 +66,11 @@ class MockKnowledgeBase(KnowledgeBase):
 
 
 class MockLLMRunner(LLMRunner):
+    def get_options(self, model):
+        return {
+            "mock_opt": "mock_val"
+        }
+
     @staticmethod
     def from_dict(config: dict):
         return MockLLMRunner()
@@ -78,17 +87,21 @@ class MockLLMRunner(LLMRunner):
     def is_model_installed(self, model) -> bool:
         return True
 
-    def run_text_completion_streaming(self, model: str, messages: List[dict],
-                                      update_callback: Callable[[MessageProgress], None], options: dict = None):
+    def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
+                                      gen_guard: Optional[GenerationGuard], update_callback: Callable[[MessageProgress], None],
+                                      options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
         pass
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
         pass
 
     def get_embedding(self, embedding_config) -> Optional[Embeddings]:
         pass
 
     def supports_thinking(self, model: str) -> Optional[bool]:
+        pass
+
+    def supports_vision(self, model: str) -> Optional[bool]:
         pass
 
 
@@ -107,7 +120,7 @@ class MockKBStore(KBStore):
 
     def _save_kb_config(self, kb: KnowledgeBase) -> bool:
         config = kb.to_dict()
-        kb_path: str = str(os.path.join(self.kb_store_folder, kb.name))
+        kb_path: str = str(os.path.join(PROJECT_DATA_PATH, self.kb_store_folder, kb.name))
         os.makedirs(kb_path, exist_ok=True)
         config_path = os.path.join(kb_path, "config.json")
         temp_config_path = os.path.join(kb_path, "config.json.temp")

@@ -418,7 +418,7 @@ function LLMConvertor({ value, onChange }) {
 }
 
 function OCRConvertor({}) {
-  const value = { conversion: "raw" };
+  const value = { conversion: "ocr" };
   return (
     <>
       <div>

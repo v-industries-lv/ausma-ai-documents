@@ -7,10 +7,13 @@ from typing import List, Dict, Union, Optional
 from convertors.document_file import DocumentFile
 from settings import Settings
 from utils import to_posix_path
+from globals import PROJECT_DATA_PATH
+
+from logger import logger
 
 
 class DocSource(ABC):
-    DEFAULT_CACHE_DIR = os.path.join(".cache", "doc_hash_cache")
+    DEFAULT_CACHE_DIR = os.path.join(PROJECT_DATA_PATH, ".cache", "doc_hash_cache")
     FORBIDDEN_NAME_SYMBOLS = [
         "/",
         "\\",
@@ -87,22 +90,26 @@ class DocSource(ABC):
     def from_settings(settings: Settings):
         doc_sources = []
         for doc_source_config in settings.get_doc_sources():
-            if doc_source_config["doc_source_type"] == "local_fs":
-                from doc_sources.local_file_system import LocalFileSystemSource
-                doc_sources.append(
-                    LocalFileSystemSource(name=doc_source_config["name"], root_path=doc_source_config["root_path"])
-                )
-            elif doc_source_config["doc_source_type"] == "mail_imap":
-                from doc_sources.mail_imap import IMAPMailSource
-                doc_sources.append(
-                    IMAPMailSource(
-                        host=doc_source_config["host"],
-                        port=doc_source_config["port"],
-                        email=doc_source_config["email"],
-                        pw=doc_source_config["password"],
-                        name=doc_source_config["name"]
+            try:
+                if doc_source_config["doc_source_type"] == "local_fs":
+                    from doc_sources.local_file_system import LocalFileSystemSource
+                    doc_sources.append(
+                        LocalFileSystemSource(name=doc_source_config["name"], root_path=doc_source_config["root_path"])
                     )
-                )
+                elif doc_source_config["doc_source_type"] == "mail_imap":
+                    from doc_sources.mail_imap import IMAPMailSource
+                    doc_sources.append(
+                        IMAPMailSource(
+                            host=doc_source_config["host"],
+                            port=doc_source_config["port"],
+                            email=doc_source_config["email"],
+                            pw=doc_source_config["password"],
+                            name=doc_source_config["name"],
+                            skip_verify=doc_source_config.get("skip_verify"),
+                        )
+                    )
+            except Exception as e:
+                logger.error(f"Error while initializing DocSource {doc_source_config["name"]} from settings. Error {e}")
         return doc_sources
 
 

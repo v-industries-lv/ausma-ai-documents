@@ -47,5 +47,10 @@ class LlmConvertor(DocumentImageConvertor):
         }
         messages = [system_message, user_message]
 
-        return self.llm_runner.run_text_completion_simple(self.model,messages, self.options)
+        # No thinking required in models doing document recognition
+        think_mode = None
+        if self.llm_runner.supports_thinking(self.model) is not None:
+            think_mode = False
+
+        return self.llm_runner.run_text_completion_simple(self.model,messages, self.options, think_mode=think_mode)
 

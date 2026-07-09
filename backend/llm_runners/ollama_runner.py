@@ -1,5 +1,6 @@
 import datetime
 import json
+import random
 from typing import Optional, List, Callable, Tuple
 
 import requests
@@ -18,15 +19,30 @@ class OllamaRunner(LLMRunner):
         runner = None
         try:
             if config.get('type') == 'ollama':
-                runner = OllamaRunner(config['host'])
+                runner = OllamaRunner(
+                    config['host'],
+                    config.get('seed', 42),
+                    config.get('num_predict', 8000),
+                    config.get('num_ctx', 16000)
+                )
         except Exception as e:
             logger.error(f"Could not create Ollama runner from config. Reason: {e}")
         return runner
 
-    def __init__(self, host: str):
+    def get_options(self, model):
+        return {
+            "seed": self.seed,
+            "num_predict": self.num_predict,
+            "num_ctx": self.num_ctx,
+        }
+    def __init__(self, host: str, seed: int, num_predict: int, num_ctx: int):
         if host.endswith('/'):
             host = host[:-1]
         self.host = host
+        # Although ollama treats "0" as random seed, we explicitly set it and
+        self.seed = seed if seed != 0 else random.randint(1, 2147483647)
+        self.num_predict = num_predict
+        self.num_ctx = num_ctx
 
     def list_chat_models(self) -> List[str]:
         completion_models = []
@@ -45,12 +61,11 @@ class OllamaRunner(LLMRunner):
 
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
                                       gen_guard: Optional[GenerationGuard],
-                                      update_callback: Callable[[MessageProgress], None], options: dict = None) -> Tuple[Optional[str], bool]:
+                                      update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
         failed_status = False
         if options is None:
             options = {}
-        _options = {"seed": RANDOM_SEED, "num_predict": MAX_TOKENS_LIMIT}
-        _options.update(options)
+        options.update(options)
         if gen_guard is None:
             gen_guard = GenerationGuard()
         url = f"{self.host}/api/chat"
@@ -58,8 +73,10 @@ class OllamaRunner(LLMRunner):
             "model": model,
             "messages": messages,
             "stream": True,
-            "options": _options
+            "options": options,
         }
+        if think_mode is not None:
+            payload.update({"think": think_mode})
         assistant_text = ''
         num_chunks = 0
         last_timestamp: Optional[datetime.datetime] = None
@@ -68,7 +85,9 @@ class OllamaRunner(LLMRunner):
                 if r.status_code != 200:
                     logger.error(f"STATUS: {r.status_code}. Message: {r.text}")
                     failed_status = True
-                for line in r.iter_lines():
+
+                # Electron app gets stuck here if you use defaults (chunk_size=512), chunk_size=None fixes this for some reason.
+                for line in r.iter_lines(chunk_size=None):
                     if is_stopped():
                         assistant_text += "[STOP]"
                         if update_callback is not None:
@@ -130,7 +149,7 @@ class OllamaRunner(LLMRunner):
 
         return assistant_text, failed_status
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
         if options is None:
             options = {}
         _options = {"seed": RANDOM_SEED, "num_predict": MAX_TOKENS_LIMIT}
@@ -143,6 +162,8 @@ class OllamaRunner(LLMRunner):
             "stream": False,
             "options": _options
         }
+        if think_mode is not None:
+            payload.update({"think": think_mode})
 
         with requests.post(url, json=payload, stream=True) as r:
             # Only "content" is relevant for RAG document prep.
@@ -183,6 +204,18 @@ class OllamaRunner(LLMRunner):
                 ).content
             )
             return "thinking" in model_info["capabilities"]
+        return None
+
+    def supports_vision(self, model: str) -> Optional[bool]:
+        if self.is_model_installed(model):
+            model_info = json.loads(
+                requests.post(
+                    f"{self.host}/api/show",
+                    data=json.dumps({"model": model}),
+                    headers={'Content-Type': 'application/json'}
+                ).content
+            )
+            return "vision" in model_info["capabilities"]
         return None
 
     def pull_model(self, model):

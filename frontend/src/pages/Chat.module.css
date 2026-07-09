@@ -11,11 +11,18 @@
 
 .background_ctn {
   width: 80%;
-  height: 93%;
+  height: 91%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+@media (max-width: 1200px) {
+  .background_ctn {
+    width: 100%;
+    height: 89%;
+  }
 }
 
 #background {
@@ -53,8 +60,18 @@
   flex-direction: row;
   justify-content: space-evenly;
   align-items: center;
-  margin: 10px 0 0 0;
+  margin: 8px 0 0 0;
 }
+
+@media (max-width: 1200px) {
+  .Rag-llm-class {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 60%;
+  }
+}
+
 #Rag-llm p {
   margin: 0;
 }
@@ -78,13 +95,20 @@
   cursor: pointer;
 }
 
+@media (max-width: 1200px) {
+  .select-ctn {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 .select-ctn:hover {
   background-color: var(--color-bg-hover);
 }
 
 .select-ctn span,
 .select-ctn select {
-  width: 11rem;
+  /* width: 11rem; */
   background: transparent;
   color: var(--color-text-primary);
   font-weight: bold;
@@ -99,11 +123,16 @@
   background-color: var(--color-select-option-bg-primary);
 }
 
+.input_group {
+  display: flex;
+  flex-direction: column;
+}
+
 #input {
   width: 105%;
   display: flex;
   flex-direction: row;
-  padding: 0 0 1rem 0;
+  padding: 0 0 0.3rem 0;
   margin: 20px 0 0 0;
 }
 
@@ -142,6 +171,16 @@
   color: var(--color-user-input);
 }
 
+.upload-wrapper {
+  max-height: 300px;
+  display: flex;
+  flex-wrap: wrap;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-color: var(--color-scrollbar-primary) transparent;
+  scrollbar-width: thin;
+}
+
 .button {
   background: none;
   border: none;
@@ -157,10 +196,47 @@
   display: flex;
 }
 
+.add_btn svg {
+  width: 40px;
+  height: 25px;
+  opacity: 0.9;
+}
+
+.add_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .button svg:hover,
 .button svg:active {
   filter: var(--color-filter);
   transition: all 0.3s ease;
+}
+
+.image_remove_button {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.preview {
+  position: relative;
+  margin: 5px;
+  display: inline-block;
+}
+
+.image_preview {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 4px;
 }
 
 .assistant-icon,
@@ -264,11 +340,11 @@
 }
 
 .message a:link {
-  color: var(--color-ausma-light-blue);
+  color: var(--color-text-reference-hover);
 }
 
 .message a:visited {
-  color: var(--color-ausma-light-orange);
+  color: var(--color-text-reference);
 }
 
 .message pre {

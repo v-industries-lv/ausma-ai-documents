@@ -37,7 +37,11 @@
 [data-theme="dark"],
 [data-theme="dark_contrast"],
 [data-theme="classic"],
-[data-theme="atlantic_teal"] {
+[data-theme="baltic_teal"],
+[data-theme="midnight_blue"],
+[data-theme="midnight_blue_soft"],
+[data-theme="mystic_purple"],
+[data-theme="forest_green"] {
   --color-prettylights-syntax-brackethighlighter-angle: #9198a1;
   --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
   --color-prettylights-syntax-carriage-return-bg: #b62324;

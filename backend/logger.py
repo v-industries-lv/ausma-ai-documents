@@ -2,10 +2,10 @@ import os
 import logging
 import sys
 from logging.handlers import TimedRotatingFileHandler
-
+from globals import PROJECT_DATA_PATH
 
 def logger_setup():
-    LOG_DIR = 'logs'
+    LOG_DIR = os.path.join(PROJECT_DATA_PATH, 'logs')
     LOG_FILE = os.path.join(LOG_DIR, 'info.log')
 
     os.makedirs(LOG_DIR, exist_ok=True)
