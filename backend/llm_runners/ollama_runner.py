@@ -152,7 +152,7 @@ class OllamaRunner(LLMRunner):
     def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
         if options is None:
             options = {}
-        _options = {"seed": RANDOM_SEED, "num_predict": MAX_TOKENS_LIMIT}
+        _options = self.get_options(model)
         _options.update(options)
 
         url = f"{self.host}/api/chat"
@@ -167,7 +167,9 @@ class OllamaRunner(LLMRunner):
 
         with requests.post(url, json=payload, stream=True) as r:
             # Only "content" is relevant for RAG document prep.
-            return r.json()["message"]["content"]
+            result = r.json()
+            logger.info(result)
+            return result["message"]["content"]
 
 
     def get_embedding(self, embedding_config: dict) -> Optional[OllamaEmbeddings]:

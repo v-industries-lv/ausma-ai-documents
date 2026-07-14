@@ -86,8 +86,10 @@ def xpdf_convert(pdf_path: str, output: str) -> List[str]:
                 )
             except:
                 raise ValueError("Failed to convert! Possible causes: invalid file, encrypted PDF")
-
-    return sorted([os.path.join(output, x) for x in os.listdir(output)])
+    output_list = sorted([os.path.join(output, x) for x in os.listdir(output)])
+    if len(output_list) == 0:
+        logger.warning(f"No output generated for file {pdf_path}. There may be a problem with converting or the file might be empty.")
+    return output_list
 
 
 def get_xpdf_path() -> str:
