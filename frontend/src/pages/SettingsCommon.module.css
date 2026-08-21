@@ -126,6 +126,14 @@
   margin: 0 0 0 3px;
 }
 
+.help_icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  position: relative;
+  top: 3px;
+}
+
 /* ===================Input=================== */
 
 .settings_main textarea:focus,
@@ -158,6 +166,19 @@
   font-size: 16px;
   padding: 1rem 1rem;
   white-space: normal;
+}
+
+.settings_main .setting select {
+  background-color: var(--color-input-bg);
+  width: 100%;
+  height: 2rem;
+  border: none;
+  border-radius: 5px;
+  color: var(--color-input-text);
+  font-size: 16px;
+  white-space: normal;
+  padding: 7px 9px;
+  box-shadow: var(--color-select-box-shadow);
 }
 
 .settings_main input[type="checkbox"] {

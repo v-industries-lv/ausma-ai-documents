@@ -67,6 +67,6 @@
 }
 
 .setting-list.open {
-  max-height: 500rem;
+  max-height: unset;
   opacity: 1;
 }

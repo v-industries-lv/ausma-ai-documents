@@ -15,31 +15,57 @@ Homepage: <https://ausma.ai>
 - Locally hosted - data does not leave your machine
 - More than traditional text search - use RAG (Retrieval Augmented Generation) to get more context-relevant results and gain better insights on your prompts
 - Document ingestion pipeline
-  - Supports .pdf, .md, .txt formats.
+  - Supports .pdf, .md, .txt, .png, .jpg, .jpeg formats.
   - Supports email loading (experimental)
-- Customizable chatbot - use your preferred LLM for chatting.
+- Customizable chat assistants - Create your own unique chat assistants by combining your preferred LLMs with with variety of options to shape their personality, behavior, and functionality.
 - Default LLM runner (Ollama) - a locally deployed AI model runner. Features automatic setup for use with AMD and NVIDIA cards as well as running on CPU.
 - User friendly web-interface
 - Packaging - build and install the app yourself or run it as a project
 
 ### Coming soon:
 
+- Windows version for version 0.6.0.
+- Ability to select multiple knowledge bases for version 0.6.0.
 - More document formats - presentation files, spreadsheets, etc.
 - Scalability features for multi-user solutions and large datasets.
 
 ## Installation
 
-### Dependencies
-
 Ausma.ai Documents has been developed and tested under Ubuntu Server 24.04 LTS and latest Tuxedo OS. It may work on related operating systems.
+
+### Install the desktop app via package
+
+- Go to releases
+- Download latest .deb package
+- Open it with Software Center or
+
+```bash
+sudo apt install ./ausma-ai_0.5.0_amd64.deb
+```
+
+#### Install Ollama locally (Recomended)
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+##### Install Default Models
+
+```bash
+ollama pull qwen2.5
+ollama pull qwen2.5vl
+ollama pull qwen3-vl:latest
+ollama pull gemma4:latest
+ollama pull bge-m3
+```
+
+### Running the web version from source
 
 #### Ubuntu
 
 ```bash
 sudo apt install python3.12-venv poppler-utils tesseract-ocr libtesseract-dev
 ```
-
-### Running from source
 
 - Clone the repository:
 
@@ -61,10 +87,11 @@ cd ausma-ai-documents &&
 ```bash
 ./run_app.sh
 ```
+
 ### \> For simple chat:
 
 - Create a room
-- Choose an installed model
+- Choose a chat assistant
 - Start chatting!
 
 ### \> To use chatbot with your documents:
@@ -79,8 +106,9 @@ cd ausma-ai-documents &&
 - Join the room, by clicking it.
 - Select knowledge base:
   - `None` - Same as the simple chat - no document context used.
-  - `<knowledge base name>` - model uses RAG - receives relevant documents from vectorstore based on your query. This enhances the response with document aware context.
-- Choose a LLM model from the installed models and you are ready to ask your questions. Note that the model gets locked-in for this room.
+  - `<knowledge base name>` - assistant uses RAG - receives relevant documents from vectorstore based on your query. This enhances the response with document aware context.
+- Choose a your preferred chat assistant and you are ready to ask your questions. Note that the chat assistant gets locked-in for this room.
+  - Assistants can be configured in settings.
 
 ### More models and LLM runners:
 
@@ -90,9 +118,20 @@ If you installed Ollama with the installation script, then you can get more mode
 
 You can also add other Ollama instances in the LLM Runners section of the Settings page. LLM Runners have a priority list - first one to be able to run the model gets used.
 
+#### Mistral
+
+If you prefer to use external service, you may also use Mistral API:
+
+WARNING! : mistral.ai is a paid API. By using such AI inference services, you confirm that you take full responsibility for any costs that it may occur due to use or misuse of this project.
+
+- In Settings page create an mistralai runner in the section LLM Runners
+- Input credentials
+- By default, an mistralai_models.json file is created with example models "mistral-large-latest", "mistral-medium-latest", "mistral-small-latest", "mistral-embed"
+  - You can manually add or remove models to this list. Check with your account what models are available to you
+
 #### openai
 
-If you prefer to use external service, you may also use openai API:
+Another external service alternative - openai API:
 
 WARNING! : openai is a paid API. By using such AI inference services, you confirm that you take full responsibility for any costs that it may occur due to use or misuse of this project.
 
@@ -112,7 +151,7 @@ WARNING! : This option allows for custom wrapping of paid AI inference services.
 
 ### Examples
 
-The "knowledge" of Ausma.ai depends on the loaded documents and the LLM model.
+The "knowledge" of Ausma.ai depends on the loaded documents and the assistant.
 
 If you load the relevant computer manuals you may ask something like:
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -xe
 
 if [[ "$(uname -s)" != "Linux" ]]; then
     echo "This is not Linux. Exiting script..."
@@ -20,9 +20,11 @@ then
     answer=${answer:-Y}
     case "$answer" in
       [Yy])
-        echo "Pulling qwen2.5, qwen2.5vl and bge-m3 models..."
+        echo "Pulling qwen2.5, qwen2.5vl qwen3-vl:latest, gemma4:latest and bge-m3 models..."
         ollama pull qwen2.5
         ollama pull qwen2.5vl
+        ollama pull qwen3-vl:latest
+        ollama pull gemma4:latest
         ollama pull bge-m3
         ;;
       *)
@@ -54,14 +56,4 @@ if [[ $xpdf_answer == [Yy] ]]; then
    rm $archive_root -r
 fi
 
-# Install virtual environment
-python3 -m venv .venv
-
-# Activate virtual environment and install required packages
-source .venv/bin/activate
-
-pip install -r requirements.txt
-
-mkdir -p documents
-
-deactivate
+./setup_python_linux.sh

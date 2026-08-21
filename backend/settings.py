@@ -10,20 +10,20 @@ from globals import PROJECT_DATA_PATH
 
 # setting keys
 DEFAULT_KNOWLEDGE_BASE = "default_knowledge_base"
-DEFAULT_SYSTEM_PROMPT = 'default_system_prompt'
 DEFAULT_LLM_RUNNER = 'default_llm_runner'
+DEFAULT_ASSISTANTS = "default_assistants"
 DEFAULT_KBSTORE = 'default_kbstore'
-DEFAULT_DOC_SOURCE = 'default_doc_source'
+DEFAULT_DOC_SOURCES = 'default_doc_sources'
 
-SUPPORTED_LLM_RUNNERS = ["debug", "ollama","openai", "remote"]
+SUPPORTED_LLM_RUNNERS = ["debug", "ollama","openai", "remote", "mistralai"]
 SUPPORTED_KBSTORES = ["chroma"]
 SUPPORTED_DOC_SOURCES = ["local_fs"]
 
 LLM_RUNNERS = 'llm_runners'
+ASSISTANTS = "assistants"
 KBSTORES = "kbstores"
 DOC_SOURCES = "doc_sources"
 RESTORE_DEFAULT = "restore_default"
-RAG_SETTINGS = "rag_settings"
 GENERATION_GUARD = "generation_guard"
 
 class Settings:
@@ -104,24 +104,19 @@ class Settings:
                         errors.append(
                             ValueError(f"LLM runner config list contains duplicates by name! Given: {value}"))
 
-        elif key == DEFAULT_SYSTEM_PROMPT:
-            if not isinstance(value, str):
-                errors.append(
-                    TypeError(f"Key {DEFAULT_SYSTEM_PROMPT} value must be a str type, got {type(value)} instead.")
-                )
-        elif key in DEFAULT_LLM_RUNNER:
+        elif key == DEFAULT_LLM_RUNNER:
             errors.append(
                 ValueError(f"Changing this value not allowed!")
             )
-        elif key in DEFAULT_KBSTORE:
+        elif key == DEFAULT_KBSTORE:
             errors.append(
                 ValueError(f"Changing this value not allowed!")
             )
-        elif key in DEFAULT_KNOWLEDGE_BASE:
+        elif key == DEFAULT_KNOWLEDGE_BASE:
             errors.append(
                 ValueError(f"Changing this value not allowed!")
             )
-        elif key in DEFAULT_DOC_SOURCE:
+        elif key == DEFAULT_DOC_SOURCES:
             errors.append(
                 ValueError(f"Changing this value not allowed!")
             )
@@ -157,6 +152,15 @@ class Settings:
     def initialize_defaults(self):
         self.initialize_default_llm_runner()
         self.initialize_default_kbstore()
+        self.initialize_default_assistants()
+        self.initialize_doc_sources()
+
+    def initialize_doc_sources(self):
+        default_doc_sources = self.settings.get(DEFAULT_DOC_SOURCES)
+        if default_doc_sources is not None:
+            self.settings[DOC_SOURCES] = default_doc_sources
+        else:
+            logger.error(f"Default doc sources not defined!")
 
     def initialize_default_llm_runner(self):
         default_llm_runner = self.settings.get(DEFAULT_LLM_RUNNER)
@@ -164,6 +168,13 @@ class Settings:
             self.settings[LLM_RUNNERS] = [default_llm_runner]
         else:
             logger.error(f"Default llm runner not defined!")
+
+    def initialize_default_assistants(self):
+        default_assistants = self.settings.get(DEFAULT_ASSISTANTS)
+        if default_assistants is not None:
+            self.settings[ASSISTANTS] = default_assistants
+        else:
+            logger.error(f"Default assistants are not defined!")
 
     def initialize_default_kbstore(self):
         default_kbstore = self.settings.get(DEFAULT_KBSTORE)
@@ -199,16 +210,3 @@ class Settings:
         self.settings = Settings._read_settings(self.defaults)
         self.initialize_defaults()
         self.save()
-
-class RAGSettings:
-    def __init__(self, rag_settings):
-        self.rag_document_count = rag_settings["rag_document_count"]
-        self.rag_char_chunk_size = rag_settings["rag_char_chunk_size"]
-        self.rag_char_overlap = rag_settings["rag_char_overlap"]
-        self.rag_similarity_score_threshold = rag_settings["rag_similarity_score_threshold"]
-        self.rag_score_margin = rag_settings["rag_score_margin"]
-        self.rag_cosine_distance_irrelevance_threshold = rag_settings["rag_cosine_distance_irrelevance_threshold"]
-
-    @staticmethod
-    def from_settings(settings: Settings):
-        return RAGSettings(settings[RAG_SETTINGS])

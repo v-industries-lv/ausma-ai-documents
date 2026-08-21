@@ -7,13 +7,40 @@ import requests
 from langchain_ollama import OllamaEmbeddings
 
 from domain import MessageProgress
-from llm_runners.llm_runner import LLMRunner, RANDOM_SEED, MAX_TOKENS_LIMIT
+from llm_runners.llm_runner import LLMRunner
 from utils import utc_now
 from logger import logger
 from generation_guard import GenerationGuard
 
 
 class OllamaRunner(LLMRunner):
+    def convert_messages_for_api(self, messages: List[dict]) -> List[dict]:
+        return messages
+
+    def get_models_with_capabilities(self) -> List[dict]:
+        if self.last_update is None or datetime.datetime.now(datetime.UTC) - self.last_update > datetime.timedelta(
+                days=1):
+            model_list = json.loads(requests.get(f"{self.host}/api/tags").content)["models"]
+            models = []
+            for model_item in model_list:
+                model_info = json.loads(
+                    requests.post(
+                        self.host + '/api/show',
+                        data='{"model": "' + model_item["model"] + '"}',
+                        headers={'Content-Type': 'application/json'}
+                    ).content
+                )
+                models.append(
+                    {
+                        "model": model_item["model"],
+                        "capabilities": model_info['capabilities'],
+                        "runner_type": self.runner_type,
+                    }
+                )
+            self.cached_models = models
+            self.last_update = datetime.datetime.now(datetime.UTC)
+        return self.cached_models
+
     @staticmethod
     def from_dict(config: dict):
         runner = None
@@ -36,6 +63,7 @@ class OllamaRunner(LLMRunner):
             "num_ctx": self.num_ctx,
         }
     def __init__(self, host: str, seed: int, num_predict: int, num_ctx: int):
+        super().__init__("ollama")
         if host.endswith('/'):
             host = host[:-1]
         self.host = host
@@ -43,41 +71,29 @@ class OllamaRunner(LLMRunner):
         self.seed = seed if seed != 0 else random.randint(1, 2147483647)
         self.num_predict = num_predict
         self.num_ctx = num_ctx
-
-    def list_chat_models(self) -> List[str]:
-        completion_models = []
-        model_list = json.loads(requests.get(f"{self.host}/api/tags").content)["models"]
-        for model in model_list:
-            model_info = json.loads(
-                requests.post(
-                    self.host + '/api/show',
-                    data='{"model": "' + model["model"] + '"}',
-                    headers={'Content-Type': 'application/json'}
-                ).content
-            )
-            if 'completion' in model_info['capabilities']:
-                completion_models.append(model["model"])
-        return completion_models
+        self.get_models_with_capabilities()
 
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
                                       gen_guard: Optional[GenerationGuard],
-                                      update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
+                                      update_callback: Callable[[MessageProgress], None], options: dict = None, thinking_flag=None) -> Tuple[str, str, bool]:
         failed_status = False
         if options is None:
             options = {}
         options.update(options)
+        api_messages = self.convert_messages_for_api(messages)
         if gen_guard is None:
             gen_guard = GenerationGuard()
         url = f"{self.host}/api/chat"
         payload = {
             "model": model,
-            "messages": messages,
+            "messages": api_messages,
             "stream": True,
             "options": options,
         }
-        if think_mode is not None:
-            payload.update({"think": think_mode})
+        if thinking_flag is not None:
+            payload.update({"think": thinking_flag})
         assistant_text = ''
+        thinking_text = ''
         num_chunks = 0
         last_timestamp: Optional[datetime.datetime] = None
         try:
@@ -95,7 +111,7 @@ class OllamaRunner(LLMRunner):
                                 MessageProgress("error", 0, 0, num_chunks,
                                             message="LLM model has been stopped")
                             )
-                        return assistant_text, True
+                        return assistant_text, thinking_text, True
                     if not line:
                         continue
                     current_timestamp = utc_now()
@@ -112,11 +128,14 @@ class OllamaRunner(LLMRunner):
                     # This switch indicates progression and that thinking phase was working as intended
                     gen_guard.think_content_switch(msg.get("content", ""), msg.get("thinking", ""))
                     chunk_text = msg.get("content", "")
-                    if len(chunk_text) == 0:
+                    if len(chunk_text) > 0:
+                        assistant_text += chunk_text
+                    else:
                         chunk_text = msg.get("thinking", "")
+                        thinking_text += chunk_text
                     num_chunks += 1
                     gen_guard.accumulate_tokens(chunk_text)
-                    assistant_text += chunk_text
+
                     if last_timestamp is not None:
                         if update_callback is not None:
                             update_callback(
@@ -131,7 +150,7 @@ class OllamaRunner(LLMRunner):
                         assistant_text += gen_guard.message_infinite_loop()
                         logger.error(
                             "LLM model has entered an infinite loop and response generation has been stopped. Please try another prompt or model.")
-                        return assistant_text, True
+                        return assistant_text, thinking_text, True
                     last_timestamp = current_timestamp
         except Exception as e:
             if update_callback is not None:
@@ -147,42 +166,45 @@ class OllamaRunner(LLMRunner):
         if len(assistant_text)==0:
             raise(ValueError("LLM generated empty response! Please check logs!"))
 
-        return assistant_text, failed_status
+        return assistant_text, thinking_text, failed_status
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, thinking_flag=None):
         if options is None:
             options = {}
         _options = self.get_options(model)
         _options.update(options)
+        api_messages = self.convert_messages_for_api(messages)
 
         url = f"{self.host}/api/chat"
         payload = {
             "model": model,
-            "messages": messages,
+            "messages": api_messages,
             "stream": False,
             "options": _options
         }
-        if think_mode is not None:
-            payload.update({"think": think_mode})
+        if thinking_flag is not None:
+            payload.update({"think": thinking_flag})
 
         with requests.post(url, json=payload, stream=True) as r:
             # Only "content" is relevant for RAG document prep.
             result = r.json()
-            logger.info(result)
             return result["message"]["content"]
 
 
     def get_embedding(self, embedding_config: dict) -> Optional[OllamaEmbeddings]:
         allowed_parameters = ["model"]
-        filtered_embedding_config = {parameter: embedding_config[parameter] for parameter in allowed_parameters if embedding_config.get(parameter) is not None}
-        try:
-            return OllamaEmbeddings(base_url=self.host, validate_model_on_init=True, **filtered_embedding_config)
-        except ValueError as ve:
-            # validation error is OK, if model is not expected to be in this runner
-            if not "validation error" in str(ve):
-                logger.error(ve)
-        except Exception as e:
-            logger.error(e)
+        filtered_embedding_config = {parameter: embedding_config[parameter] for parameter in allowed_parameters if
+                                     embedding_config.get(parameter) is not None}
+        available_embedding_models = [x["model"] for x in self.get_models_with_capabilities() if "embedding" in x["capabilities"]]
+        if filtered_embedding_config.get("model") in available_embedding_models:
+            try:
+                return OllamaEmbeddings(base_url=self.host, validate_model_on_init=True, **filtered_embedding_config)
+            except ValueError as ve:
+                # validation error is OK, if model is not expected to be in this runner
+                if not "validation error" in str(ve):
+                    logger.error(ve)
+            except Exception as e:
+                logger.error(e)
         return None
 
     def check_model_installed(self, model):
@@ -191,34 +213,6 @@ class OllamaRunner(LLMRunner):
             logger.error(f"[LLM_MODEL_NOT_FOUND]_{model}_{utc_now().isoformat()}")
             raise ValueError(
                 f"Model {repr(model)} not installed! Available models: {';'.join([x["model"] for x in model_list])}")
-
-    def is_model_installed(self, model) -> bool:
-        model_list = json.loads(requests.get(f"{self.host}/api/tags").content)["models"]
-        return model in [x["model"] for x in model_list] and model is not None
-
-    def supports_thinking(self, model: str) -> Optional[bool]:
-        if self.is_model_installed(model):
-            model_info = json.loads(
-                requests.post(
-                    f"{self.host}/api/show",
-                    data=json.dumps({"model": model}),
-                    headers={'Content-Type': 'application/json'}
-                ).content
-            )
-            return "thinking" in model_info["capabilities"]
-        return None
-
-    def supports_vision(self, model: str) -> Optional[bool]:
-        if self.is_model_installed(model):
-            model_info = json.loads(
-                requests.post(
-                    f"{self.host}/api/show",
-                    data=json.dumps({"model": model}),
-                    headers={'Content-Type': 'application/json'}
-                ).content
-            )
-            return "vision" in model_info["capabilities"]
-        return None
 
     def pull_model(self, model):
         # {"status": "success" or "error": "<error message>"}

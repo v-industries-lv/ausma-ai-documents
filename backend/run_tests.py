@@ -1,4 +1,5 @@
 import unittest
+import xmlrunner
 import os
 import sys
 import platform
@@ -23,5 +24,8 @@ os.chdir(TEST_DIR)
 loader = unittest.TestLoader()
 suite = loader.discover(start_dir=TEST_DIR)
 
-runner = unittest.TextTestRunner(verbosity=2)
-runner.run(suite)
+with open('../unit-tests.xml', 'wb') as output:
+    runner = xmlrunner.XMLTestRunner(verbosity=2, output=output)
+    result = runner.run(suite)
+    if not result.wasSuccessful():
+        exit(1)

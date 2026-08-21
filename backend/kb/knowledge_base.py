@@ -11,7 +11,7 @@ from langchain_core.embeddings import Embeddings
 from convertors.convertor_result import ConvertorResult
 from convertors.document_file import DocumentFile
 from logger import logger
-from settings import Settings, DEFAULT_KNOWLEDGE_BASE, RAGSettings
+from settings import Settings, DEFAULT_KNOWLEDGE_BASE
 from utils import compute_folder_hash, from_posix_path
 from globals import PROJECT_DATA_PATH
 
@@ -26,6 +26,8 @@ class KnowledgeBase(ABC):
         self.embedding_config: dict = kb_dict["embedding"]
         self.languages = kb_dict.get("languages", ["eng"])
         self.cache_file = os.path.join(KnowledgeBase.DEFAULT_CACHE_DIR, from_posix_path(self.name) + ".json")
+        self.rag_char_chunk_size = kb_dict.get("rag_char_chunk_size", 500)
+        self.rag_char_overlap = kb_dict.get("rag_char_overlap", 100)
 
     def _create_embedding(self, embedding_source: Callable[[dict], Embeddings]):
         return embedding_source(self.embedding_config)
@@ -65,7 +67,7 @@ class KnowledgeBase(ABC):
         pass
 
     @abstractmethod
-    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult, rag_settings: RAGSettings):
+    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult):
         pass
 
     @abstractmethod
@@ -107,6 +109,10 @@ class KnowledgeBase(ABC):
         if new_kb.convertor_configs != self.convertor_configs:
             return True
         if new_kb.embedding_config != self.embedding_config:
+            return True
+        if new_kb.rag_char_chunk_size != self.rag_char_chunk_size:
+            return True
+        if new_kb.rag_char_overlap != self.rag_char_overlap:
             return True
         return False
 
@@ -158,8 +164,8 @@ class AddressedKnowledgeBase(KnowledgeBase):
     def rag_lookup(self, embedding_source: Callable[[dict], Embeddings], query: str, document_count: int):
         return self.kb.rag_lookup(embedding_source, query, document_count)
 
-    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult, rag_settings: RAGSettings):
-        self.kb.store_convertor_result(embedding_source, convertor_result, rag_settings)
+    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult):
+        self.kb.store_convertor_result(embedding_source, convertor_result)
 
     def has_full_document(self, embedding_source: Callable[[dict], Embeddings], doc: DocumentFile) -> bool:
         return self.kb.has_full_document(embedding_source, doc)

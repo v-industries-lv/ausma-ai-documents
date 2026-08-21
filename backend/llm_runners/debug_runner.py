@@ -10,21 +10,24 @@ from llm_runners.llm_runner import LLMRunner
 
 
 class DebugRunner(LLMRunner):
+    def get_models_with_capabilities(self) -> List[dict]:
+        return self.cached_models
+
     def remove_model(self, model) -> bool:
         return False
+
+    def convert_messages_for_api(self, messages: List[dict]) -> List[dict]:
+        return messages
 
     def pull_model(self, model) -> bool:
         return False
 
-    def is_model_installed(self, model) -> bool:
-        return model in self.list_chat_models()
-
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
-                                      gen_guard: GenerationGuard,
-                                      update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
+                                      gen_guard: GenerationGuard, update_callback: Callable[[MessageProgress], None],
+                                      options: dict = None, thinking_flag=None) -> Tuple[str, str, bool]:
         return DebugRunner._mock_output()
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None) -> str:
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, thinking_flag=None) -> str:
         return DebugRunner._mock_output()[0]
 
     @staticmethod
@@ -45,22 +48,26 @@ class DebugRunner(LLMRunner):
         }
 
     def __init__(self):
-        pass
-
-    def list_chat_models(self):
-        return ["debug_lorem_ipsum", "debug_code", "debug_markdown"]
+        super().__init__("debug")
+        self.cached_models = [
+            {
+                "model": "debug_lorem_ipsum",
+                "capabilities": ["completion"],
+                "runner_type": self.runner_type,
+            },
+            {
+                "model":  "debug_code",
+                "capabilities": ["completion"],
+                "runner_type": self.runner_type,
+            },
+            {
+                "model": "debug_markdown",
+                "capabilities": ["completion"],
+                "runner_type": self.runner_type,
+            },
+        ]
 
     def get_embedding(self, embedding_config: dict) -> Optional[Embeddings]:
-        return None
-
-    def supports_thinking(self, model: str) -> Optional[bool]:
-        if self.is_model_installed(model) is not None:
-            return True
-        return None
-
-    def supports_vision(self, model: str) -> Optional[bool]:
-        if self.is_model_installed(model) is not None:
-            return True
         return None
 
     @staticmethod
@@ -78,4 +85,4 @@ class DebugRunner(LLMRunner):
     <li>Lorem Ipsum</li>
     </ul>
     """
-        return assistant_text, False
+        return assistant_text, 'thinking of text', False

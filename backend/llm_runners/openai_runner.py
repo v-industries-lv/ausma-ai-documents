@@ -26,7 +26,7 @@ class OpenAIRunner(LLMRunner):
             if config.get('type') == 'openai':
                 runner = OpenAIRunner(api_key=config["api_key"])
         except Exception as e:
-            logger.error(f"Could not create Ollama runner from config. Reason: {e}")
+            logger.error(f"Could not create OpenAI runner from config. Reason: {e}")
         return runner
 
     def get_options(self, model):
@@ -34,37 +34,47 @@ class OpenAIRunner(LLMRunner):
         return None
 
     def __init__(self, api_key: str):
+        super().__init__("openai")
         self.host_api = "https://api.openai.com/v1"
         self.api_key = api_key
         self._model_list_file = os.path.join(PROJECT_DATA_PATH, "openai_models.json")
         if os.path.exists(self._model_list_file):
             with open(self._model_list_file, "r") as fh:
-                self.models: List[str] = sorted(set(json.load(fh)))
+                self.cached_models: List[dict] = json.load(fh)
         else:
-            self.models: List[str] = ["gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano"]
+            self.cached_models: List[dict] = [
+                {
+                    "model": "gpt-4.1",
+                    "capabilities": ["completion", "vision"],
+                    "runner_type": self.runner_type,
+                },
+                {
+                    "model": "gpt-4.1-mini",
+                    "capabilities": ["completion", "vision"],
+                    "runner_type": self.runner_type,
+                },
+                {
+                    "model": "gpt-4.1-nano",
+                    "capabilities": ["completion", "vision"],
+                    "runner_type": self.runner_type,
+                },
+                {
+                    "model": "text-embedding-3-small",
+                    "capabilities": ["embedding"],
+                    "runner_type": self.runner_type,
+                }
+            ]
             self._save_models()
-        self.cached_openai_models: Optional[List[str]] = None
-        self.last_update: Optional[datetime.datetime] = None
-        self.get_openai_models()
+        self.get_models_with_capabilities()
 
 
     def _save_models(self):
         temp_file = self._model_list_file + ".tmp"
         with open(temp_file, "w") as fh:
-            json.dump(self.models, fh, indent=2)
+            json.dump(self.cached_models, fh, indent=2)
         shutil.move(temp_file, self._model_list_file)
 
-    def list_chat_models(self):
-        online_models = self.get_openai_models()
-        _models = []
-        for model in self.models:
-            if model in online_models:
-                _models.append(model)
-            else:
-                logger.error(f"OpenAIRunner: Could not find model {model} online")
-        return _models
-
-    def get_openai_models(self) -> List[str]:
+    def get_models_with_capabilities(self) -> List[dict]:
         if self.last_update is None or datetime.datetime.now(datetime.UTC) - self.last_update > datetime.timedelta(days=1):
             response = json.loads(
                 requests.get(
@@ -72,42 +82,36 @@ class OpenAIRunner(LLMRunner):
                     headers={"Authorization": f"Bearer {self.api_key}"}
                 ).content
             )
-            self.cached_openai_models = [x["id"] for x in response["data"]]
+            serverside_models = [x["id"] for x in response["data"]]
+            # Leave only defined models
+            self.cached_models = [x for x in self.cached_models if x["model"] in serverside_models]
             self.last_update = datetime.datetime.now(datetime.UTC)
-        return self.cached_openai_models
-
-    def is_model_installed(self, model) -> bool:
-        response = json.loads(
-            requests.get(
-                f"{self.host_api}/models/{model}",
-                headers={"Authorization": f"Bearer {self.api_key}"}
-            ).content
-        )
-        return response.get("id") == model
+        return self.cached_models
 
     def pull_model(self, model) -> bool:
         if self.is_model_installed(model):
-            if model not in self.models:
-                self.models.append(model)
+            if model not in self.cached_models:
+                self.cached_models.append(model)
                 self._save_models()
             return True
         return False
 
     def remove_model(self, model) -> bool:
-        if model in self.models:
-            self.models.remove(model)
+        if model in self.cached_models:
+            self.cached_models.remove(model)
             self._save_models()
             return True
         return False
 
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
                                       gen_guard: GenerationGuard,
-                                      update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
+                                      update_callback: Callable[[MessageProgress], None], options: dict = None, thinking_flag=None) -> Tuple[str, str, bool]:
         failed_status = False
         if options is None:
             options = {}
         _options = {"max_output_tokens": MAX_TOKENS_LIMIT}
         _options.update(options)
+        api_messages = self.convert_messages_for_api(messages)
         # OpenAI does not support seed
         if "seed" in _options.keys():
             _options.pop("seed")
@@ -120,11 +124,14 @@ class OpenAIRunner(LLMRunner):
         }
         payload = {
             "model": model,
-            "input": messages,
+            "input": api_messages,
             "stream": True,
             **_options
         }
+        if thinking_flag is not None:
+            logger.warning(f"Reasoning not supported yet. Asked mode: {thinking_flag}")
         assistant_text = ''
+        thinking_text = ''
         num_chunks = 0
         last_timestamp: Optional[datetime.datetime] = None
         try:
@@ -141,7 +148,7 @@ class OpenAIRunner(LLMRunner):
                                     MessageProgress("error", 0, 0, num_chunks,
                                             message="LLM model has been stopped")
                                 )
-                            return assistant_text, True
+                            return assistant_text, thinking_text, True
                         if not line:
                             continue
                         decoded_line = line.decode("utf-8").strip()
@@ -178,7 +185,7 @@ class OpenAIRunner(LLMRunner):
                                         assistant_text += gen_guard.message_infinite_loop()
                                         logger.error(
                                             "LLM model has entered an infinite loop and response generation has been stopped. Please try another prompt or model.")
-                                        return assistant_text, True
+                                        return assistant_text, thinking_text, True
                                     last_timestamp = current_timestamp
         except Exception as e:
             if update_callback is not None:
@@ -194,14 +201,15 @@ class OpenAIRunner(LLMRunner):
         if len(assistant_text) == 0:
             raise (ValueError("LLM generated empty response! Please check logs!"))
 
-        return assistant_text, failed_status
+        return assistant_text, thinking_text, failed_status
 
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, thinking_flag=None):
         if options is None:
             options = {}
         _options = {"max_output_tokens": MAX_TOKENS_LIMIT}
         _options.update(options)
+        api_messages = self.convert_messages_for_api(messages)
         # OpenAI does not support seed
         if "seed" in _options.keys():
             _options.pop("seed")
@@ -213,27 +221,58 @@ class OpenAIRunner(LLMRunner):
         }
         payload = {
             "model": model,
-            "input": messages,
+            "input": api_messages,
             "stream": False,
             **_options
         }
-
+        if thinking_flag is not None:
+            logger.warning(f"Reasoning not supported yet. Asked mode: {thinking_flag}")
         with requests.post(url, headers=headers, json=payload, stream=True) as r:
             return r.json()["output"][0]["content"][0]["text"]
 
     def get_embedding(self, embedding_config) -> Optional[Embeddings]:
-        if self.is_model_installed(embedding_config["model"]):
-            return OpenAIEmbeddings(model=embedding_config["model"], api_key=SecretStr(self.api_key))
+        available_embedding_models = [x["model"] for x in self.get_models_with_capabilities() if "embedding" in x["capabilities"]]
+        if embedding_config.get("model") in available_embedding_models:
+            # We still check, if model is actually available, because it could be cached, but removed at server side
+            if self.is_model_installed(embedding_config["model"]):
+                return OpenAIEmbeddings(model=embedding_config["model"], api_key=SecretStr(self.api_key))
         return None
 
-    def supports_thinking(self, model: str) -> Optional[bool]:
-        """
-        OpenAI library does not provide a way to tell programmatically if the model is reasoning (thinking) or not.
-        """
-        return None
-
-    def supports_vision(self, model: str) -> Optional[bool]:
-        """
-        OpenAI library does not provide a way to tell programmatically if the model is multimodal (vision) or not.
-        """
-        return None
+    def convert_messages_for_api(self, messages: List[dict]) -> List[dict]:
+        new_messages = []
+        for message in messages:
+            if message["role"] == "system":
+                new_messages.append(
+                    {
+                        "role": "developer",
+                        "content": message["content"]
+                    }
+                )
+            elif message["role"] == "user":
+                new_message = {
+                    "role": "user",
+                    "content": []
+                }
+                if "content" in message:
+                    new_message["content"].append(
+                        {
+                            "type": "input_text",
+                            "text": message["content"]
+                        }
+                    )
+                if "images" in message:
+                    for image in message["images"]:
+                        new_message["content"].append(
+                            {
+                                "type": "input_image",
+                                "image_url": f"data:image/png;base64,{image}"
+                            }
+                        )
+                new_messages.append(new_message)
+            elif message["role"] == "assistant":
+                new_message = {
+                    "role": "user",
+                    "content": message["content"]
+                }
+                new_messages.append(new_message)
+        return new_messages

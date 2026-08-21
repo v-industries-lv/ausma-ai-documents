@@ -18,7 +18,6 @@ from convertors.convertor_result import ConvertorResult
 from convertors.document_file import DocumentFile
 from kb.knowledge_base import KnowledgeBase, KBStore
 from logger import logger
-from settings import RAGSettings
 from globals import PROJECT_DATA_PATH
 
 class ChromaKnowledgeBase(KnowledgeBase):
@@ -95,7 +94,7 @@ class ChromaKnowledgeBase(KnowledgeBase):
             chunk.metadata["chunk_count"] = len(chunks)
         return chunks
 
-    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult, rag_settings: RAGSettings):
+    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult):
         document_metadata = convertor_result.document_metadata
         # Validating metadata vs actual folder contents
         valid_document_source = KnowledgeBase.validate_document_source(convertor_result)
@@ -121,8 +120,8 @@ class ChromaKnowledgeBase(KnowledgeBase):
         if len(folder_docs) > 0:
             logger.info(f"[{convertor_result.conversion_type}]Preparing {len(folder_docs)} documents...")
             text_splitter = CharacterTextSplitter(
-                chunk_size=rag_settings.rag_char_chunk_size,
-                chunk_overlap=rag_settings.rag_char_overlap,
+                chunk_size=self.rag_char_chunk_size,
+                chunk_overlap=self.rag_char_overlap,
             )
             chunks = text_splitter.split_documents(folder_docs)
             ChromaKnowledgeBase._add_chunk_metadata(chunks)
@@ -208,6 +207,8 @@ class ChromaKnowledgeBase(KnowledgeBase):
             "selection": self.selection,
             "convertors": self.convertor_configs,
             "embedding": self.embedding_config,
+            "rag_char_chunk_size": self.rag_char_chunk_size,
+            "rag_char_overlap": self.rag_char_overlap,
         }
 
 

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
+    "test:ci": "vitest run --coverage --reporter=junit --outputFile=junit.xml",
     "coverage": "vitest --coverage"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "@vitest/coverage-v8": "^4.1.9",
+    "@vitest/ui": "^4.1.11",
     "eslint": "^8.57.1",
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-react-hooks": "^7.0.1",

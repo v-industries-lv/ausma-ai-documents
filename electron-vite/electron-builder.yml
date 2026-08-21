@@ -48,6 +48,12 @@ linux:
       to: 'frontend'
     - from: 'build/icon.png'
       to: 'icon.png'
+deb:
+  depends:
+    - python3.12-venv
+    - poppler-utils
+    - tesseract-ocr
+    - libtesseract-dev
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false

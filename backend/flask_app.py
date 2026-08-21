@@ -12,15 +12,17 @@ from app_modules.llm_module import LLMModule
 from app_modules.multimodal_chat_module import MMChatModule
 from app_modules.settings_module import SettingsModule
 from app_modules.kb_module import KBModule
+from assistants.assistant import Assistant
 from config import app, db, settings, socketio
 from domain import ChatRoom, RoomMessage, MessageProgress
 from kb.knowledge_base import SuperKBStore, KBStore
 from doc_sources.doc_source import DocSource, SuperDocSource
 from knowledge_base_service import KnowledgeBaseService
 from generation_guard import GenerationGuard
-from llm_runners.llm_runner import ChatContext, LLMRunner, SuperRunner
+from llm_runners.llm_runner import LLMRunner, SuperRunner
+from convertors.llm_contexts import ChatContext
 from logger import logger
-from settings import DEFAULT_SYSTEM_PROMPT, LLM_RUNNERS, KBSTORES, DOC_SOURCES, RESTORE_DEFAULT, GENERATION_GUARD, RAGSettings
+from settings import LLM_RUNNERS, KBSTORES, DOC_SOURCES, RESTORE_DEFAULT, GENERATION_GUARD, ASSISTANTS
 from store.sql_alchemy_stores import SQLAlchemy_ChatStore
 from utils import utc_now
 from room_states import RoomStateRegister, RoomState
@@ -224,7 +226,13 @@ class InputData:
             raise ValueError("Missing user input parameter!")
         self.user_text = self.user_input.get("content")
         self.kb_name = data.get('kb_name', None)
-        self.model = data.get('llm_model')
+        assistant = data.get('assistant')
+        if type(assistant) == dict:
+            self.assistant_config: Optional[dict] = assistant
+            self.assistant_name: str = assistant.get('name')
+        elif type(assistant) == str:
+            self.assistant_config: Optional[dict] = None
+            self.assistant_name: str = assistant
 
         self.images = self.user_input.get("images", [])
         self.images = [sanitize_image_name(f) for f in self.images]
@@ -236,7 +244,8 @@ class InputData:
             "user_text": self.user_text,
             "images": self.images,
             "kb_name": self.kb_name,
-            "model": self.model,
+            "assistant_config": self.assistant_config,
+            "assistant_name": self.assistant_name,
         }
 
     def to_chat_input(self):
@@ -255,7 +264,6 @@ def handle_message(message_data):
     room_state: RoomState = room_state_register.get(data.room_id)
     room_state.start()
     try:
-
         # send temporary user message (id=null)
         raw_user_message = data.to_room_message()
 
@@ -265,40 +273,45 @@ def handle_message(message_data):
 
         history_query = chat_store.messages_by_room(data.room_id)
         cleaned_history = [x for x in history_query if not x.failed]
-        system_prompt_history = [x for x in cleaned_history if x.role == "system"]
 
-        llm_model = data.model
-        if len(system_prompt_history) > 0:
-            sys_message = system_prompt_history[0]
-            sys_content = sys_message.get_json_content()
-            ctx = ChatContext(
-                llm_model,
-                None,
-                kb_service.kb_store.get(data.kb_name),
-                sys_content.get("options", None)
-            )
+        if data.assistant_config is not None:
+            assistant_config = data.assistant_config
         else:
-            default_system_prompt = settings.get(DEFAULT_SYSTEM_PROMPT, '')
-            llm_runner_options = super_runner.get_options(llm_model)
-            ctx = ChatContext(
-                llm_model,
-                default_system_prompt,
-                kb_service.kb_store.get(data.kb_name),
-                llm_runner_options
-            )
+            assistant_name = data.assistant_name
+            assistants = [config for config in settings.get(ASSISTANTS) if config['name'] == assistant_name]
+            if len(assistants)>0:
+                assistant_config = assistants[0]
+            else:
+                logger.error(f"Failed to load assitant config for \"{assistant_name}\"")
+                assistant_config = None
 
-        if not super_runner.is_model_installed(model=llm_model):
-            raise ValueError(f"Did not find model: {llm_model}! Check if model is installed and the LLM runner is enabled!")
+        if len(cleaned_history) == 0:
+            if assistant_config is not None:
+                assistant = Assistant.from_settings(assistant_config, super_runner)
+            else:
+                assistant = None
+        else:
+            assistant = Assistant.from_history(cleaned_history, super_runner)
+
+        if assistant is None:
+            raise ValueError(f"Could not create assistant")
+
+        ctx = ChatContext(
+            kb_service.kb_store.get(data.kb_name)
+        )
+
+        if not assistant.llm_runner.is_model_installed(model=assistant.model):
+            raise ValueError(f"Did not find model: {assistant.model}! Check if model is installed and the LLM runner is enabled!")
         try:
             gen_guard = GenerationGuard.from_settings(settings[GENERATION_GUARD])
-            assistant_text, rag_sources = super_runner.chat(
+
+            assistant_text, thinking_text, rag_sources = assistant.chat(
                 ctx,
                 room_state,
                 data.user_input,
                 gen_guard=gen_guard,
                 update_callback=lambda msg: emit_progress(msg, data.room_id),
                 history=cleaned_history,
-                rag_settings=RAGSettings.from_settings(settings),
             )
         except Exception as e:
             emit_progress(MessageProgress('error', 0, 0, 0, message=f"{e}"), data.room_id)
@@ -313,7 +326,7 @@ def handle_message(message_data):
         has_system_prompt_history = any([x.role == "system" for x in cleaned_history])
         if not has_system_prompt_history:
             system_message = RoomMessage(room_id=data.room_id, username="__system__", role="system",
-                                         content=json.dumps(ctx.to_system_content()),
+                                         content=json.dumps(assistant.to_system_content()),
                                          rag_sources=None,
                                          failed=room_state.failed
                                          )
@@ -323,8 +336,8 @@ def handle_message(message_data):
                                    rag_sources=rag_sources,
                                    failed=room_state.failed
                                    )
-        assistant_msg = RoomMessage(room_id=data.room_id, username=llm_model, role='assistant',
-                                    content=json.dumps({"content": assistant_text,}),
+        assistant_msg = RoomMessage(room_id=data.room_id, username=assistant.model, role='assistant',
+                                    content=json.dumps({"content": assistant_text, "thinking": thinking_text, "assistant":{"name":assistant.name, "history_mode": assistant.history_mode}}),
                                     rag_sources=rag_sources,
                                     failed=room_state.failed
                                     )
@@ -388,7 +401,7 @@ def update_module_deps():
         kb_module = KBModule(kb_service)
 
     if llm_module is not None:
-        llm_module.llm_runners = super_runner
+        llm_module.super_llm_runner = super_runner
     else:
         llm_module = LLMModule(super_runner)
 
@@ -409,7 +422,7 @@ if __name__ == '__main__':
 
     # Cache models before launching app.
     logger.info(f"Loading models...")
-    llm_module.llm_runners.list_chat_models()
+    llm_module.super_llm_runner.get_models_with_capabilities()
 
     logger.info(f"App starting at {utc_now().isoformat()}")
     host = "127.0.0.1" if args.localhost else "0.0.0.0"

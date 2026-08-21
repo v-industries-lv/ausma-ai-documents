@@ -8,15 +8,15 @@ const styles = { ..._styles, ..._styles2 };
 
 export default function ModelSelector({
   model,
-  lockedModel,
   setModel,
   disabled,
   className,
+  runnerType = null,
   maxWidth = 100,
   dynamicWidth = true,
 }) {
   const [models, setModels] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(true);
   const selectRef = useRef(null);
   const measureRef = useRef(null);
 
@@ -40,42 +40,43 @@ export default function ModelSelector({
   }, [model, dynamicWidth, refreshing]);
 
   async function fetchModels() {
-    const req = await fetch("/api/llm_runners/models");
+    const req = await fetch("/api/llm_runners/models_with_capabilities");
     const json = await req.json();
-
-    const newModels = uniqueValues(json?.chat_models ?? []);
-
-    const same =
-      models.length === newModels.length &&
-      models.every((m) => newModels.includes(m));
-
-    if (!same) {
-      setModels(newModels);
-
-      setModel((prev) => (newModels.includes(prev) ? prev : newModels[0]));
+    const newModels = json.filter(
+      (m) =>
+        (m.capabilities ?? []).includes("completion") &&
+        (runnerType === null || m.runner_type === runnerType),
+    );
+    setModels(uniqueValues(newModels.map((m) => m.model)));
+    if (model === null && newModels.length > 0) {
+      setModel(newModels[0].model);
     }
+    setRefreshing(false);
   }
 
   useEffect(() => {
     fetchModels();
-  }, []);
+  }, [runnerType]);
 
   async function refreshModels() {
     setRefreshing(true);
     const req = await fetch("/api/llm_runners/models/refresh");
-    const json = await req.json();
-    console.log(json);
+    await req.json();
     fetchModels();
-    setRefreshing(false);
   }
 
-  function shortenModel(model, offset = 0) {
-    if (model.length <= maxWidth - offset) {
-      return model;
+  function includeCurrentValue(models) {
+    if (!model || models.includes(model)) {
+      return { title: model, fullModelList: models, missingModel: false };
+    } else {
+      return {
+        title: model + "\nModel not found. Check runner.",
+        fullModelList: [model, ...models],
+        missingModel: true,
+      };
     }
-    return model.substring(0, maxWidth - offset) + "...";
   }
-
+  const { fullModelList, title, missingModel } = includeCurrentValue(models);
   return (
     <>
       <div
@@ -85,14 +86,11 @@ export default function ModelSelector({
   `}
       >
         <div className={`${className}  ${styles["select-ctn"]}`} title={model}>
-          <label for="llm_model">LLM model:</label>
-          {lockedModel ? (
-            <span className={styles.select} style={{ maxWidth }} title={model}>
-              🔒 {lockedModel}
-            </span>
-          ) : models?.length && !refreshing ? (
+          <label htmlFor="llm">LLM model:</label>
+          {!refreshing ? (
             <>
               <select
+                id="llm"
                 ref={selectRef}
                 name="llm"
                 className={`${styles.select} ${dynamicWidth ? styles["dynamic-select"] : styles["static-select"]}`}
@@ -100,11 +98,11 @@ export default function ModelSelector({
                 style={{ maxWidth }}
                 value={model}
                 disabled={disabled}
-                title={model}
+                title={title}
               >
-                {models.map((model) => (
-                  <option value={model} key={model}>
-                    {model}
+                {fullModelList.map((model) => (
+                  <option value={model} key={model} title={model}>
+                    {(models.includes(model) ? "" : "[!] ") + model}
                   </option>
                 ))}
               </select>
@@ -124,7 +122,7 @@ export default function ModelSelector({
           className={`${styles["nav_option_btn"]} ${!dynamicWidth ? styles["nav_option_btn_static"] : ""}`}
           onClick={refreshModels}
           title="Refresh Modules"
-          disabled={disabled || refreshing || lockedModel?.length}
+          disabled={disabled || refreshing}
         >
           <RefreshIcon
             className={`${styles["home_icon"]} ${!dynamicWidth ? styles["home_icon_static"] : ""}`}

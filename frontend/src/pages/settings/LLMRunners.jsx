@@ -1,6 +1,7 @@
 import _styles from "../Settings.module.css";
 import _styles2 from "../SettingsCommon.module.css";
 import ListSetting from "./ListSetting";
+import SecretInput from "../../components/SecretInput.jsx"
 
 const styles = { ..._styles, ..._styles2 };
 
@@ -32,6 +33,14 @@ const llmRunners = {
       type: "openai",
       name: "new_openai_runner",
       api_key: "sk-proj-[rest of your key here]",
+    },
+  },
+  mistralai: {
+    component: MistralAIRunner,
+    defaultValue: {
+      type: "mistralai",
+      name: "new_mistralai_runner",
+      api_key: "[your api key here]",
     },
   },
   remote: {
@@ -113,6 +122,7 @@ function OllamaRunner({ value, onChange }) {
         if (Number.isNaN(parsedValue)) {
           return;
         }
+        break;
       default:
         parsedValue = v;
     }
@@ -202,7 +212,6 @@ function OllamaRunner({ value, onChange }) {
   );
 }
 
-
 function OpenAIRunner({ value, onChange }) {
   function updateValue(e) {
     const target = e.target;
@@ -234,11 +243,64 @@ function OpenAIRunner({ value, onChange }) {
 
       <div className={styles.setting}>
         <label htmlFor="api">API key:</label>
-        <input
+        <SecretInput
           id="api"
           name="api_key"
           value={value.api_key}
-          type="password"
+          onChange={updateValue}
+        />
+      </div>
+
+      <div className={styles["checkbox-wrapper"]}>
+        <label htmlFor="active">Active:</label>
+        <input
+          id="active"
+          className={styles["checkbox"]}
+          name="active"
+          type="checkbox"
+          checked={Boolean(value.active)}
+          onChange={updateValue}
+          title="Active / Inactive"
+        />
+      </div>
+    </>
+  );
+}
+
+function MistralAIRunner({ value, onChange }) {
+  function updateValue(e) {
+    const target = e.target;
+    const n = target.name;
+    const v = target.value;
+    const checked = target.checked;
+    const type = target.type;
+    const newValue = { ...value, [n]: type === "checkbox" ? checked : v };
+    onChange?.(newValue);
+  }
+  return (
+    <>
+      {externalServiceWarning}
+      <div className={styles.setting}>
+        <label htmlFor="type" name="type">
+          Type:
+        </label>
+        <input name="type" id="type" defaultValue={value.type} readOnly />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="api_name"> Name:</label>
+        <input
+          id="api_name"
+          name="name"
+          value={value.name}
+          onChange={updateValue}
+        />
+      </div>
+      <div className={styles.setting}>
+        <label htmlFor="api">API key:</label>
+        <SecretInput
+          id="api"
+          name="api_key"
+          value={value.api_key}
           onChange={updateValue}
         />
       </div>
@@ -309,12 +371,7 @@ function RemoteRunner({ value, onChange }) {
 
       <div className={styles.setting}>
         <label htmlFor="url">API url:</label>
-        <input
-          id="url"
-          name="url"
-          value={value.url}
-          onChange={updateValue}
-        />
+        <input id="url" name="url" value={value.url} onChange={updateValue} />
       </div>
 
       <div className={styles["checkbox-wrapper"]}>

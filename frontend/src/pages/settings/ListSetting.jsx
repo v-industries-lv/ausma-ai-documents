@@ -17,9 +17,10 @@ export default function ListSetting({
   title,
   description,
   typeParameter = "type",
+  typeLabel = "Type:",
 }) {
   const [value, edited, { add, update, remove, swap, reset }] = useListState(
-    addInitialKeys(initial ?? [])
+    addInitialKeys(initial ?? []),
   );
   function addItem(type) {
     const defaultValue = types[type]?.defaultValue;
@@ -59,7 +60,7 @@ export default function ListSetting({
       </div>
 
       <div className={styles["button-row-two-sides"]}>
-        <AddRunner onAdd={addItem} types={types} />
+        <AddRunner onAdd={addItem} types={types} typeLabel={typeLabel} />
         <EditButtons
           edited={edited}
           onSave={save}
@@ -71,13 +72,13 @@ export default function ListSetting({
   );
 }
 
-function AddRunner({ onAdd, types: allTypes }) {
+function AddRunner({ typeLabel, onAdd, types: allTypes }) {
   const types = ["", ...Object.keys(allTypes)];
   const [selected, setSelected] = useState(types[0]);
   return (
     <div className={styles["button_group"]}>
       <label htmlFor="new-llm-runner-type" name="type-select">
-        Type:
+        {typeLabel}
       </label>
       <select
         className={styles["select-setting"]}

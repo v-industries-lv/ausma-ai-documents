@@ -57,7 +57,9 @@ class KBStoreTest(unittest.TestCase):
             "name": "new_kb",
             "selection": [],
             "convertors": [{"model": "test_convertor"}],
-            "embedding": {"model": "test_embedding"}
+            "embedding": {"model": "test_embedding"},
+            "rag_char_chunk_size": 500,
+            "rag_char_overlap": 100,
         }
         with_full_name = {**new_kb_config, "full_name": "chroma_store/new_kb"}
 

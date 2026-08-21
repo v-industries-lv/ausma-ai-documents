@@ -38,6 +38,12 @@ def run_flask():
                 "vision"
             ],
         },
+        {
+            "model": "test_model_embedding",
+            "capabilities": [
+                "embedding",
+            ]
+        },
     ]
 
     @app.route("/")
@@ -47,15 +53,18 @@ def run_flask():
             status = 200,
         )
 
+    @app.route("/api/models/list_with_capabilities")
+    def list_models_with_capabilities():
+        return app.response_class(
+            response=json.dumps(MODELS),
+            status=200,
+        )
+
     @app.route("/api/models/list", methods=["GET"])
     def list_models():
         return app.response_class(
             response=json.dumps(
-                [
-                    "test_model",
-                    "test_model_thinking",
-                    "test_model_vision",
-                ],
+                [x["model"] for x in MODELS],
                 indent=2
             ),
             status=200,

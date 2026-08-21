@@ -16,3 +16,6 @@ export { default as ChatUserIcon } from "./ChatUserIcon.jsx";
 export { default as ChatAusmaIcon } from "./ChatAusmaIcon.jsx";
 export { default as RefreshIcon } from "./RefreshIcon.jsx";
 export { default as UploadImageIcon } from "./UploadImage.jsx";
+export { default as ShowInExplorer } from "./ShowInExplorer.jsx";
+export { default as DocumentIcon } from "./DocumentIcon.jsx";
+export { default as LockIcon } from "./LockIcon.jsx";

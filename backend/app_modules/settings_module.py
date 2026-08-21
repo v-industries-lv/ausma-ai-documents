@@ -5,6 +5,7 @@ from flask import request, Flask
 
 from settings import Settings
 from settings import RESTORE_DEFAULT
+from platformdirs import user_documents_dir
 
 
 class SettingsModule:
@@ -57,4 +58,10 @@ class SettingsModule:
                     mimetype='application/json'
                 )
 
+        @app.route('/api/config/default_doc_root', methods=['GET'])
+        def get_default_doc_root():
+            return app.response_class(
+                    response=json.dumps({"content": user_documents_dir()}),
+                    mimetype='application/json'
+                )
 

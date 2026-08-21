@@ -8,8 +8,6 @@
   ],
   "embedding":
     {
-      "model": "bge-m3:latest",
-      "temperature": 0.7,
-      "seed": 42
+      "model": "bge-m3:latest"
     }
 }

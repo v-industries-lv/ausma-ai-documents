@@ -1,8 +1,14 @@
 import _styles from "../Settings.module.css";
 import _styles2 from "../SettingsCommon.module.css";
 import ListSetting from "./ListSetting";
+import SecretInput from "../../components/SecretInput.jsx"
 
 const styles = { ..._styles, ..._styles2 };
+
+async function fetchDefaultDocRoot() {
+  const response = await fetch("/api/config/default_doc_root");
+  return (await response.json()).content;
+}
 
 const docSources = {
   local_fs: {
@@ -10,7 +16,7 @@ const docSources = {
     defaultValue: {
       doc_source_type: "local_fs",
       name: "default_local",
-      root_path: "documents",
+      root_path: await fetchDefaultDocRoot(),
     },
   },
   mail_imap: {
@@ -131,13 +137,11 @@ function IMAPMailSource({ value, onChange }) {
       </div>
       <div className={styles.setting}>
         <label htmlFor="password">Password [IMAP]:</label>
-        <input
-          type="password"
+        <SecretInput
           id="password"
           name="password"
           value={value.password}
           onChange={updateValue}
-          placeholder="[email password]"
         />
       </div>
       <p>Disabling SSL verification is NOT recomended by default. Only disable it when dealing with local servers with self-signed certificates.</p>

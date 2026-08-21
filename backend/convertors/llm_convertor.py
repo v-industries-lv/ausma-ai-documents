@@ -52,5 +52,5 @@ class LlmConvertor(DocumentImageConvertor):
         if self.llm_runner.supports_thinking(self.model) is not None:
             think_mode = False
 
-        return self.llm_runner.run_text_completion_simple(self.model,messages, self.options, think_mode=think_mode)
+        return self.llm_runner.run_text_completion_simple(self.model, messages, self.options, thinking_flag=think_mode)
 

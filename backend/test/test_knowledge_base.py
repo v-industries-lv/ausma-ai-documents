@@ -12,7 +12,6 @@ from convertors.document_file import DocumentFile
 from kb.knowledge_base import KnowledgeBase
 from kb.chroma import ChromaKnowledgeBase
 from llm_runners.ollama_runner import OllamaRunner
-from settings import RAGSettings
 from test.mock_classes import MockChroma, mock_embeddings_source
 
 
@@ -55,8 +54,6 @@ class KnowledgeBaseTest(unittest.TestCase):
         kb, _ = self._makeChroma()
         embedding = kb._create_embedding(mock_embeddings_source)
         self.assertEqual(embedding.model, "bge-m3:latest")
-        self.assertEqual(embedding.temperature, 0.7)
-        self.assertEqual(embedding.seed, 42)
 
     def test_knowledgebase_validate_document_source_exists(self):
         convertor_result = ConvertorResult(
@@ -176,17 +173,7 @@ class KnowledgeBaseTest(unittest.TestCase):
             result_hash="bad877b2f1bfd0d8e37ba5a2d3e6107320946d713b0ca19326bf690995d61145",
             document_path="mock_data/existing_document/ducks.pdf",
         )
-        rag_settings = RAGSettings(
-            {
-                "rag_document_count": 20,
-                "rag_char_chunk_size": 1000,
-                "rag_char_overlap": 200,
-                "rag_similarity_score_threshold": 0.8,
-                "rag_score_margin": 0.2,
-                "rag_cosine_distance_irrelevance_threshold": 1.0
-            }
-        )
-        kb.store_convertor_result(mock_embeddings_source, convertor_result, rag_settings=rag_settings)
+        kb.store_convertor_result(mock_embeddings_source, convertor_result)
         with open("temp/mock_chroma_db.json", "r") as fh:
             stored_document_contents = json.load(fh)
         self.assertEqual(len(stored_document_contents), 3)

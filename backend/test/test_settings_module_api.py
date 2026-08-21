@@ -55,18 +55,24 @@ class SettingsModuleAPITest(unittest.TestCase):
 
     def test_get_specific_config(self):
         response = json.loads(
-            http.request('GET', f"http://{HOST}:{PORT}/api/config/default_system_prompt").data.decode('utf-8')
+            http.request('GET', f"http://{HOST}:{PORT}/api/config/default_llm_runner").data.decode('utf-8')
         )
         with open("settings/mock_initialized_default.conf", "r") as f:
             default_config = json.load(f)
-        self.assertEqual(response, default_config["default_system_prompt"])
+        self.assertEqual(response, default_config["default_llm_runner"])
 
     def test_set_specific_config(self):
-        http.request("POST", f"http://{HOST}:{PORT}/api/config/default_system_prompt", json="New system prompt")
+        llm_runner = {
+            'host': 'http://localhost:11434',
+            'name': 'default_ollama_runner',
+            'type': 'ollama'
+        }
+        http.request("POST", f"http://{HOST}:{PORT}/api/config/default_llm_runner", json=llm_runner)
         response = json.loads(
-            http.request('GET', f"http://{HOST}:{PORT}/api/config/default_system_prompt").data.decode('utf-8')
+            http.request('GET', f"http://{HOST}:{PORT}/api/config/default_llm_runner").data.decode('utf-8')
         )
-        self.assertEqual(response, "New system prompt")
+
+        self.assertEqual(response, llm_runner)
 
     def test_restore_defaults(self):
         new_llm_runner = [{"type": "ollama", "host": "localhost:1234", "name": "test_runner_name"}]
@@ -83,21 +89,7 @@ class SettingsModuleAPITest(unittest.TestCase):
         )
         with open("settings/mock_initialized_default.conf", "r") as f:
             default_config = json.load(f)
-        self.assertEqual(response, default_config)
+        self.assertEqual(default_config, response)
 
-    def test_set_system_prompt(self):
-        new_system_prompt = "New system prompt"
-        http.request("POST", f"http://{HOST}:{PORT}/api/config/default_system_prompt", json=new_system_prompt)
-        response = json.loads(
-            http.request('GET', f"http://{HOST}:{PORT}/api/config").data.decode('utf-8')
-        )
-        self.assertEqual(response["default_system_prompt"], new_system_prompt)
 
-    def test_set_system_prompt_invalid_type(self):
-        new_system_prompt = [{"default_system_prompt": "New system prompt"}]
-        http.request("POST", f"http://{HOST}:{PORT}/api/config/default_system_prompt", json=new_system_prompt)
-        response = json.loads(
-            http.request('GET', f"http://{HOST}:{PORT}/api/config").data.decode('utf-8')
-        )
-        self.assertNotEqual(response["default_system_prompt"], new_system_prompt)
 

@@ -1,9 +1,22 @@
-const { app, session, shell, BrowserWindow, Menu } = require("electron");
+const { app, session, shell, BrowserWindow, Menu, ipcMain } = require("electron");
 const { spawn } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const isMac = process.platform === "darwin";
+
+ipcMain.handle('show-item-in-folder', async (_, filePath) => {
+  try {
+    shell.showItemInFolder(filePath);
+
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+});
 
 let serverProcess;
 
@@ -14,7 +27,7 @@ async function createWindow(url) {
     show: false,
     webPreferences: {
       nodeIntegration: false,
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, '../preload/index.js'),
       additionalArguments: [`--defaultUsername=${os.userInfo().username}`],
     },
   });

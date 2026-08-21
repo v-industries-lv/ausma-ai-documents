@@ -2,7 +2,7 @@ import os
 import unittest
 
 from settings import Settings
-from settings import LLM_RUNNERS, DEFAULT_SYSTEM_PROMPT, SUPPORTED_LLM_RUNNERS, KBSTORES, DOC_SOURCES
+from settings import LLM_RUNNERS, SUPPORTED_LLM_RUNNERS, KBSTORES, DOC_SOURCES
 
 # test file
 def tf(name: str) -> str:
@@ -80,12 +80,6 @@ class SettingTestCase(unittest.TestCase):
         self.assertEqual(str(cm.exception), f"Errors:\n{['LLM runner host :123456 is invalid.']}")
         self.assertNotEqual(settings[LLM_RUNNERS], test_val)
 
-    def test_default_system_prompt_validation(self):
-        settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
-        with self.assertRaises(Exception) as cm:
-            settings[DEFAULT_SYSTEM_PROMPT] = None
-        self.assertEqual(str(cm.exception), f"Errors:\n{["Key default_system_prompt value must be a str type, got <class 'NoneType'> instead."]}")
-
     def test_unknown_setting_key_validation(self):
         settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
         settings["unknown_setting"] = None
@@ -121,17 +115,25 @@ class SettingTestCase(unittest.TestCase):
 
     def test_get_doc_sources(self):
         settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
-        runners = settings.get_doc_sources()
-        self.assertEqual(runners, settings[DOC_SOURCES])
+        doc_sources = settings.get_doc_sources()
+        self.assertEqual(doc_sources, settings[DOC_SOURCES])
 
     def test_get_doc_sources_modify_return(self):
         settings = Settings(tf("mock_default.conf"), tf("mock_current.conf"))
-        runners = settings.get_doc_sources()
-        runners.pop()
-        self.assertNotEqual(runners, settings[DOC_SOURCES])
-        runners = settings.get_doc_sources()
-        runners[0] = {}
-        self.assertNotEqual(runners, settings[DOC_SOURCES])
+        # Initialize some doc source, is empty otherwise
+        doc_sources = [{
+            "doc_source_type": "local_fs",
+            "name": "default_local",
+            "root_path": "documents"
+        }]
+        settings[DOC_SOURCES] = doc_sources
+
+        doc_sources = settings.get_doc_sources()
+        doc_sources.pop()
+        self.assertNotEqual(doc_sources, settings[DOC_SOURCES])
+        doc_sources = settings.get_doc_sources()
+        doc_sources[0] = {}
+        self.assertNotEqual(doc_sources, settings[DOC_SOURCES])
 
 
 if __name__ == '__main__':

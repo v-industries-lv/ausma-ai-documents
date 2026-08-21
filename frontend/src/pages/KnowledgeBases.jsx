@@ -83,6 +83,8 @@ export default function KnowledgeBases() {
     const kb = {
       fresh: true,
       name: name,
+      rag_char_chunk_size: 1000,
+      rag_char_overlap:  200,
       selection: ["**/*"],
       convertors: [
         {
@@ -583,13 +585,65 @@ function AddConvertor({ onAdd, children, startsDirty }) {
 }
 
 function KBEditor({ kb, onSave, onRemove, onClear }) {
+  const maxChunkSize = 20000;
   function addKeys(kb) {
     return { ...kb, convertors: addInitialKeys(kb.convertors) };
   }
+
   const [value, edited, { upsert, reset }] = useObjectState(
     addKeys(kb),
     kb.fresh,
   );
+
+  const chunkSize = value.rag_char_chunk_size;
+  const chunkOverlap = value.rag_char_overlap;
+
+  const handleInputChange = (event) => {
+    const { name, value: newValue, validity, min, max } = event.target;
+    let finalValue;
+    if (validity.rangeUnderflow) {
+      finalValue = Number(min);
+    } else if (validity.rangeOverflow) {
+      finalValue = Number(max);
+    } else if (validity.valid) {
+      finalValue = Number(newValue);
+    } else {
+      return
+    }
+
+    if (name === `rag_char_chunk_size`) {
+        upsert({
+            [`rag_char_overlap`]: Math.min(Math.floor(finalValue / 2), chunkOverlap),
+            [name]: finalValue,
+        });
+    } else {
+        upsert({ [name]: finalValue });
+    }
+  };
+
+  const handleSpinnerButtonEventChunkSize = (value) => {
+    handleInputChange({
+      target: {
+        name: "rag_char_chunk_size",
+        value,
+        min: 0,
+        max: maxChunkSize,
+        validity: { valid: true },
+      },
+    });
+  };
+
+  const handleSpinnerButtonEventChunkOverlap = (value) => {
+    handleInputChange({
+      target: {
+        name: "rag_char_overlap",
+        value: Math.min(Math.floor(chunkSize/ 2), value),
+        min: 0,
+        max: Math.floor(chunkSize/2),
+        validity: { valid: true },
+      },
+    });
+  };
 
   async function save() {
     if (await onSave?.(value)) {
@@ -614,6 +668,49 @@ function KBEditor({ kb, onSave, onRemove, onClear }) {
       initiallyClosed={!value.fresh}
     >
       <div className={styles["item"]}>
+        <div className={styles.setting}>
+          <label htmlFor="rag_char_chunk_size_id">Chunk size:</label>
+          <div className={styles["wrapper"]}>
+            <input
+              type="number"
+              min={100}
+              max={maxChunkSize}
+              className={styles["input_field"]}
+              id="rag_char_chunk_size_id"
+              name="rag_char_chunk_size"
+              value={chunkSize}
+              onChange={handleInputChange}
+            />
+            <SpinnerButtons
+              value={chunkSize}
+              onChange={handleSpinnerButtonEventChunkSize}
+              min={100}
+              max={maxChunkSize}
+              step={100}
+            />
+          </div>
+
+          <label htmlFor="rag_char_overlap_id">Chunk overlap:</label>
+          <div className={styles["wrapper"]}>
+            <input
+              type="number"
+              min={0}
+              max={Math.floor(chunkSize/2)}
+              className={styles["input_field"]}
+              id="rag_char_overlap_id"
+              name="rag_char_overlap"
+              value={chunkOverlap}
+              onChange={handleInputChange}
+            />
+            <SpinnerButtons
+              value={chunkOverlap}
+              onChange={handleSpinnerButtonEventChunkOverlap}
+              min={0}
+              max={Math.floor(chunkSize/2)}
+              step={100}
+            />
+          </div>
+        </div>
         <SourceSelection
           value={value.selection}
           onChange={(v) => upsert({ selection: v })}

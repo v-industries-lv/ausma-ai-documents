@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 /coverage
+junit.xml
 
 # Editor directories and files
 .vscode/*

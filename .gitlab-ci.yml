@@ -1,0 +1,171 @@
+stages:
+  - build-env
+  - test
+  - accept-package
+  - build-binaries
+  - package-installers
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "internal-dev"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+build-image:
+  image: docker:latest
+  stage: build-env
+  script:
+    - docker build -t ausma-ai-build:linux -f backend/Dockerfile .
+  tags:
+    - docker
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "internal-dev"'
+test-python:
+  stage: test
+  image:
+    name: ausma-ai-build:linux
+    pull_policy: never
+  cache:
+    - key:
+        files:
+          - backend/requirements.txt
+      paths:
+        - backend/.venv/
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "internal-dev"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - backend/**/*
+  script:
+    - cd backend
+    - echo "Running LLMs on '$TEST_OLLAMA_HOST'"
+    - ./setup_python_linux.sh
+    - ./run_tests_coverage.sh
+  coverage: '/TOTAL.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    when: always
+    paths:
+      - backend/htmlcov/
+      - backend/coverage.xml
+      - backend/unit-tests.xml
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage.xml
+      junit: backend/unit-tests.xml
+test-javascript:
+  image: node:24-alpine
+  stage: test
+  cache:
+    - key:
+        files:
+          - frontend/package.json
+      paths:
+        - frontend/node_modules/
+        - frontend/package-lock.json
+  before_script:
+    - cd frontend
+    - npm ci
+  script:
+    - npm run test:ci
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  artifacts:
+    paths:
+      - frontend/coverage/
+      - frontend/junit.xml
+    when: always
+    reports:
+      junit:
+        - frontend/junit.xml
+# audit checks for security vulnerabilities
+# they should register as warnings and not fail builds during development
+audit-javascript-frontend:
+  image: node:24-alpine
+  stage: test
+  script:
+    - cd frontend
+    - npm audit
+  allow_failure:
+    exit_codes:
+      - 1
+audit-javascript-electron:
+  image: node:24-alpine
+  stage: test
+  script:
+    - cd electron-vite
+    - npm audit
+  allow_failure:
+    exit_codes:
+      - 1
+audit-python:
+  image: python:3.12
+  stage: test
+  script:
+    - cd backend
+    - python -m pip install pip-audit
+    # IGNORE: PYSEC-2026-311. If you set the embedding model in ChromaDB to a malicious one, you can preform RCE.
+    # We use local chromaDB, therefore you would have to have local filesystem access to perform this.
+    - pip-audit -r requirements.txt --ignore-vuln PYSEC-2026-311
+    - pip-audit -r requirements-build.txt
+  allow_failure:
+    exit_codes:
+      - 1
+# audit end
+accept-package:
+  stage: accept-package
+  when: manual
+  script:
+    - echo "Manual build triggered"
+package-frontend:
+  image: node:24-alpine
+  stage: build-binaries
+  needs: 
+    - accept-package
+  before_script:
+    - cd frontend
+    - npm ci
+  script:
+    - npm run build
+  artifacts:
+    when: on_success
+    paths:
+      - frontend/dist/
+package-backend:
+  image: python:3.12
+  stage: build-binaries
+  needs: 
+    - accept-package
+  before_script:
+    - cd backend
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt
+    - pip install -r requirements-build.txt
+  script:
+    - ./build_bundled.sh
+  after_script:
+    - cd backend
+    - du -s dist
+    - du -hs dist
+  artifacts:
+    when: on_success
+    paths:
+      - backend/dist/
+package-electron:
+  image: node:24-trixie
+  stage: package-installers
+  needs:
+    - package-backend
+    - package-frontend
+  before_script:
+    - cd electron-vite
+    - npm ci
+  script:
+    - npm run build:linux
+  after_script:
+    - cd electron-vite
+    - du -s dist
+    - du -hs
+  artifacts:
+    when: on_success
+    paths:
+      - electron-vite/dist/

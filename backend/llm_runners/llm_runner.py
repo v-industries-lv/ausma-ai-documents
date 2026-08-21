@@ -1,31 +1,56 @@
-import json
+import datetime
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Tuple
-import datetime
-import os
 
-from app_modules.multimodal_chat_module import MMChatModule
-from convertors.llm_contexts import ChatContext
-from domain import RoomMessage, MessageProgress
 from langchain_core.embeddings import Embeddings
 
+from domain import MessageProgress
 from generation_guard import GenerationGuard
 from logger import logger
-from room_states import RoomState
-from settings import Settings, RAGSettings
-from utils import utc_now, list_of_b64_from_paths
-from reranker import rerank
+from settings import Settings
+from utils import utc_now
 
 RANDOM_SEED = 42
 MAX_TOKENS_LIMIT = 32000
 
 class LLMRunner(ABC):
-    @abstractmethod
-    def list_chat_models(self):
-        pass
+    def __init__(self, runner_type: str):
+        self.runner_type = runner_type
+        self.last_update: Optional[datetime.datetime] = None
+        self.cached_models: Optional[List[dict]] = None
 
     @abstractmethod
+    def get_models_with_capabilities(self) -> List[dict]:
+        pass
+
+    def refresh_model_cache(self):
+        # Make the cache stale as opposed to clearing cached models. Prevents concurrent users from clearing each others model list while refreshing.
+        self.last_update = None
+        self.cached_models = self.get_models_with_capabilities()
+
+    def supports_thinking(self, model: str) -> Optional[bool]:
+        available_thinking_models = [x["model"] for x in self.get_models_with_capabilities() if "thinking" in x["capabilities"]]
+        if model in available_thinking_models:
+            return True
+        return False
+
+    def supports_vision(self, model: str) -> Optional[bool]:
+        available_vision_models = [x["model"] for x in self.get_models_with_capabilities() if "vision" in x["capabilities"]]
+        if model in available_vision_models:
+            return True
+        return False
+
+    def list_chat_models(self):
+        available_completion_models = [x["model"] for x in self.get_models_with_capabilities() if "completion" in x["capabilities"]]
+        if len(available_completion_models) == 0:
+            logger.error(f"{type(self)}: Could not find any completion models!")
+        return available_completion_models
+
     def is_model_installed(self, model) -> bool:
+        return model in [x["model"] for x in self.get_models_with_capabilities()]
+
+    @abstractmethod
+    def convert_messages_for_api(self, messages: List[dict]) -> List[dict]:
         pass
 
     @abstractmethod
@@ -40,132 +65,20 @@ class LLMRunner(ABC):
         if not self.is_model_installed(model):
             logger.error(f"[LLM_MODEL_NOT_FOUND]_{model}_{utc_now().isoformat()}")
             raise ValueError(
-                f"Model {repr(model)} not installed! Available models: {';'.join([x.model for x in self.list_chat_models()])}")
-
-    def chat(self, ctx: ChatContext, room_state: RoomState,
-             user_input: dict,
-             gen_guard: Optional[GenerationGuard],
-             update_callback: Optional[Callable] = None,
-             history: Optional[List[RoomMessage]] = None,
-             rag_settings: RAGSettings = None) -> Tuple[str, str]:
-
-        def rag_context_builder(rag_sources: dict):
-            rag_tag_start = "<rag_source>"
-            rag_tag_end = "</rag_source>"
-            context_text_rag = "\n\nThe following text is context provided by RAG: \n"
-            return context_text_rag + "\n" + '\n'.join([rag_tag_start + x["content"] + rag_tag_end for x in rag_sources])
-
-
-        context_text_no_rag = "\n\nRAG did not find any relevant documents..."
-
-        failed_status = False
-        try:
-            llm_model = ctx.llm_model
-            self.check_model_installed(llm_model)
-            user_content = user_input.get("content")
-            if user_content is None or len(user_content) == 0:
-                raise(ValueError("No text provided!"))
-            context = ""
-            reranked_rag_sources = None
-            if ctx.kb is not None:
-                embedding_model = ctx.kb.embedding_config["model"]
-                self.check_model_installed(embedding_model)
-                retrieved_documents = ctx.kb.rag_lookup(
-                    self.get_embedding,
-                    user_input["content"],
-                    rag_settings.rag_document_count,
-                )
-                logger.info(f"RAG used in room {room_state.room_id}! Document count: {str(len(retrieved_documents))}")
-                raw_rag_sources = [{"id": x[0].id, "similarity_score": x[1], "metadata": x[0].metadata,
-                                    "content": x[0].page_content}
-                                   for x in retrieved_documents]
-                rag_context = ""
-                reranked_rag_sources = rerank(raw_rag_sources, self.get_embedding(ctx.kb.embedding_config), rag_settings)
-                if len(reranked_rag_sources) > 0:
-                    rag_context = rag_context_builder(reranked_rag_sources)
-                    logger.info(f"After reranking documents of room {room_state.room_id}, relevant document count: {str(len(reranked_rag_sources))}")
-
-                if len(rag_context) == 0:
-                    rag_context = context_text_no_rag
-                    logger.info(f"RAG result in {room_state.room_id}: No relevant documents found!")
-                context += rag_context
-
-            user_message = {
-                'role': 'user',
-                'content': user_input["content"] + context,
-            }
-            images = user_input.get("images", [])
-            supports_vision = self.supports_vision(llm_model)
-            if supports_vision:
-                user_message["images"] = list_of_b64_from_paths( [os.path.join(MMChatModule.UPLOAD_FOLDER, f) for f in images])
-            elif len(images)>0:
-                logger.warning(f"Ignoring images passed to a model that does not support vision. Model: {llm_model}")
-
-            if len(history) == 0:
-                messages = [ctx.get_system_message(), user_message]
-            else:
-                messages = []
-                for message_item in history:
-                    context = ""
-                    if message_item.rag_sources is not None:
-                        rag_sources_used = json.loads(message_item.rag_sources)
-                        if rag_sources_used is not None:
-                            if len(rag_sources_used) > 0:
-                                context += rag_context_builder(rag_sources_used)
-                            else:
-                                context += context_text_no_rag
-                    message = {"role": message_item.role}
-                    message.update(json.loads(message_item.content))
-                    if supports_vision:
-                        msg_images = message.get("images", [])
-                        message["images"] = list_of_b64_from_paths(
-                            [os.path.join(MMChatModule.UPLOAD_FOLDER, f) for f in msg_images])
-                    message["content"] += context
-                    messages.append(message)
-
-                messages.append(user_message)
-
-            # TODO: implement think handling.
-            # Right now either always sets it as False
-            # Or leaves as None when thinking is not supported by the llm runner
-            think_mode = self.supports_thinking(llm_model)
-            if think_mode is not None:
-                think_mode = False
-
-            assistant_text, failed_status = self.run_text_completion_streaming(
-                model=llm_model,
-                messages=messages,
-                is_stopped=room_state.is_stopped,
-                gen_guard=gen_guard,
-                update_callback=update_callback,
-                think_mode=think_mode,
-                options=ctx.options
-            )
-        except Exception as e:
-            logger.error(f"[CHAT_FATAL]{room_state.room_id}", e)
-            raise e
-        if failed_status:
-            room_state.stop()
-        return assistant_text, json.dumps(reranked_rag_sources)
+                f"Model {repr(model)} not installed! Available models: {';'.join([x["model"] for x in self.get_models_with_capabilities()])}")
 
     @abstractmethod
-    def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool], gen_guard: Optional[GenerationGuard], update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
+    def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
+                                      gen_guard: Optional[GenerationGuard], update_callback: Callable[[MessageProgress], None],
+                                      options: dict = None, thinking_flag=None) -> Tuple[str, str, bool]:
         pass
 
     @abstractmethod
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, thinking_flag=None):
         pass
 
     @abstractmethod
     def get_embedding(self, embedding_config) -> Optional[Embeddings]:
-        pass
-
-    @abstractmethod
-    def supports_thinking(self, model: str) -> Optional[bool]:
-        pass
-
-    @abstractmethod
-    def supports_vision(self, model: str) -> Optional[bool]:
         pass
 
     @staticmethod
@@ -186,7 +99,9 @@ class LLMRunner(ABC):
         from llm_runners.debug_runner import DebugRunner
         from llm_runners.openai_runner import OpenAIRunner
         from llm_runners.remote_runner import RemoteRunner
-        runner_classes = [OllamaRunner, DebugRunner, OpenAIRunner, RemoteRunner]
+        from llm_runners.mistral_runner import MistralRunner
+
+        runner_classes = [OllamaRunner, DebugRunner, OpenAIRunner, RemoteRunner, MistralRunner]
 
         for item in settings.get_llm_runners():
             for runner_cls in runner_classes:
@@ -212,12 +127,23 @@ class LLMRunner(ABC):
 
 
 class SuperRunner(LLMRunner):
+    def get_models_with_capabilities(self) -> List[dict]:
+        models = []
+        for runner in self.runners:
+            models += runner.get_models_with_capabilities()
+        return models
+
+    def convert_messages_for_api(self, messages: List[dict]) -> List[dict]:
+        # SuperRunner does not require message formatting
+        return messages
+
     @staticmethod
     def from_dict(config: dict) -> Optional[LLMRunner]:
         from llm_runners.debug_runner import DebugRunner
         from llm_runners.ollama_runner import OllamaRunner
         from llm_runners.openai_runner import OpenAIRunner
         from llm_runners.remote_runner import RemoteRunner
+        from llm_runners.mistral_runner import MistralRunner
 
         if config.get("active"):
             if config["type"] == "ollama":
@@ -226,6 +152,8 @@ class SuperRunner(LLMRunner):
                 return OpenAIRunner.from_dict(config)
             elif config["type"] == "remote":
                 return RemoteRunner.from_dict(config)
+            elif config["type"] == "mistralai":
+                return MistralRunner.from_dict(config)
             elif config["type"] == "debug":
                 return DebugRunner.from_dict(config)
         return None
@@ -253,45 +181,38 @@ class SuperRunner(LLMRunner):
         return None
 
     def __init__(self, runners: List[LLMRunner]):
+        super().__init__("super")
         self.runners = runners
-        self._cached_models = None
-        self._last_cached = None
 
     def list_chat_models(self):
         models = []
-        if self._cached_models is not None and datetime.datetime.now(
-                datetime.UTC) - self._last_cached < datetime.timedelta(days=1):
-            return self._cached_models
-        self._last_cached = datetime.datetime.now(datetime.UTC)
         for runner in self.runners:
-            runner_models = []
             try:
-                runner_models = runner.list_chat_models()
+                models += runner.list_chat_models()
             except Exception as e:
-                logger.error(f"An error occured trying to list models. Error: {e}")
-            models += runner_models
-        self._cached_models = models
+                logger.error(f"An error occured trying to list models from runner {runner.runner_type}. Error: {e}")
         return models
 
     def refresh_model_cache(self):
-        # Make the cache stale as opposed to clearing cached models. Prevents concurrent users from clearing each others model list while refreshing.
-        self._last_cached = datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)
-        self.list_chat_models()
+        for runner in self.runners:
+            runner.refresh_model_cache()
 
-    def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool], gen_guard: Optional[GenerationGuard], update_callback: Callable[[MessageProgress], None], options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
+    def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
+                                      gen_guard: Optional[GenerationGuard], update_callback: Callable[[MessageProgress], None],
+                                      options: dict = None, thinking_flag=None) -> Tuple[str, str, bool]:
         if options is None:
             options = {}
-        for runner in self.runners:
-            if runner.is_model_installed(model):
-                return runner.run_text_completion_streaming(model, messages, is_stopped, gen_guard, update_callback, options, think_mode=think_mode)
-        return None, True
+        runner = self.get_runner_by_model(model)
+        if runner is not None:
+            return runner.run_text_completion_streaming(model, messages, is_stopped, gen_guard, update_callback, options, thinking_flag=thinking_flag)
+        return '', '', True
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, thinking_flag=None):
         if options is None:
             options = {}
-        for runner in self.runners:
-            if runner.is_model_installed(model):
-                return runner.run_text_completion_simple(model, messages, options, think_mode=think_mode)
+        runner = self.get_runner_by_model(model)
+        if runner is not None:
+            return runner.run_text_completion_simple(model, messages, options, thinking_flag=thinking_flag)
         return None
 
     def get_embedding(self, embedding_config: dict) -> Optional[Embeddings]:
@@ -325,3 +246,12 @@ class SuperRunner(LLMRunner):
             except Exception:
                 pass
         return model_ready
+
+    def get_runners_by_type(self, runner_type) -> List[LLMRunner]:
+        return [x for x in self.runners if x.runner_type == runner_type]
+
+    def get_runner_by_model(self, model) -> Optional[LLMRunner]:
+        for runner in self.runners:
+            if runner.is_model_installed(model):
+                return runner
+        return None

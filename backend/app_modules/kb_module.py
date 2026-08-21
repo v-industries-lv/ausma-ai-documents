@@ -17,7 +17,7 @@ class KBModule:
         parsed_config = kb_config.copy()
         try:
             parsed_config = dict(parsed_config)
-            key_types = {"name": str, "selection": list, "convertors": list, "embedding": dict}
+            key_types = {"name": str, "selection": list, "convertors": list, "embedding": dict, "rag_char_chunk_size": int, "rag_char_overlap": int,}
             for key, expected_type in key_types.items():
                 parsed_config[key] = expected_type(parsed_config[key])
             selection_list = []

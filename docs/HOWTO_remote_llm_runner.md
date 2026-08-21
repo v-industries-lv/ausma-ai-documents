@@ -7,32 +7,45 @@ This can be used for custom AI integrations, when the regular LLM runners are no
 
 ## Model Management Endpoints
 
-### 1. List Models
+### 1. List Models with Capabilities
 
-*   **Endpoint:** `/api/models/list`
+*   **Endpoint:** `/api/models/list_with_capabilities`
 *   **Method:** `GET`
-*   **Description:** Retrieves a list of all available models on the system.
+*   **Description:** Retrieves a list of all available models on the system along with their capabilities. The RemoteRunner uses this to cache model information (updating daily).
 *   **Success Response (200 OK):**
     *   **Content-Type:** `application/json`
-    *   **Body:** An array of model names (strings).
+    *   **Body:** An array of objects containing model names and their immediate capability flags.
     ```json
     [
-        "model_name_1",
-        "model_name_2",
-        "model_name_3"
+        {
+            "model": "model_name_1",
+            "completion": true,
+            "embedding": false
+        },
+        {
+            "model": "model_name_2",
+            "completion": true,
+            "embedding": true
+        }
     ]
     ```
+    *Note: The RemoteRunner subsequently calls `/api/models/show` for each model listed here to get the full `capabilities` array for internal caching.*
 
 ### 2. Show Model Details
 
 *   **Endpoint:** `/api/models/show`
-*   **Method:** `GET`
-*   **Description:** Retrieves detailed information for a specific model.
-*   **Query Parameters:** 
-    *   `model`: The name of the model to retrieve.
+*   **Method:** `POST`
+*   **Description:** Retrieves detailed information for a specific model. Required by RemoteRunner to fetch the full capabilities list after getting the initial model list.
+*   **Request Body:**
+    *   Requires a JSON body containing the `model` name.
+    ```json
+    {
+        "model": "model_thinking"
+    }
+    ```
 *   **Success Response (200 OK):**
     *   **Content-Type:** `application/json`
-    *   **Body:** Model details.
+    *   **Body:** Model details including an array of capabilities.
     ```json
     {
         "model": "model_thinking",
@@ -65,11 +78,12 @@ This can be used for custom AI integrations, when the regular LLM runners are no
     ```
 *   **Success Response (200 OK):**
     *   **Content-Type:** `application/json`
-    *   **Body:** 
+    *   **Body:** A boolean indicating success.
     ```json
     true
     ```
 *   **Failure Response (400/500 Error):**
+    *   **Content-Type:** `application/json`
     *   **Body:** 
     ```json
     false
@@ -89,11 +103,12 @@ This can be used for custom AI integrations, when the regular LLM runners are no
     ```
 *   **Success Response (200 OK):**
     *   **Content-Type:** `application/json`
-    *   **Body:** 
+    *   **Body:** A boolean indicating success.
     ```json
     true
     ```
 *   **Failure Response (400/500 Error):**
+    *   **Content-Type:** `application/json`
     *   **Body:** 
     ```json
     false
@@ -146,8 +161,9 @@ This can be used for custom AI integrations, when the regular LLM runners are no
 *   **Request Body:**
     *   Requires a JSON body containing:
         *   `model`: The model to use (e.g., `"test_model"`).
-        *   `messages`: An array representing the conversation history (e.g., `[{"role": "user", "content": "Hi"}]`).
+        *   `input`: An array representing the conversation history (key is `input`, not `messages`).
         *   `stream`: (Optional boolean) If `true`, the response will be streamed.
+        *   `max_output_tokens`: Integer defining the maximum tokens for output.
 
 ### Streaming Mode (Used for Chat UI)
 

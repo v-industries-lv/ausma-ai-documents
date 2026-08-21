@@ -2,36 +2,61 @@ import _styles from "./RagReferenceContent.module.css";
 import _styles2 from "./Username.module.css";
 import FullScreenModal from "./FullScreenModal";
 import { renderNewLines } from "../utils/jsxUtils";
-
+import ShowItemInFolderButton from "./ShowItemInFolderButton";
+import { DocumentIcon } from "./Icons/ComponentIcons";
 const styles = { ..._styles, ..._styles2 };
 
 export default function RagReferenceContent({ msg, setReference }) {
   const ragReference = JSON.parse(msg?.rag_sources ?? "[]") ?? [];
-  console.log(ragReference);
 
   const hasReference = ragReference.length > 0;
 
   return (
     <>
-      <div className={`${styles["list-content"]} ${styles["content-style"]}`}>
+      <div>
         {hasReference ? (
-          <div>
+          <div
+            className={`${styles["list-content"]} ${styles["content-style"]}`}
+          >
             {ragReference
               .toSorted((a, b) => a.similarity_score - b.similarity_score)
               .map((ref, i) => (
-                <a
-                  title="More"
-                  key={i}
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setReference(ref);
-                  }}
-                >
-                  {ref.metadata.document_path},&nbsp;{ref.metadata.page_number}/
-                  {ref.metadata.page_count}, &nbsp;{ref.metadata.chunk_number}/
-                  {ref.metadata.chunk_count}, &nbsp;{ref.content};<br />
-                </a>
+                <>
+                  {" "}
+                  <div className={styles["reference-content"]}>
+                    <div className={styles["reference-left"]}>
+                      <span>
+                        <DocumentIcon
+                          className={`${styles["icon"]} ${styles["document-icon"]} `}
+                        />
+                      </span>
+
+                      <a
+                        className={styles["reference-link"]}
+                        title="More"
+                        key={i}
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setReference(ref);
+                        }}
+                      >
+                        <b>{ref.metadata.filename}&nbsp;</b>
+                        <br />
+                        <b>
+                          Page {ref.metadata.page_number}/
+                          {ref.metadata.page_count}
+                        </b>{" "}
+                        - "{ref.content}";
+                      </a>
+                    </div>
+                    <div>
+                      <ShowItemInFolderButton
+                        filePath={ref.metadata.document_path}
+                      />
+                    </div>
+                  </div>
+                </>
               ))}
           </div>
         ) : (
@@ -54,12 +79,11 @@ export function RagReferenceModal({ reference, close }) {
     page_count,
     ...metadata
   } = reference.metadata;
-  metadata.page = `${page_number}/${page_count}`;
   metadata.chunk = `${chunk_number}/${chunk_count}`;
   metadata.document = `${document_number}/${document_count}`;
 
   const metadataEntries = Object.entries(metadata).toSorted((a, b) =>
-    a[0].localeCompare(b[0])
+    a[0].localeCompare(b[0]),
   );
   const entries = [
     ["id", reference.id],
@@ -72,7 +96,38 @@ export function RagReferenceModal({ reference, close }) {
       <FullScreenModal isClosed={!reference} onClickOff={close}>
         <div className={styles["content-style"]}>
           <div className={styles["reference-wrapper"]} title="Full Reference">
-            <p>{renderNewLines(reference.content)}</p>
+            <h2>Source</h2>
+            <div className={styles["ref-doc-group"]}>
+              <div className={styles["ref-doc-wrapper"]}>
+                <span>
+                  <DocumentIcon
+                    className={`${styles["icon-xl"]} ${styles["document-icon"]}`}
+                  />
+                </span>
+                <h3 className={styles["reference-link"]}>
+                  <b>{metadata.filename}</b>
+                </h3>
+              </div>
+              <div>
+                <ShowItemInFolderButton filePath={metadata.document_path} />
+              </div>
+            </div>
+            <h3>Page {(metadata.page = `${page_number}/${page_count}`)}</h3>
+
+            <span className={styles["horizontal-line"]} />
+
+            <div className={styles["reference-section"]}>
+              <h3>Retrieved Content</h3>
+
+              <div className={styles["retrieved-content"]}>
+                <p>{renderNewLines(reference.content)}</p>
+              </div>
+            </div>
+
+            <span className={styles["horizontal-line"]} />
+
+            <h3>Source Information</h3>
+
             {entries.map((pair) => (
               <p>
                 {pair[0]} : {pair[1]}

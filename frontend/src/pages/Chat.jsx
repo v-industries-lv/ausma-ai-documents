@@ -4,7 +4,7 @@ import styles from "./Chat.module.css";
 import "./Index.css";
 import { socket } from "../socket";
 import KnowledgeBaseSelector from "../components/KnowledgeBaseSelector";
-import ModelSelector from "../components/ModelSelector";
+import AssistantSelector from "../components/AssistantSelector";
 import Spinner from "../components/Spinner";
 import { MarkdownHooks } from "react-markdown";
 import rehypeStarryNight from "rehype-starry-night";
@@ -28,7 +28,7 @@ export default function ChatWrapper() {
   return <Chat key={roomId} roomId={roomId} />;
 }
 
-function Chat({ roomId }) {
+export function Chat({ roomId }) {
   const [_roomDefaults, setRoomDefaults] = useState(null);
   const { username } = useContext(UsernameContext);
   useEffect(() => {
@@ -53,8 +53,8 @@ function Chat({ roomId }) {
 
   // knowledge base set by the UI
   const [_kb, setKb] = useState(null);
-  // model set by the UI
-  const [_model, setModel] = useState(null);
+  // assistant set by the UI
+  const [_assistant, setAssistant] = useState(null);
 
   const [progress, setProgress] = useState({ status: "initial" });
 
@@ -110,24 +110,32 @@ function Chat({ roomId }) {
     fetchRoomDetails();
   }, [roomId]);
 
-  let lastAssitentMessage = null;
+  let lastAssistantMessage = null;
   history.forEach((element) => {
     if (element.role === "assistant") {
-      lastAssitentMessage = element;
+      lastAssistantMessage = element;
     }
   });
 
   const [reference, setReference] = useState(null);
 
-  // model set by constraints from history
-  const lockedModel = lastAssitentMessage?.username;
-  // effective model - to be used
-  const model = lockedModel ?? _model ?? roomDefaults?.model;
+  // Taking username for legacy reasons and extracting assistant name ony if available
+  let lockedAssistant = lastAssistantMessage?.username;
+  if (history.length > 1) {
+    const lastAssistantMessageContent = JSON.parse(
+      lastAssistantMessage.content,
+    );
+    if (lastAssistantMessageContent?.assistant) {
+      lockedAssistant = lastAssistantMessageContent.assistant.name;
+    }
+  }
 
+  // effective assistant - to be used
+  const assistant = _assistant ?? roomDefaults?.assistant;
   function getLastKnowledgeBase() {
     let kb = null;
     const rag_sources =
-      JSON.parse(lastAssitentMessage?.rag_sources ?? "[]") ?? [];
+      JSON.parse(lastAssistantMessage?.rag_sources ?? "[]") ?? [];
     rag_sources.forEach((rag_source) => {
       const current_kb = rag_source.knowledge_base;
       if (current_kb) {
@@ -142,7 +150,7 @@ function Chat({ roomId }) {
   const kb = _kb ?? lastKnowledgeBase ?? roomDefaults?.knowledge_base ?? "None";
 
   const generating = ["started", "generating"].includes(progress.status);
-  const inputDisabled = model === null || generating;
+  const inputDisabled = assistant === null || generating;
 
   function sendMessage(input, images = []) {
     if (input.trim() !== "") {
@@ -152,7 +160,7 @@ function Chat({ roomId }) {
       }
       socket.send({
         user_input: input_data,
-        llm_model: model,
+        assistant: assistant,
         kb_name: kb,
         room_id: roomId,
         username: username,
@@ -202,10 +210,10 @@ function Chat({ roomId }) {
               dynamicWidth
             />
 
-            <ModelSelector
-              model={model}
-              setModel={setModel}
-              lockedModel={lockedModel}
+            <AssistantSelector
+              assistant={assistant}
+              lockedAssistant={lockedAssistant}
+              setAssistant={setAssistant}
               disabled={inputDisabled}
               className={styles["select-ctn"]}
               maxWidth="20ch"
@@ -361,6 +369,7 @@ function ChatMessage({ msg, setReference }) {
       </>
     );
   } else if (msg.role === "assistant") {
+    const assistantName = msgContent?.assistant?.name ?? "ausma.ai";
     return (
       <div className={styles["assistant-message"]} key={msg.id}>
         <div className={styles["message_ctn"]}>
@@ -369,7 +378,7 @@ function ChatMessage({ msg, setReference }) {
             className={styles["user-icon"]}
             style={iconStyle}
           />
-          <span className={styles["assistant"]}>ausma.ai:</span>
+          <span className={styles["assistant"]}>{assistantName}:</span>
         </div>
         <div className={styles["message"]}>
           <MarkdownHooks

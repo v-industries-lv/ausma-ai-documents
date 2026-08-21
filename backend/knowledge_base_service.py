@@ -8,10 +8,8 @@ from convertors.document_image_convertor import DocumentImageConvertor
 from convertors.convertor_result import ConvertorResult
 import threading
 from convertors.document_file import DocumentFile
-from settings import RAGSettings
 from utils import utc_now
 from typing import Optional, List, Dict, Any
-from config import settings
 
 class KnowledgeBaseService:
     def __init__(self, kb_store: KBStore, doc_source: DocSource, llm_runner: LLMRunner):
@@ -120,7 +118,7 @@ class KnowledgeBaseService:
                                                     convertor=convertor.conversion_type)
                                 convertor_result: Optional[ConvertorResult] = convertor.convert(document, document_context)
                                 if convertor_result is not None:
-                                    kb.store_convertor_result(self.llm_runner.get_embedding, convertor_result, RAGSettings.from_settings(settings))
+                                    kb.store_convertor_result(self.llm_runner.get_embedding, convertor_result)
                                     self.doc_source.update_cache(document)
                                     kb.update_checked(document)
                                     break

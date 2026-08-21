@@ -35,50 +35,39 @@ class RemoteRunner(LLMRunner):
         def embed_query(self, text):
             return self.embed_documents([text])[0]
 
+    def get_models_with_capabilities(self) -> List[dict]:
+        if self.last_update is None or datetime.datetime.now(datetime.UTC) - self.last_update > datetime.timedelta(
+                days=1):
+            model_list = json.loads(requests.get(f"{self.url}/models/list_with_capabilities").content)
+            models = []
+            for model_item in model_list:
+                model_info = json.loads(
+                    requests.post(
+                        self.url + '/models/show',
+                        data='{"model": "' + model_item["model"] + '"}',
+                        headers={'Content-Type': 'application/json'}
+                    ).content
+                )
+                models.append(
+                    {
+                        "model": model_item["model"],
+                        "capabilities": model_info['capabilities'],
+                        "runner_type": self.runner_type,
+                    }
+                )
+            self.cached_models = models
+            self.last_update = datetime.datetime.now(datetime.UTC)
+        return self.cached_models
+
     def __init__(self, url: str, options: dict = None):
+        super().__init__("remote")
         self.url = url
         self.options = options
+        self.get_models_with_capabilities()
 
     def get_options(self, model):
         # Not implemented
         return None
-
-    def list_chat_models(self) -> List[str]:
-        headers = {
-            "Content-Type": "application/json"
-        }
-        r = requests.get(
-            f"{self.url}/models/list",
-            headers=headers
-        )
-        print(r.json())
-        models = []
-        for model in r.json():
-            payload = {"model": model}
-            headers = {
-                "Content-Type": "application/json"
-            }
-            r = requests.post(
-                f"{self.url}/models/show",
-                headers=headers,
-                json=payload
-            )
-            result = r.json()
-            if result is None:
-                continue
-            if "completion" in result["capabilities"]:
-                models.append(result["model"])
-        return models
-
-    def is_model_installed(self, model) -> bool:
-        headers = {
-            "Content-Type": "application/json"
-        }
-        r = requests.get(
-            f"{self.url}/models/list",
-            headers=headers
-        )
-        return model in r.json()
 
     def pull_model(self, model) -> bool:
         payload = {"model": model}
@@ -107,12 +96,13 @@ class RemoteRunner(LLMRunner):
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
                                       gen_guard: Optional[GenerationGuard],
                                       update_callback: Callable[[MessageProgress], None], options: dict = None,
-                                      think_mode=None) -> Tuple[Optional[str], bool]:
+                                      thinking_flag=None) -> Tuple[str, str, bool]:
         failed_status = False
         if options is None:
             options = {}
         _options = {"max_output_tokens": MAX_TOKENS_LIMIT}
         _options.update(options)
+        api_messages = self.convert_messages_for_api(messages)
         if gen_guard is None:
             gen_guard = GenerationGuard()
         url = f"{self.url}/generate"
@@ -121,11 +111,14 @@ class RemoteRunner(LLMRunner):
         }
         payload = {
             "model": model,
-            "input": messages,
+            "input": api_messages,
             "stream": True,
             **_options
         }
+        if thinking_flag is not None:
+            logger.warning(f"Reasoning not supported yet. Asked mode: {thinking_flag}")
         assistant_text = ''
+        thinking_text = ''
         num_chunks = 0
         last_timestamp: Optional[datetime.datetime] = None
         try:
@@ -142,7 +135,7 @@ class RemoteRunner(LLMRunner):
                                     MessageProgress("error", 0, 0, num_chunks,
                                                     message="LLM model has been stopped")
                                 )
-                            return assistant_text, True
+                            return assistant_text, thinking_text, True
                         if not line:
                             continue
                         decoded_line = line.decode("utf-8").strip()
@@ -176,7 +169,7 @@ class RemoteRunner(LLMRunner):
                                 assistant_text += gen_guard.message_infinite_loop()
                                 logger.error(
                                     "LLM model has entered an infinite loop and response generation has been stopped. Please try another prompt or model.")
-                                return assistant_text, True
+                                return assistant_text, thinking_text, True
                             last_timestamp = current_timestamp
                         else:
                             print(line)
@@ -194,13 +187,14 @@ class RemoteRunner(LLMRunner):
         if len(assistant_text) == 0:
             raise (ValueError("LLM generated empty response! Please check logs!"))
 
-        return assistant_text, failed_status
+        return assistant_text, thinking_text, failed_status
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, thinking_flag=None):
         if options is None:
             options = {}
         _options = {"max_output_tokens": MAX_TOKENS_LIMIT}
         _options.update(options)
+        api_messages = self.convert_messages_for_api(messages)
         # OpenAI does not support seed
         if "seed" in _options.keys():
             _options.pop("seed")
@@ -211,11 +205,12 @@ class RemoteRunner(LLMRunner):
         }
         payload = {
             "model": model,
-            "input": messages,
+            "input": api_messages,
             "stream": False,
             **_options
         }
-
+        if thinking_flag is not None:
+            logger.warning(f"Reasoning not supported yet. Asked mode: {thinking_flag}")
         with requests.post(url, headers=headers, json=payload) as r:
             response = r.json()
             if response["status"] == "error":
@@ -223,34 +218,11 @@ class RemoteRunner(LLMRunner):
             return r.json()["content"]
 
     def get_embedding(self, embedding_config) -> Optional[Embeddings]:
-        if not self.is_model_installed(embedding_config.get("model")):
-            return None
-        return RemoteRunner.RemoteEmbeddings(self.url, model=embedding_config.get("model"))
-
-    def supports_thinking(self, model: str) -> Optional[bool]:
-        payload = {"model": model}
-        headers = {
-            "Content-Type": "application/json"
-        }
-        r = requests.post(
-            f"{self.url}/models/show",
-            headers=headers,
-            json=payload
-        )
-
-        return "thinking" in r.json()["capabilities"]
-
-    def supports_vision(self, model: str) -> Optional[bool]:
-        payload = {"model": model}
-        headers = {
-            "Content-Type": "application/json"
-        }
-        r = requests.post(
-            f"{self.url}/models/show",
-            headers=headers,
-            json=payload
-        )
-        return "vision" in r.json()["capabilities"]
+        available_embedding_models = [x["model"] for x in self.get_models_with_capabilities() if "embedding" in x["capabilities"]]
+        if embedding_config.get("model") in available_embedding_models:
+            if self.is_model_installed(embedding_config.get("model")):
+                return RemoteRunner.RemoteEmbeddings(self.url, model=embedding_config.get("model"))
+        return None
 
     @staticmethod
     def from_dict(config: dict):
@@ -261,3 +233,6 @@ class RemoteRunner(LLMRunner):
         except Exception as e:
             logger.error(f"Could not create RemoteRunner from config. Reason: {e}")
         return runner
+
+    def convert_messages_for_api(self, messages: List[dict]) -> List[dict]:
+        return messages

@@ -24,7 +24,7 @@ class RemoteRunnerTest(unittest.TestCase):
         runner = RemoteRunner(f"http://{HOST}:{PORT}/api")
         self.assertIsNone(runner.get_embedding(embedding_config={}))
 
-        embedding = runner.get_embedding(embedding_config={"model": "test_model"})
+        embedding = runner.get_embedding(embedding_config={"model": "test_model_embedding"})
         self.assertEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9]], embedding.embed_documents(["mock_text", "mock_text", "mock_text"]))
         self.assertEqual([1, 2, 3], embedding.embed_query("mock_text"))
 
@@ -55,7 +55,7 @@ class RemoteRunnerTest(unittest.TestCase):
         def mock_message_progress_callable(x):
             pass
 
-        result, _ = runner.run_text_completion_streaming(
+        result, _, _ = runner.run_text_completion_streaming(
             model="test_model",
             messages=[{}],
             is_stopped=mock_bool_callable,
@@ -71,7 +71,7 @@ class RemoteRunnerTest(unittest.TestCase):
         def mock_message_progress_callable(x):
             pass
 
-        result, _ = runner.run_text_completion_streaming(
+        result, _, _ = runner.run_text_completion_streaming(
             model="test_model_error",
             messages=[{}],
             is_stopped=mock_bool_callable,

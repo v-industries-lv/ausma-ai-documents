@@ -18,7 +18,6 @@ from knowledge_base_service import KnowledgeBaseService
 from kb.knowledge_base import KBStore, KnowledgeBase
 from doc_sources.doc_source import DocSource
 from llm_runners.llm_runner import LLMRunner
-from settings import RAGSettings
 from utils import to_posix_path
 
 
@@ -31,10 +30,13 @@ class MockKnowledgeBase(KnowledgeBase):
         pass
 
     def rag_lookup(self, embedding_source: Callable[[dict], Embeddings], query: str, document_count: int):
-        pass
+        return [
+            [Document("rag_text_1", id="1", metadata={}), 0.81],
+            [Document("rag_text_2", id="2", metadata={}), 0.82],
+            [Document("rag_text_3", id="3", metadata={}), 0.83],
+        ]
 
-    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult,
-                               rag_settings: RAGSettings):
+    def store_convertor_result(self, embedding_source: Callable[[dict], Embeddings], convertor_result: ConvertorResult):
         pass
 
     def has_full_document(self, embedding_source: Callable[[dict], Embeddings], doc: DocumentFile) -> bool:
@@ -66,6 +68,39 @@ class MockKnowledgeBase(KnowledgeBase):
 
 
 class MockLLMRunner(LLMRunner):
+
+    def get_models_with_capabilities(self) -> List[dict]:
+        return self.cached_models
+
+    def __init__(self, name=None):
+        super().__init__("mock_runner")
+        self.name = name
+        self.cached_models = [
+            {
+                "model": "test_model",
+                "capabilities": ["completion"],
+                "runner_type": self.runner_type,
+            },
+            {
+                "model": "test_model_vision",
+                "capabilities": ["completion", "vision"],
+                "runner_type": self.runner_type,
+            },
+            {
+                "model": "test_model_thinking",
+                "capabilities": ["completion", "thinking"],
+                "runner_type": self.runner_type,
+            },
+            {
+                "model": "test_model_embedding",
+                "capabilities": ["embedding"],
+                "runner_type": self.runner_type,
+            },
+        ]
+
+    def convert_messages_for_api(self, messages: List[dict]) -> List[dict]:
+        return messages
+
     def get_options(self, model):
         return {
             "mock_opt": "mock_val"
@@ -76,39 +111,41 @@ class MockLLMRunner(LLMRunner):
         return MockLLMRunner()
 
     def pull_model(self, model) -> bool:
-        return True
+        if model not in [x["model"] for x in self.cached_models]:
+            self.cached_models.append(
+                {
+                    "model": model,
+                    "capabilities": ["completion", "vision", "thinking"],
+                    "runner_type": self.runner_type,
+                }
+            )
+            return True
+        return False
 
     def remove_model(self, model) -> bool:
-        return True
-
-    def list_chat_models(self):
-        pass
-
-    def is_model_installed(self, model) -> bool:
-        return True
+        for model_item in self.cached_models:
+            if model_item["model"] == model:
+                self.cached_models.remove(model_item)
+                return True
+        return False
 
     def run_text_completion_streaming(self, model: str, messages: List[dict], is_stopped: Callable[[], bool],
-                                      gen_guard: Optional[GenerationGuard], update_callback: Callable[[MessageProgress], None],
-                                      options: dict = None, think_mode=None) -> Tuple[Optional[str], bool]:
-        pass
+                                      gen_guard: Optional[GenerationGuard],
+                                      update_callback: Callable[[MessageProgress], None],
+                                      options: dict = None, thinking_flag=None) -> Tuple[str, str, bool]:
+        return "Output text", "Thinking about output text", True
 
-    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, think_mode=None):
+    def run_text_completion_simple(self, model: str, messages: List[dict], options: dict = None, thinking_flag=None):
         pass
 
     def get_embedding(self, embedding_config) -> Optional[Embeddings]:
-        pass
-
-    def supports_thinking(self, model: str) -> Optional[bool]:
-        pass
-
-    def supports_vision(self, model: str) -> Optional[bool]:
-        pass
+        return MockEmbedding(embedding_config)
 
 
 class MockKBStore(KBStore):
 
     def __init__(self):
-        self.kbs: Dict[str,dict] = dict()
+        self.kbs: Dict[str, dict] = dict()
         super().__init__("mock", "mock_store", "knowledge_base/mock")
 
     def _load(self) -> Dict[str, KnowledgeBase]:
@@ -204,16 +241,14 @@ class MockCollection:
 
 
 class MockEmbedding(Embeddings):
-    def __init__(self, model: str, temperature: str, seed: int):
+    def __init__(self, model: str):
         self.model = model
-        self.temperature = temperature
-        self.seed = seed
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        pass
+        return [self.embed_query(x) for x in texts]
 
     def embed_query(self, text: str) -> list[float]:
-        pass
+        return [0] if len(text) == 0 else [sum(ord(char) for char in text)]
 
 
 class MockChroma(VectorStore):

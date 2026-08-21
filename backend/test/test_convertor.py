@@ -1,23 +1,22 @@
+import json
 import os
 import shutil
 import unittest
-from convertors.convertor_result import ConvertorResult
+
 from convertors.convertor import Convertor
+from convertors.convertor import DocumentFile
+from convertors.convertor_result import ConvertorResult
 from convertors.llm_contexts import DocumentContext
-from convertors.raw_convertor import RawConvertor
+from convertors.llm_convertor import LlmConvertor
 from convertors.ocr_convertor import OcrConvertor
 from convertors.ocr_with_llm_convertor import OcrLlmConvertor
-from convertors.llm_convertor import LlmConvertor
-from convertors.convertor import DocumentFile
-import json
-
-from llm_runners.ollama_runner import OllamaRunner
+from convertors.raw_convertor import RawConvertor
+from test.llm_environment import get_llm_runner
 from test.mock_classes import MockKnowledgeBase
 
 
 class ConvertorTest(unittest.TestCase):
-    ollama_host = os.environ.get('TEST_OLLAMA_HOST', "http://localhost:11434")
-    LLM_RUNNER = OllamaRunner.from_dict({"type": "ollama", "host": ollama_host})
+    LLM_RUNNER = get_llm_runner()
 
     def setUp(self):
         print(os.path.basename(os.path.normpath(os.getcwd())))
@@ -59,7 +58,7 @@ class ConvertorTest(unittest.TestCase):
                             "name": "new_kb",
                             "selection": [],
                             "convertors": [{"model": "test_convertor"}],
-                            "embedding": {"model": "test_embedding"}
+                            "embedding": {"model": "test_model_embedding"}
                         }
                     )
                 )

@@ -1,5 +1,13 @@
+const {ipcRenderer} = require('electron/renderer')
+const { contextBridge } = require('electron');
+
 const usernameArgPrefix = "--defaultUsername=";
 const usernameSetting = "username";
+
+contextBridge.exposeInMainWorld('electron', {
+  showItemInFolder: (filePath) =>
+    ipcRenderer.invoke('show-item-in-folder', filePath),
+})
 
 process.argv.forEach((arg) => {
   if (arg.startsWith(usernameArgPrefix)) {

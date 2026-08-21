@@ -12,6 +12,7 @@ email_credentials.yaml
 __pycache__
 current.conf
 openai_models.json
+mistralai_models.json
 package-lock.json
 node_modules/
 /dist
@@ -29,4 +30,7 @@ node_modules/
 /temp_images
 /.cache
 test/.cache
-
+unit-tests.xml
+.coverage
+/htmlcov
+coverage.xml

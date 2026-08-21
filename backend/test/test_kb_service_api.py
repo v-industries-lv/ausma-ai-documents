@@ -122,15 +122,18 @@ class KBServiceAPITest(unittest.TestCase):
             "embedding":
                 {
                     "model": "bge-m3:latest"
-                }
+                },
+            "rag_char_chunk_size": 500,
+            "rag_char_overlap": 100,
         }
         http.request("POST", f"http://{HOST}:{PORT}/api/kb/put", json=kb_config)
         response = json.loads(
             http.request('GET', f"http://{HOST}:{PORT}/api/kb/new_kb/config").data.decode('utf-8')
         )
         self.assertEqual(response, kb_config)
-        response = json.loads(http.request('GET', f"http://{HOST}:{PORT}/api/kb/new_kb/delete").data.decode('utf-8'))
-        self.assertEqual({"status": "success", "text": "Knowledge base deleted!"}, response)
+        response = http.request('POST', f"http://{HOST}:{PORT}/api/kb/new_kb/delete").data.decode('utf-8')
+        data = json.loads(response)
+        self.assertEqual({"status": "success", "text": "Knowledge base deleted!"}, data)
 
     def test_doc_path(self):
         response = json.loads(
