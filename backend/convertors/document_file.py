@@ -1,4 +1,5 @@
 import json
+import platform
 import shutil
 import traceback
 from abc import ABC, abstractmethod
@@ -145,7 +146,7 @@ class PDFDocumentFile(DocumentFile):
         for index, page in enumerate(reader.pages, 1):
             output_name = str(index).rjust(len(str(len(reader.pages))), "0") + ".txt"
             output_path = os.path.join(conversion_output_path, output_name)
-            with open(output_path, "w") as fh:
+            with open(output_path, "w", encoding="utf-8" if platform.system() == "Windows" else None) as fh:
                 text = page.extract_text()
                 fh.write(text)
 

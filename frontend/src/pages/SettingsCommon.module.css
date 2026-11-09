@@ -142,7 +142,7 @@
   word-break: break-all;
 }
 
-.settings_main label {
+.settings_main label:not(.setting-list) {
   display: inline-block;
   margin: 0.5rem 0 0.5rem 0;
 }

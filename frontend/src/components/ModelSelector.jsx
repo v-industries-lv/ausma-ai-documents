@@ -14,6 +14,8 @@ export default function ModelSelector({
   runnerType = null,
   maxWidth = 100,
   dynamicWidth = true,
+  capability = "completion",
+  label = "LLM model:",
 }) {
   const [models, setModels] = useState([]);
   const [refreshing, setRefreshing] = useState(true);
@@ -44,7 +46,7 @@ export default function ModelSelector({
     const json = await req.json();
     const newModels = json.filter(
       (m) =>
-        (m.capabilities ?? []).includes("completion") &&
+        (m.capabilities ?? []).includes(capability) &&
         (runnerType === null || m.runner_type === runnerType),
     );
     setModels(uniqueValues(newModels.map((m) => m.model)));
@@ -86,7 +88,7 @@ export default function ModelSelector({
   `}
       >
         <div className={`${className}  ${styles["select-ctn"]}`} title={model}>
-          <label htmlFor="llm">LLM model:</label>
+          <label htmlFor="llm">{label}</label>
           {!refreshing ? (
             <>
               <select
@@ -110,7 +112,7 @@ export default function ModelSelector({
             </>
           ) : (
             <select
-              name="kb_name"
+              name="llm"
               className={`${styles.select} ${dynamicWidth ? styles["dynamic-select"] : styles["static-select"]}`}
               disabled
             >

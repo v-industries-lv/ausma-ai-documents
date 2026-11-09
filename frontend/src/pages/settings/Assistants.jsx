@@ -16,6 +16,7 @@ const commonDefaults = {
   system_prompt:
     "You are a helpful assistant. Provide a conversational answer. Do not respond with anything that might cause XSS. If you don't know the answer, just say \"I do not know.\" Don't make up an answer. ",
   rag_settings: {
+    embedding: { model: "bge-m3:latest" },
     rag_document_count: 20,
     rag_char_chunk_size: 1000,
     rag_char_overlap: 200,
@@ -246,6 +247,10 @@ function useCommon({ value, onChange }) {
 }
 
 function RagSettings({ value, setValue }) {
+  function setModel(_model) {
+      upsert({ embedding: { model: _model } });
+  }
+
   function upsert(o) {
     setValue({ ...value, ...o });
   }
@@ -264,6 +269,25 @@ function RagSettings({ value, setValue }) {
   return (
     <>
       <div className={styles.setting}>
+        <div>
+            <ModelSelector
+              model = {value.embedding?.model}
+              setModel = {
+                  (_model) => {
+                      if (value.embedding?.model !== _model) {
+                          setModel(_model);
+                      }
+                  }
+              }
+              disabled = {false}
+              className = {styles["select-ctn"]}
+              maxWidth = "100%"
+              runnerType = {null}
+              dynamicWidth = {false}
+              capability = "embedding"
+              label = "Filtering embedding model:"
+            />
+        </div>
         <label htmlFor="document_count_id">
           Document count:
           <AboutIcon

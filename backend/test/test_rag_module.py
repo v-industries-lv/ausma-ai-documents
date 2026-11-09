@@ -1,11 +1,9 @@
 import unittest
 from assistants.assistant import AssistantRagModule
-from langchain_ollama import OllamaEmbeddings
 
-from test.llm_environment import get_embeddings
+from test.llm_environment import get_llm_runner
 
-OLLAMA_EMBEDDINGS = get_embeddings("bge-m3")
-
+OLLAMA_EMBEDDING_GETTER = get_llm_runner().get_embedding
 
 class AssistantRagModuleTest(unittest.TestCase):
     def test_rag_module(self):
@@ -22,10 +20,11 @@ class AssistantRagModuleTest(unittest.TestCase):
                 "rag_document_count": 20,
                 "rag_similarity_score_threshold": 0.8,
                 "rag_score_margin": 0.2,
-                "rag_cosine_distance_irrelevance_threshold": 1.0
+                "rag_cosine_distance_irrelevance_threshold": 1.0,
+                "embedding_config": {"model": "bge-m3:latest"},
             }
         )
-        result = rag_module.filter_relevant_documents(documents, embedding=OLLAMA_EMBEDDINGS)
+        result = rag_module.filter_relevant_documents(documents, get_embedding=OLLAMA_EMBEDDING_GETTER)
         self.assertEqual(3, len(result))
 
     def test_rag_module_irrelevant_documents(self):
@@ -41,10 +40,11 @@ class AssistantRagModuleTest(unittest.TestCase):
                 "rag_document_count": 20,
                 "rag_similarity_score_threshold": 0.8,
                 "rag_score_margin": 0.2,
-                "rag_cosine_distance_irrelevance_threshold": 1.0
+                "rag_cosine_distance_irrelevance_threshold": 1.0,
+                "embedding_config": {"model": "bge-m3:latest"},
             }
         )
-        result = rag_module.filter_relevant_documents(documents, embedding=OLLAMA_EMBEDDINGS)
+        result = rag_module.filter_relevant_documents(documents, get_embedding=OLLAMA_EMBEDDING_GETTER)
         self.assertEqual(0, len(result))
 
     def test_rag_module_empty(self):
@@ -54,10 +54,11 @@ class AssistantRagModuleTest(unittest.TestCase):
                 "rag_document_count": 20,
                 "rag_similarity_score_threshold": 0.8,
                 "rag_score_margin": 0.2,
-                "rag_cosine_distance_irrelevance_threshold": 1.0
+                "rag_cosine_distance_irrelevance_threshold": 1.0,
+                "embedding_config": {"model": "bge-m3:latest"},
             }
         )
-        result = rag_module.filter_relevant_documents(documents, embedding=OLLAMA_EMBEDDINGS)
+        result = rag_module.filter_relevant_documents(documents, get_embedding=OLLAMA_EMBEDDING_GETTER)
         self.assertEqual(0, len(result))
 if __name__ == '__main__':
     unittest.main()

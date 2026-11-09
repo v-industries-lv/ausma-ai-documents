@@ -113,6 +113,7 @@ describe("AssitantSelector Component", () => {
     });
     render(
       <AssistantSelector
+        dynamicWidth={false}
         setAssistant={setAssistant}
         assistant={getAssistant()}
       />,
@@ -137,6 +138,7 @@ describe("AssitantSelector Component", () => {
     });
     render(
       <AssistantSelector
+        dynamicWidth={false}
         setAssistant={setAssistant}
         assistant={getAssistant()}
       />,
@@ -160,6 +162,7 @@ describe("AssitantSelector Component", () => {
     });
     render(
       <AssistantSelector
+        dynamicWidth={false}
         setAssistant={setAssistant}
         assistant={getAssistant()}
       />,
@@ -184,6 +187,7 @@ describe("AssitantSelector Component", () => {
     });
     const { rerender } = render(
       <AssistantSelector
+        dynamicWidth={false}
         setAssistant={setAssistant}
         assistant={getAssistant()}
       />,
@@ -200,6 +204,7 @@ describe("AssitantSelector Component", () => {
     expect(getAssistant()).toEqual("Ausma");
     rerender(
       <AssistantSelector
+        dynamicWidth={false}
         setAssistant={setAssistant}
         assistant={getAssistant()}
       />,
@@ -221,6 +226,7 @@ describe("AssitantSelector Component", () => {
 
     render(
       <AssistantSelector
+        dynamicWidth={false}
         setAssistant={setAssistant}
         assistant={getAssistant()}
       />,
@@ -245,6 +251,7 @@ describe("AssitantSelector Component", () => {
     });
     render(
       <AssistantSelector
+        dynamicWidth={false}
         setAssistant={setAssistant}
         assistant={getAssistant()}
       />,

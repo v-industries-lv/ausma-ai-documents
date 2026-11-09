@@ -24,7 +24,7 @@ from convertors.llm_contexts import ChatContext
 from logger import logger
 from settings import LLM_RUNNERS, KBSTORES, DOC_SOURCES, RESTORE_DEFAULT, GENERATION_GUARD, ASSISTANTS
 from store.sql_alchemy_stores import SQLAlchemy_ChatStore
-from utils import utc_now
+from utils import utc_now, from_posix_path
 from room_states import RoomStateRegister, RoomState
 
 chat_store = SQLAlchemy_ChatStore(db, app)
@@ -42,7 +42,7 @@ def host_frontend(base_path):
 
     @app.route('/assets/<path:path>')
     def assets(path):
-        return send_from_directory(base_path + '/assets', path)
+        return send_from_directory(os.path.join(base_path, 'assets'), from_posix_path(path))
 
     @app.route('/about/', methods=['GET'])
     @app.route('/about', methods=['GET'])
@@ -65,33 +65,19 @@ def host_frontend(base_path):
 
 
     def front_end():
-        return send_file(base_path + '/index.html')
+        logger.info(f"Index file path: {os.path.join(base_path, 'index.html')}, exists: {os.path.exists(os.path.join(base_path, 'index.html'))}")
+        logger.info(f"cwd: {os.getcwd()}")
+        return send_file(os.path.join(base_path, 'index.html'))
 
     @app.route('/static/<path:path>')
     def static(path):
-        return send_from_directory(base_path + '/static', path)
+        logger.info(f"Static directory: {os.path.join(base_path,  'static')}, path: {path}")
+        return send_from_directory(os.path.join(base_path,  'static'), path)
 
 
 frontend_path = None
 instance_path = ""
 logger.info(f"Starting in: {os.getcwd()}")
-
-# TODO: from_posix_path() for paths? If we are going to bundle for multiple platforms
-if os.path.isdir("frontend"):
-    # bundled
-    # working directory is the root of the bundle, but paths are relative to the flask_app.py
-    frontend_path = "../../frontend"
-elif os.path.isdir("../frontend/dist"):
-    # running in development
-    frontend_path = '../frontend/dist'
-elif os.path.isdir("../frontend"):
-    frontend_path = '../../frontend'
-    instance_path = '../'
-if frontend_path is not None:
-    host_frontend(frontend_path)
-else:
-    logger.warning("No frontend code present, only running /api")
-
 
 @app.route('/api/create_room/', methods=['POST'])
 @app.route('/api/create_room', methods=['POST'])
@@ -225,7 +211,7 @@ class InputData:
         if self.user_input is None:
             raise ValueError("Missing user input parameter!")
         self.user_text = self.user_input.get("content")
-        self.kb_name = data.get('kb_name', None)
+        self.selected_kbs = data.get('selected_knowledge_bases', [])
         assistant = data.get('assistant')
         if type(assistant) == dict:
             self.assistant_config: Optional[dict] = assistant
@@ -243,7 +229,7 @@ class InputData:
             "username": self.username,
             "user_text": self.user_text,
             "images": self.images,
-            "kb_name": self.kb_name,
+            "selected_knowledge_bases": self.selected_kbs,
             "assistant_config": self.assistant_config,
             "assistant_name": self.assistant_name,
         }
@@ -252,6 +238,7 @@ class InputData:
         return {
             "content": self.user_text,
             "images": self.images,
+            "selected_knowledge_bases": self.selected_kbs,
         }
 
     def to_room_message(self):
@@ -297,7 +284,7 @@ def handle_message(message_data):
             raise ValueError(f"Could not create assistant")
 
         ctx = ChatContext(
-            kb_service.kb_store.get(data.kb_name)
+            [kb_service.kb_store.get(kb) for kb in data.selected_kbs]
         )
 
         if not assistant.llm_runner.is_model_installed(model=assistant.model):
@@ -372,6 +359,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--production', action='store_true', help='Use production config.')
     parser.add_argument('--localhost', action='store_true', help='Only listen for local connections')
+    parser.add_argument('--frontend_path', type=str, help='Frontend location')
     args = parser.parse_args()
     return args
 
@@ -408,6 +396,11 @@ def update_module_deps():
 
 if __name__ == '__main__':
     args = parse_args()
+    if args.frontend_path is not None:
+        host_frontend(from_posix_path(args.frontend_path))
+    else:
+        logger.warning("No frontend code present, only running /api")
+
     SettingsModule(settings).apply_routes(app, handle_settings_updated)
     MMChatModule.apply_routes(app, base_path=instance_path)
     if args.production:

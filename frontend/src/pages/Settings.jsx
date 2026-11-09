@@ -236,6 +236,17 @@ function DefaultRoomSettings({ initial, onSave }) {
     onSave?.(value);
     reset();
   }
+
+  const selectedKbs = value?.default_selected_knowledge_bases ?? [];
+  function handleSelectedKbsChange(knowledgeBases) {
+    const newKnowledgeBases =
+      typeof knowledgeBases === "function"
+        ? knowledgeBases(selectedKbs)
+        : knowledgeBases;
+
+    upsert({ default_selected_knowledge_bases: newKnowledgeBases });
+  }
+
   const assistant = value?.assistant;
 
   function setAssistant(_assistant) {
@@ -252,19 +263,17 @@ function DefaultRoomSettings({ initial, onSave }) {
       title="Chat Room Defaults"
     >
       <p>The defaults set when looking at an empty chat room.</p>
-
+      <label>Knowledge base:</label>
       <KnowledgeBaseSelector
-        kb={value?.knowledge_base ?? {}}
-        setKb={(knowledge_base) => upsert({ knowledge_base })}
-        className={styles["select-ctn"]}
-        maxWidth="100%"
+        selectedKbs={selectedKbs}
+        setSelectedKbs={handleSelectedKbsChange}
+        className={styles["select-ctn-kb"]}
         dynamicWidth={false}
       />
       <AssistantSelector
         assistant={assistant}
         setAssistant={setAssistant}
         className={styles["select-ctn"]}
-        maxWidth="100%"
         dynamicWidth={false}
       />
 

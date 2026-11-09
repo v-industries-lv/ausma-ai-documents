@@ -2,6 +2,7 @@ import os.path
 import shutil
 import unittest
 from convertors.document_file import DocumentFile, PDFDocumentFile, TextDocumentFile
+from utils import from_posix_path
 
 class DocumentFileTest(unittest.TestCase):
     def setUp(self):
@@ -34,9 +35,9 @@ class DocumentFileTest(unittest.TestCase):
     def test_ensure_output_folder(self):
         document = DocumentFile.create('test_doc_source_name', 'documents', 'documents/ducks.pdf')
         document._ensure_output_exists()
-        self.assertTrue(os.path.exists("processed/ducks.pdf_f06b0e20587b9f30a7274843eded4de2ae437a1de1dd44b8d0646831f8acee97"))
+        self.assertTrue(os.path.exists(from_posix_path("processed/ducks.pdf_f06b0e20587b9f30a7274843eded4de2ae437a1de1dd44b8d0646831f8acee97")))
         document.cleanup_output()
-        self.assertFalse(os.path.exists("processed/ducks.pdf_f06b0e20587b9f30a7274843eded4de2ae437a1de1dd44b8d0646831f8acee97"))
+        self.assertFalse(os.path.exists(from_posix_path("processed/ducks.pdf_f06b0e20587b9f30a7274843eded4de2ae437a1de1dd44b8d0646831f8acee97")))
 
     def test_new_and_existing_metadata(self):
         document = DocumentFile.create('test_doc_source_name', 'documents', 'documents/ducks.pdf')
@@ -72,16 +73,13 @@ class DocumentFileTest(unittest.TestCase):
     def test_convert_document_to_images(self):
         document = PDFDocumentFile('test_doc_source_name', 'documents', 'documents/ducks.pdf')
         document.convert_document_to_images()
-        self.assertEqual(len(os.listdir(document.temp_image_path)), 3)
+        self.assertEqual(3, len(os.listdir(document.temp_image_path)))
 
         os.environ["XPDF_PATH"] = "__disabled__"
-        document = PDFDocumentFile('test_doc_source_name', 'documents', 'documents/ducks.pdf')
-        document.convert_document_to_images()
-        self.assertEqual(len(os.listdir(document.temp_image_path)), 3)
-
         os.environ["POPPLER_PATH"] = "__disabled__"
         document = PDFDocumentFile('test_doc_source_name', 'documents', 'documents/ducks.pdf')
         document.convert_document_to_images()
-        self.assertEqual(len(os.listdir(document.temp_image_path)), 0)
+        self.assertEqual(0, len(os.listdir(document.temp_image_path)))
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Lobby from "./pages/Lobby";
-import Settings from "./pages/Setttings";
+import Settings from "./pages/Settings";
 import KnowledgeBases from "./pages/KnowledgeBases";
 import AboutAusma from "./pages/AboutAusma";
 import ChatWrapper from "./pages/Chat";

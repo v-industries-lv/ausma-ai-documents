@@ -1,4 +1,5 @@
 import os
+import platform
 import shutil
 import subprocess
 import uuid
@@ -14,17 +15,19 @@ def make_absolute_path(path):
     else:
         return os.path.abspath(os.path.join(os.getcwd(), path))
 
+def validate_path(path: Optional[str]) -> bool:
+    return path is not None and os.path.exists(make_absolute_path(path))
 
 def convert_pdf(pdf_path: str, output_folder: str = "temp_images") -> Optional[List[str]]:
     pdf_path = make_absolute_path(pdf_path)
     temp_folder = os.path.join(os.getcwd(), PROJECT_DATA_PATH, output_folder)
     paths = None
-    if not get_xpdf_path() == "__disabled__":
+    if not os.environ.get("XPDF_PATH", "") == "__disabled__":
         try:
             paths = xpdf_convert(pdf_path, temp_folder)
         except Exception as e:
             logger.error(f"XPDF could not convert pdf. Error: {e}")
-    if paths is None and not get_poppler_path() == "__disabled__":
+    if paths is None and not os.environ.get("POPPLER_PATH", "") == "__disabled__":
         try:
             paths = poppler_convert(pdf_path, temp_folder)
         except Exception as e:
@@ -93,10 +96,30 @@ def xpdf_convert(pdf_path: str, output: str) -> List[str]:
 
 
 def get_xpdf_path() -> str:
-    return make_absolute_path(os.environ.get("XPDF_PATH", os.path.join(os.getcwd(), "bin", "linux", "pdftopng")))
+    cwd = os.getcwd()
+    if cwd.endswith("test"):
+        cwd = cwd[:-len("test")]
+    os_dict = {
+        'Linux': "linux",
+        'Darwin': "macos",
+        'Windows': "windows",
+    }
+    current_platform = os_dict.get(platform.system())
+    binary = "pdftopng.exe" if current_platform  == "windows" else "pdftopng"
+    # First try to return provided XPDF_PATH, if valid. If not, return the default for the system.
+    xpdf_path = os.environ.get("XPDF_PATH")
+    if validate_path(xpdf_path):
+        return make_absolute_path(xpdf_path)
+    return make_absolute_path(
+        os.path.join(cwd, "bin", current_platform, binary)
+    )
+
 
 def get_poppler_path() -> str:
-    return make_absolute_path(os.environ.get("POPPLER_PATH", "/usr/bin"))
+    poppler_path = os.environ.get("POPPLER_PATH")
+    if validate_path(poppler_path):
+        return make_absolute_path(poppler_path)
+    return "/usr/bin"
 
 def poppler_convert(pdf_path: str, output: str) -> List[str]:
     # Library telling lies about output type. If paths_only=True, then List[str], not List[Image]

@@ -118,15 +118,16 @@ class KnowledgeBase(ABC):
 
     @staticmethod
     def validate_document_source(convertor: ConvertorResult) -> bool:
+        output_path = from_posix_path(convertor.output_path)
         extra_string_list = []
         if convertor.model is not None:
             extra_string_list = [convertor.model]
-        folder_hash = compute_folder_hash(convertor.output_path, extra_string_list=extra_string_list)
-        if not os.path.exists(convertor.output_path):
-            logger.info(f"Data {convertor.output_path} does not exist.")
+        folder_hash = compute_folder_hash(output_path, extra_string_list=extra_string_list)
+        if not os.path.exists(output_path):
+            logger.info(f"Data {output_path} does not exist.")
             return False
         if folder_hash != convertor.result_hash:
-            logger.warning(f"Document folder {convertor.output_path} contents have been altered.")
+            logger.warning(f"Document folder {output_path} contents have been altered.")
             logger.warning(f"Original hash: {convertor.result_hash}, current hash: {folder_hash}")
             return False
         return True

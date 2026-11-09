@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import _styles3 from "./Selector.module.css";
 import _styles2 from "./Layout.module.css";
 import _styles from "./RagReferenceContent.module.css";
-import { uniqueValues } from "../utils/listTools";
 import { RefreshIcon, LockIcon } from "./Icons/ComponentIcons";
 
 const styles = { ..._styles, ..._styles2, ..._styles3 };
@@ -13,32 +12,12 @@ export default function AssistantSelector({
   setAssistant,
   disabled,
   className,
-  maxWidth = 100,
   dynamicWidth = true,
 }) {
   const [assistants, setAssistants] = useState([]);
   const [refreshing, setRefreshing] = useState(true);
-  const selectRef = useRef(null);
-  const measureRef = useRef(null);
-
-  useEffect(() => {
-    if (!selectRef.current) return;
-
-    if (!dynamicWidth) {
-      selectRef.current.style.removeProperty("width");
-      return;
-    }
-
-    selectRef.current.style.removeProperty("width");
-
-    if (!measureRef.current) return;
-
-    const text =
-      selectRef.current.options[selectRef.current.selectedIndex]?.text ?? "";
-
-    measureRef.current.textContent = text;
-    selectRef.current.style.width = `${measureRef.current.offsetWidth + 40}px`;
-  }, [assistant, dynamicWidth, refreshing]);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   async function fetchAssistants() {
     const req = await fetch("/api/config/assistants");
@@ -64,6 +43,20 @@ export default function AssistantSelector({
     fetchAssistants();
   }
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
       <div
@@ -74,40 +67,112 @@ export default function AssistantSelector({
       >
         <div
           className={`${className}  ${styles["select-ctn"]}`}
-          title={lockedAssistant ? lockedAssistant : assistant}
+          title={
+            lockedAssistant
+              ? `Selected Assistant: ${lockedAssistant}`
+              : `Selected Assistant: ${assistant}`
+          }
+          ref={dropdownRef}
         >
-          <label htmlFor="assistant">Assistant:</label>
-
           {lockedAssistant ? (
-            <span
-              className={styles.select}
-              style={{ maxWidth }}
-              title={lockedAssistant}
-            >
-              <LockIcon className={`${styles["lock-icon"]}`} />
-              {lockedAssistant}
-            </span>
-          ) : !refreshing ? (
             <>
-              <select
-                ref={selectRef}
-                id="assistant"
-                name="assistant"
-                className={`${styles.select} ${dynamicWidth ? styles["dynamic-select"] : styles["static-select"]}`}
-                onChange={(e) => setAssistant(e.target.value)}
-                style={{ maxWidth }}
-                value={assistant ?? undefined}
-                disabled={disabled}
-                title={assistant}
+              <span className={styles["select-label"]}>Assistant:</span>
+              <span
+                className={styles.select}
+                title={`Selected Assistant: ${lockedAssistant}`}
               >
-                {assistants.map((assistant) => (
-                  <option value={assistant} key={assistant}>
-                    {assistant}
-                  </option>
-                ))}
-              </select>
-              <span ref={measureRef} className={styles["measure-span"]} />
+                <LockIcon className={`${styles["lock-icon"]}`} />
+                {lockedAssistant}
+              </span>
             </>
+          ) : !refreshing ? (
+            dynamicWidth ? (
+              <>
+                <button
+                  type="button"
+                  className={`${styles.select} ${
+                    styles["dynamic-select"]
+                  } ${isOpen ? styles["dynamic-select-open"] : ""}`}
+                  onClick={() => setIsOpen(!isOpen)}
+                  title={`Selected Assistant: ${assistant}`}
+                  disabled={disabled}
+                >
+                  <span className={styles["select-label"]}>Assistant:</span>
+                  <span className={styles["select-value"]}>
+                    {assistant || "None"}
+                  </span>
+
+                  <span className={styles["select-arrow"]}>
+                    <svg
+                      width="9"
+                      height="8"
+                      viewBox="0 0 12 8"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M1 1.5L6 6.5L11 1.5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </button>
+                {isOpen && (
+                  <div
+                    className={`${styles["dropdown-menu-base"]} ${
+                      styles["dropdown-menu-dynamic"]
+                    }`}
+                  >
+                    <div className={styles["dropdown-menu-content"]}>
+                      {assistants.map((item) => (
+                        <button
+                          type="button"
+                          key={item}
+                          className={`${styles["dropdown-option"]} ${
+                            styles["dropdown-button"]
+                          }`}
+                          onClick={() => {
+                            setAssistant(item);
+                            setIsOpen(false);
+                          }}
+                          disabled={disabled}
+                        >
+                          <span
+                            className={styles["dropdown-option-name"]}
+                            title={item}
+                          >
+                            {item}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <label htmlFor="assistant">Assistant:</label>
+                <select
+                  id="assistant"
+                  name="assistant"
+                  className={`${styles.select} ${styles["static-select"]}`}
+                  onChange={(e) => setAssistant(e.target.value)}
+                  value={assistant ?? undefined}
+                  disabled={disabled}
+                  title={`Selected Assistant: ${assistant}`}
+                >
+                  {assistants.map((item) => (
+                    <option value={item} key={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )
           ) : (
             <select
               name="kb_name"
@@ -119,6 +184,7 @@ export default function AssistantSelector({
           )}
         </div>
         <button
+          type="button"
           className={`${styles["nav_option_btn"]} ${!dynamicWidth ? styles["nav_option_btn_static"] : ""}`}
           onClick={refreshAssistants}
           title="Refresh Assistants"

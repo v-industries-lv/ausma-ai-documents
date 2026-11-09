@@ -24,12 +24,10 @@ Homepage: <https://ausma.ai>
 
 ### Coming soon:
 
-- Windows version for version 0.6.0.
-- Ability to select multiple knowledge bases for version 0.6.0.
 - More document formats - presentation files, spreadsheets, etc.
 - Scalability features for multi-user solutions and large datasets.
 
-## Installation
+## Installation (Linux)
 
 Ausma.ai Documents has been developed and tested under Ubuntu Server 24.04 LTS and latest Tuxedo OS. It may work on related operating systems.
 
@@ -40,7 +38,7 @@ Ausma.ai Documents has been developed and tested under Ubuntu Server 24.04 LTS a
 - Open it with Software Center or
 
 ```bash
-sudo apt install ./ausma-ai_0.5.0_amd64.deb
+sudo apt install ./ausma-ai_0.6.0_amd64.deb
 ```
 
 #### Install Ollama locally (Recomended)
@@ -80,13 +78,63 @@ cd ausma-ai-documents &&
 ./setup_linux.sh
 ```
 
-## Quick start
-
 - Run the web-app and open in browser (see the URL in terminal):
 
 ```bash
 ./run_app.sh
 ```
+
+## Installation (Windows)
+
+Recommended Windows 11 (tested)
+
+### Install the desktop app via package
+
+- Go to releases
+- Download latest .msi installer
+- Run it and follow the instructions
+
+#### Install Ollama locally (Recomended)
+
+```powershell
+irm https://ollama.com/install.ps1 | iex
+```
+
+##### Install Default Models
+
+```powershell
+ollama pull qwen2.5
+ollama pull qwen2.5vl
+ollama pull qwen3-vl:latest
+ollama pull gemma4:latest
+ollama pull bge-m3
+```
+
+- After successful installation, run the app from the desktop shortcut or from ausma-ai.exe in the installation directory.
+
+### Running the web version from source
+
+- Clone the repository:
+
+```powershell
+git clone [gitrepo]
+```
+
+- Open project root directory and from PowerShell terminal launch setup_windows.ps1 . 
+
+```powershell
+.\setup_windows.ps1
+```
+
+NOTE: windows requires administrator privileges for installation of the components. You will be asked to run the setup with administrator priviledges.
+
+- Run the web-app and open in browser (see the URL in terminal):
+
+```powershell
+.\run_app.ps1
+```
+
+## Quick start
 
 ### \> For simple chat:
 
@@ -105,8 +153,9 @@ cd ausma-ai-documents &&
 - Create a room (think of a room as a session or a conversion)
 - Join the room, by clicking it.
 - Select knowledge base:
-  - `None` - Same as the simple chat - no document context used.
+  - No knowledge bases selected is the same as the simple chat - no document context used.
   - `<knowledge base name>` - assistant uses RAG - receives relevant documents from vectorstore based on your query. This enhances the response with document aware context.
+  - You can select multiple knowledge bases for enhanced context. Will use assistants RAG configuration to keep only relevant retrieved texts from all selected knowledge bases.
 - Choose a your preferred chat assistant and you are ready to ask your questions. Note that the chat assistant gets locked-in for this room.
   - Assistants can be configured in settings.
 

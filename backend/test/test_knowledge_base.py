@@ -13,6 +13,7 @@ from kb.knowledge_base import KnowledgeBase
 from kb.chroma import ChromaKnowledgeBase
 from llm_runners.ollama_runner import OllamaRunner
 from test.mock_classes import MockChroma, mock_embeddings_source
+from utils import from_posix_path
 
 
 class KnowledgeBaseTest(unittest.TestCase):
@@ -150,7 +151,7 @@ class KnowledgeBaseTest(unittest.TestCase):
 
     def _makeChroma(self, kb_name = "test"):
         config_path = f"knowledge_bases/chroma/{kb_name}/config.json"
-        with open(config_path, "r") as fh:
+        with open(from_posix_path(config_path), "r") as fh:
             kb_dict = json.load(fh)
         kb = ChromaKnowledgeBase(kb_dict, config_path, self.chroma_client)
         return kb, kb_dict
@@ -174,7 +175,7 @@ class KnowledgeBaseTest(unittest.TestCase):
             document_path="mock_data/existing_document/ducks.pdf",
         )
         kb.store_convertor_result(mock_embeddings_source, convertor_result)
-        with open("temp/mock_chroma_db.json", "r") as fh:
+        with open(from_posix_path("temp/mock_chroma_db.json"), "r") as fh:
             stored_document_contents = json.load(fh)
         self.assertEqual(len(stored_document_contents), 3)
 
@@ -185,7 +186,9 @@ class KnowledgeBaseTest(unittest.TestCase):
 
     def test_chroma_has_full_convertor_result(self):
         with open(
-                "mock_data/existing_document/ducks.pdf_f06b0e20587b9f30a7274843eded4de2ae437a1de1dd44b8d0646831f8acee97/metadata.json",
+                from_posix_path(
+                    "mock_data/existing_document/ducks.pdf_f06b0e20587b9f30a7274843eded4de2ae437a1de1dd44b8d0646831f8acee97/metadata.json"
+                ),
                 "r") as fh:
             document_metadata = json.load(fh)
         kb, _ = self._makeChroma()
@@ -207,10 +210,10 @@ class KnowledgeBaseTest(unittest.TestCase):
         same_document = DocumentFile.create("doc_source_name", os.path.join(os.getcwd(), "documents"),
                                             "documents/same_ducks.pdf")
         kb.add_doc_path(mock_embeddings_source, same_document, same_document.file_path)
-        with open("temp/updated_document.json", "r") as fh:
+        with open(from_posix_path("temp/updated_document.json"), "r") as fh:
             updated_document = json.load(fh)
             paths = updated_document["metadata"]["document_path"]
-            self.assertEqual(paths, "documents/ducks.pdf;doc_source_name/documents/same_ducks.pdf")
+            self.assertEqual(paths, "documents/ducks.pdf;doc_source_name"+os.sep+"documents/same_ducks.pdf")
 
 
 if __name__ == '__main__':

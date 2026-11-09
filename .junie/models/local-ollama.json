@@ -1,0 +1,13 @@
+{
+  "baseUrl": "http://localhost:11434/v1/chat/completions",
+  "id": "qwen3-coder:30b",
+  "apiType": "OpenAICompletion",
+  "temperature": 0.6,
+  "primaryModel": {
+    "id": "qwen3-coder:30b",
+    "temperature": 0.3
+  },
+  "fasterModel": {
+    "id": "qwen2.5-coder:1.5b"
+  }
+}

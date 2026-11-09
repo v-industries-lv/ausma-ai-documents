@@ -22,3 +22,5 @@ fi
 
 echo "Downloading dependencies"
 npm install
+# needed to allow `npm run dev` immidiately 
+node node_modules/electron/install.js

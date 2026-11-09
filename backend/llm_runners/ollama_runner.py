@@ -23,20 +23,27 @@ class OllamaRunner(LLMRunner):
             model_list = json.loads(requests.get(f"{self.host}/api/tags").content)["models"]
             models = []
             for model_item in model_list:
-                model_info = json.loads(
-                    requests.post(
-                        self.host + '/api/show',
-                        data='{"model": "' + model_item["model"] + '"}',
-                        headers={'Content-Type': 'application/json'}
-                    ).content
+                response = requests.post(
+                    self.host + '/api/show',
+                    data='{"model": "' + model_item["model"] + '"}',
+                    headers={'Content-Type': 'application/json'}
                 )
-                models.append(
-                    {
-                        "model": model_item["model"],
-                        "capabilities": model_info['capabilities'],
-                        "runner_type": self.runner_type,
-                    }
-                )
+                try:
+                    response.raise_for_status()
+                    model_info = json.loads(
+                        response.content
+                    )
+                    models.append(
+                        {
+                            "model": model_item["model"],
+                            "capabilities": model_info['capabilities'],
+                            "runner_type": self.runner_type,
+                        }
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to get data on model {model_item["model"]} from {self.host}.")
+                    logger.error(e)
+                    logger.error(response.content)
             self.cached_models = models
             self.last_update = datetime.datetime.now(datetime.UTC)
         return self.cached_models

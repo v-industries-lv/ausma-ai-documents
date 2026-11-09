@@ -1,4 +1,5 @@
 import pathlib
+import platform
 import subprocess
 
 from convertors.convertor_result import ConvertorResult
@@ -47,7 +48,7 @@ class DocumentImageConvertor(Convertor):
                         logger.info(f"{self.conversion_type} - {image_path}")
                         image_filename = pathlib.Path(image_path).stem
                         with open(os.path.join(output_path, image_filename + ".txt"),
-                                  "w") as fh:
+                                  "w", encoding="utf-8" if platform.system() == "Windows" else None) as fh:
                             converted_text = self.image_to_text(image_path, context)
                             if converted_text is None:
                                 return None

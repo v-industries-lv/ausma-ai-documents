@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import _styles from "./KnowledgeBases.module.css";
 import _styles2 from "./SettingsCommon.module.css";
+import _styles3 from "./Settings.module.css";
 import "./Index.css";
 import { useEffect } from "react";
 import CollapsibleBox from "../components/CollapsibleBox";
@@ -10,8 +11,9 @@ import EditButtons from "../components/EditButtons";
 import SpinnerButtons from "../components/SpinnerButtons";
 import RandomNumberButton from "../components/RandomNumberButton";
 import SourceSelection from "./knowledgebases/SourceSelection";
+import ModelSelector from "../components/ModelSelector";
 
-const styles = { ..._styles, ..._styles2 };
+const styles = { ..._styles, ..._styles2 , ..._styles3};
 
 export default function KnowledgeBases() {
   const [knowledgeBases, setKnowledgeBases] = useState([]);
@@ -239,6 +241,10 @@ const convertors = {
 };
 
 function OCRLLMConvertor({ value, onChange }) {
+  function setModel(_model) {
+    const newValue = { ...value, model: _model };
+    onChange?.(newValue);
+  }
   function updateValue(e) {
     const target = e.target;
     const n = target.name;
@@ -265,15 +271,23 @@ function OCRLLMConvertor({ value, onChange }) {
         />
       </div>
       <div>
-        <label htmlFor="model_id">Model:</label>
-        <input
-          className={styles["input_field"]}
-          id={styles["model_id"]}
-          name="model"
-          value={value.model}
-          onChange={updateValue}
-        />
-
+        <ModelSelector
+              model = {value.model}
+              setModel = {
+                  (_model) => {
+                      if (value.model !== _model) {
+                          setModel(_model);
+                      }
+                  }
+              }
+              disabled = {false}
+              className = {styles["select-ctn"]}
+              maxWidth = "100%"
+              runnerType = {null}
+              dynamicWidth = {false}
+              capability = "completion"
+              label = "Proofread model:"
+          />
         <label htmlFor="seed_id">Seed:</label>
         <div className={styles["wrapper"]}>
           <input
@@ -341,6 +355,10 @@ function RawConvertor({}) {
 }
 
 function LLMConvertor({ value, onChange }) {
+  function setModel(_model) {
+      const newValue = { ...value, model: _model };
+      onChange?.(newValue);
+  }
   function updateValue(e) {
     const target = e.target;
     const n = target.name;
@@ -368,13 +386,22 @@ function LLMConvertor({ value, onChange }) {
         />
       </div>
       <div>
-        <label htmlFor="model_id">Model:</label>
-        <input
-          className={styles["input_field"]}
-          id={styles["model_id"]}
-          name="model"
-          value={value.model}
-          onChange={updateValue}
+        <ModelSelector
+            model = {value.model}
+            setModel = {
+                (_model) => {
+                    if (value.model !== _model) {
+                        setModel(_model);
+                    }
+                }
+            }
+            disabled = {false}
+            className = {styles["select-ctn"]}
+            maxWidth = "100%"
+            runnerType = {null}
+            dynamicWidth = {false}
+            capability = "vision"
+            label = "Vision model:"
         />
         <label htmlFor="seed_id">Seed:</label>
         <div className={styles["wrapper"]}>
@@ -590,6 +617,10 @@ function KBEditor({ kb, onSave, onRemove, onClear }) {
     return { ...kb, convertors: addInitialKeys(kb.convertors) };
   }
 
+  function setModel(_model) {
+      upsert({ embedding: { model: _model } });
+  }
+
   const [value, edited, { upsert, reset }] = useObjectState(
     addKeys(kb),
     kb.fresh,
@@ -716,21 +747,23 @@ function KBEditor({ kb, onSave, onRemove, onClear }) {
           onChange={(v) => upsert({ selection: v })}
         />
         <div>
-          <label
-            className={styles["selection_model"]}
-            id={styles["selection_model"]}
-            htmlFor="model"
-          >
-            Embedding Model:
-          </label>
-          <input
-            className={styles["input_field"]}
-            id={styles["model"]}
-            name="model"
-            // we can do this because there isn't anything else in embedding
-            onChange={(e) => upsert({ embedding: { model: e.target.value } })}
-            value={value.embedding.model}
-          />
+            <ModelSelector
+              model = {value.embedding?.model}
+              setModel = {
+                  (_model) => {
+                      if (value.embedding?.model !== _model) {
+                          setModel(_model);
+                      }
+                  }
+              }
+              disabled = {false}
+              className = {styles["select-ctn"]}
+              maxWidth = "100%"
+              runnerType = {null}
+              dynamicWidth = {false}
+              capability = "embedding"
+              label = "Embedding model:"
+            />
         </div>
       </div>
       <ConvertorList

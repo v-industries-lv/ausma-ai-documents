@@ -11,20 +11,38 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: ausma-ai
+  target:
+    - msi
+  icon: build/icon.ico
+
+  extraResources:
+    - from: '../backend/dist'
+      to: '.'
+
+    - from: '../backend/defaults.conf'
+      to: 'flask_app/defaults.conf'
+
+    - from: '../backend/bin/windows/pdftopng.exe'
+      to: 'flask_app/bin/windows/pdftopng.exe'
+
+    - from: '../frontend/dist'
+      to: 'frontend'
+
+    - from: 'build/icon.png'
+      to: 'icon.png'
+msi:
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  menuCategory: "ausma.ai"
+  shortcutName: "ausma.ai"
+  runAfterFinish: false
+  oneClick: false
+  perMachine: true
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
-mac:
-  entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:

@@ -19,7 +19,7 @@ import {
   StopIcon,
   ChatUserIcon,
   ChatAusmaIcon,
-  CreateRoomIcon, // Temp placeholder for adding images as input
+  // CreateRoomIcon, Temp placeholder for adding images as input
 } from "../components/Icons/ComponentIcons";
 
 export default function ChatWrapper() {
@@ -52,7 +52,14 @@ export function Chat({ roomId }) {
   }, [roomId]);
 
   // knowledge base set by the UI
-  const [_kb, setKb] = useState(null);
+  const [selectedKbs, setSelectedKbs] = useState(
+    roomDefaults.default_selected_knowledge_bases ?? [],
+  );
+
+  useEffect(() => {
+    setSelectedKbs(roomDefaults.default_selected_knowledge_bases ?? []);
+  }, [roomDefaults.default_selected_knowledge_bases]);
+
   // assistant set by the UI
   const [_assistant, setAssistant] = useState(null);
 
@@ -132,22 +139,6 @@ export function Chat({ roomId }) {
 
   // effective assistant - to be used
   const assistant = _assistant ?? roomDefaults?.assistant;
-  function getLastKnowledgeBase() {
-    let kb = null;
-    const rag_sources =
-      JSON.parse(lastAssistantMessage?.rag_sources ?? "[]") ?? [];
-    rag_sources.forEach((rag_source) => {
-      const current_kb = rag_source.knowledge_base;
-      if (current_kb) {
-        kb = current_kb;
-      }
-    });
-    return kb;
-  }
-  // knowledge base last used
-  const lastKnowledgeBase = getLastKnowledgeBase();
-  // effective knowledge base
-  const kb = _kb ?? lastKnowledgeBase ?? roomDefaults?.knowledge_base ?? "None";
 
   const generating = ["started", "generating"].includes(progress.status);
   const inputDisabled = assistant === null || generating;
@@ -161,7 +152,7 @@ export function Chat({ roomId }) {
       socket.send({
         user_input: input_data,
         assistant: assistant,
-        kb_name: kb,
+        selected_knowledge_bases: selectedKbs,
         room_id: roomId,
         username: username,
       });
@@ -192,7 +183,6 @@ export function Chat({ roomId }) {
       div.scrollIntoView(false);
     }
   }
-
   function isEmptyRoomInfo(room = null) {
     return !room || Object.keys(room).length === 0;
   }
@@ -202,11 +192,10 @@ export function Chat({ roomId }) {
         <div className={styles["chat_main"]} key={roomId}>
           <div id={styles["Rag-llm"]} className={styles["Rag-llm-class"]}>
             <KnowledgeBaseSelector
-              kb={kb}
-              setKb={setKb}
+              selectedKbs={selectedKbs}
+              setSelectedKbs={setSelectedKbs}
               disabled={inputDisabled}
               className={styles["select-ctn"]}
-              maxWidth="20ch"
               dynamicWidth
             />
 
@@ -216,7 +205,6 @@ export function Chat({ roomId }) {
               setAssistant={setAssistant}
               disabled={inputDisabled}
               className={styles["select-ctn"]}
-              maxWidth="20ch"
               dynamicWidth
             />
           </div>

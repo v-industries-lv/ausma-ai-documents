@@ -5,13 +5,22 @@
   font-size: 14px;
 }
 
+.select {
+  padding: 5px;
+  z-index: 1;
+}
+
 .model-select-wrapper {
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .static-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
   width: 100%;
   gap: 0.5rem;
 }
@@ -28,24 +37,201 @@
   align-items: center;
   align-items: center;
   align-items: flex-start;
+  position: relative;
 }
 
 .dynamic-select {
+  display: flex;
+  align-items: center;
   min-width: 8ch;
-  max-width: 25ch;
+  max-width: 30ch;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: inherit;
+  color: var(--color-text-primary);
+  border: none;
+  font-size: inherit;
+}
+
+.dynamic-select:hover,
+.dynamic-select-open {
+  background-color: var(--color-bg-hover);
+  border-radius: 12px;
+}
+
+.select-label {
+  flex: 0 0 auto;
+}
+
+.select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 4px;
+}
+
+.select-arrow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  margin-left: 6px;
 }
 
 .static-select {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
   width: 100%;
   overflow: hidden;
+  background-color: var(--color-select-bg);
+  box-shadow: var(--color-select-box-shadow);
+  color: var(--color-select-text);
+  white-space: nowrap;
+  text-align: start;
+  border: none;
+  outline: none;
+  min-width: 0;
+  border-radius: 5px;
+  padding: 7px 9px 7px 12px;
 }
 
-.measure-span {
-  position: absolute;
-  visibility: hidden;
+.static-select .select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+  margin-left: 4px;
+}
 
-  font: inherit;
-  font-weight: bold;
+.static-select .select-arrow {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.dynamic-select .select-arrow {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.dropdown-wrapper {
+  position: relative;
+}
+
+.dropdown-divider {
+  width: 100%;
+  height: 1px;
+  flex: 0 0 1px;
+  background-color: var(--color-text-primary);
+  margin: 4px 0;
+}
+
+.dropdown-menu-base {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  background: var(--color-select-bg);
+  border: 1px solid var(--color-border-bottom);
+  padding: 0;
+  border-radius: 0px;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.dropdown-button {
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+
+.dropdown-menu-content {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: var(--color-scrollbar-primary) transparent;
+  scrollbar-width: thin;
+}
+
+.dropdown-menu-dynamic {
+  position: absolute;
+  min-width: 30ch;
+  max-width: 50ch;
+  max-height: 210px;
+  font-size: 12px;
+}
+
+.dropdown-menu-static {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  max-height: 9rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.dropdown-option-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-option:hover {
+  background: var(--color-bg-hover);
+}
+
+.dropdown-option input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 16px;
+  min-width: 16px;
+  max-width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 16px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-bottom);
+  border-radius: 3px;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+}
+
+.dropdown-option input[type="checkbox"]:checked {
+  background-color: var(--color-bg-secondary);
+  border-color: var(--color-border-bottom);
+}
+
+.dropdown-option input[type="checkbox"]:checked::before {
+  content: "";
+  width: 0.25rem;
+  height: 0.5rem;
+  border: solid var(--color-text-primary);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.chat-svg {
+  fill: var(--color-text-primary);
+  height: 12px;
+  width: 12px;
 }

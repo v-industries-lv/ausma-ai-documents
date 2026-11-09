@@ -54,6 +54,18 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  position: relative;
+}
+
+.select-ctn-kb {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.select-ctn-kb label {
+  margin: 0 !important;
+  display: flex !important;
 }
 
 .select-ctn select {

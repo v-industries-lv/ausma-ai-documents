@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Callable
 
 from sklearn.metrics.pairwise import cosine_similarity
 import itertools
@@ -6,21 +6,26 @@ from langchain_core.embeddings import Embeddings
 
 class AssistantRagModule:
 
-    def __init__(self, rag_document_count, rag_similarity_score_threshold, rag_score_margin, rag_cosine_distance_irrelevance_threshold):
+    def __init__(self, rag_document_count: int, rag_similarity_score_threshold: float, rag_score_margin: float, rag_cosine_distance_irrelevance_threshold: float, embedding_config: dict):
         self.rag_document_count = rag_document_count
         self.rag_similarity_score_threshold = rag_similarity_score_threshold
         self.rag_score_margin = rag_score_margin
         self.rag_cosine_distance_irrelevance_threshold = rag_cosine_distance_irrelevance_threshold
+        self.embedding_config = embedding_config
 
     def to_settings(self):
         return {
             "rag_document_count": self.rag_document_count,
             "rag_similarity_score_threshold": self.rag_similarity_score_threshold,
             "rag_score_margin": self.rag_score_margin,
-            "rag_cosine_distance_irrelevance_threshold": self.rag_cosine_distance_irrelevance_threshold
+            "rag_cosine_distance_irrelevance_threshold": self.rag_cosine_distance_irrelevance_threshold,
+            "embedding_config": self.embedding_config,
         }
 
-    def filter_relevant_documents(self, documents: List[dict], embedding: Embeddings):
+    def filter_relevant_documents(self, documents: List[dict], get_embedding: Callable):
+        embedding: Embeddings = get_embedding(self.embedding_config)
+        if embedding is None:
+            raise ValueError(f"Could not get embedding model - {self.embedding_config}")
         relevant_documents = [x for x in documents if
                               x["similarity_score"] < self.rag_cosine_distance_irrelevance_threshold]
         if len(relevant_documents) == 0:
@@ -69,4 +74,5 @@ class AssistantRagModule:
             settings.get("rag_similarity_score_threshold", 0.8),
             settings.get("rag_score_margin", 0.2),
             settings.get("rag_cosine_distance_irrelevance_threshold", 1.0),
+            settings.get("embedding_config", {"model": "bge-m3:latest"}),
         )

@@ -27,7 +27,8 @@ class Assistant:
 
     CONTEXT_TEXT_NO_RAG = "\n\nRAG did not find any relevant documents..."
 
-    def __init__(self, name: str, llm_runner: LLMRunner, model: str, system_prompt: str, options: dict, rag_settings: dict, history_mode: str, thinking_flag: str):
+    def __init__(self, name: str, llm_runner: LLMRunner, model: str, system_prompt: str,
+                 options: dict, rag_settings: dict, history_mode: str, thinking_flag: str):
         self.name = name
         self.llm_runner = llm_runner
         self.model = model
@@ -39,6 +40,7 @@ class Assistant:
         if self.thinking_flag != False and not self.llm_runner.supports_thinking(model):
             self.thinking_flag = False
             logger.warning(f"Assistant {self.name} with model {self.model} and thinking flag {thinking_flag} does not support thinking. Switching off thinking.")
+
 
     @staticmethod
     def _parse_thinking_flag(thinking_flag: str) -> Union[str, bool]:
@@ -63,12 +65,20 @@ class Assistant:
                 raise (ValueError("No text provided!"))
 
             context = ""
-            rag_sources = None
-            kb = ctx.kb
-            if kb is not None:
-                rag_sources = self.get_relevant_rag_sources(kb, user_input)
+            rag_sources = []
+            knowledge_bases = ctx.knowledge_bases
+            for kb in knowledge_bases:
+                if kb is not None:
+                    rag_sources += self.get_rag_sources(kb, user_input)
+            if len(knowledge_bases) > 0:
+                if len(rag_sources)>0:
+                    logger.info(f"Filtering {len(rag_sources)} sources...")
+                    rag_sources = self.rag_module.filter_relevant_documents(
+                        rag_sources,
+                        self.llm_runner.get_embedding
+                    )
+                    logger.info(f"Relevant sources: {len(rag_sources)}")
                 context += Assistant.get_rag_context(rag_sources)
-
             user_message = {
                 'role': 'user',
                 'content': user_input["content"] + context,
@@ -104,7 +114,7 @@ class Assistant:
             room_state.stop()
         return assistant_text, thinking_text, json.dumps(rag_sources)
 
-    def get_relevant_rag_sources(self, kb: KnowledgeBase, user_input: dict) -> List[dict]:
+    def get_rag_sources(self, kb: KnowledgeBase, user_input: dict) -> List[dict]:
         embedding_model = kb.embedding_config["model"]
         self.llm_runner.check_model_installed(embedding_model)
         retrieved_documents = kb.rag_lookup(
@@ -112,15 +122,10 @@ class Assistant:
             user_input["content"],
             self.rag_module.rag_document_count,
         )
-        logger.info(f"KB retrieved document count: {str(len(retrieved_documents))}")
-        rag_sources = [{"id": x[0].id, "similarity_score": x[1], "metadata": x[0].metadata,
+        logger.info(f"KB {kb.name} retrieved document count: {str(len(retrieved_documents))}")
+        return [{"id": x[0].id, "similarity_score": x[1], "metadata": x[0].metadata,
                             "content": x[0].page_content}
                            for x in retrieved_documents]
-
-        return self.rag_module.filter_relevant_documents(
-            rag_sources,
-            self.llm_runner.get_embedding(kb.embedding_config)
-        )
 
     @staticmethod
     def message_history_builder(history: List[RoomMessage], user_message: dict, supports_vision: bool) -> List[dict]:

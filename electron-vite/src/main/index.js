@@ -27,7 +27,7 @@ async function createWindow(url) {
     show: false,
     webPreferences: {
       nodeIntegration: false,
-      preload: path.join(__dirname, '../preload/index.js'),
+      preload: path.join(__dirname, path.join("..", "preload", "index.js")),
       additionalArguments: [`--defaultUsername=${os.userInfo().username}`],
     },
   });
@@ -66,7 +66,7 @@ async function createWindow(url) {
   if (fs.existsSync(iconPath)) {
     win.setIcon(iconPath);
   } else {
-    win.setIcon(getParentDir() + '/../resources/icon.png');
+    win.setIcon(path.join(getParentDir(), "..", "resources", "icon.png"));
   }
   console.log(iconPath);
   win.loadURL(url);
@@ -106,31 +106,37 @@ async function launchLocalServer() {
     packagedBackendPath,
     process.platform === 'win32' ? 'flask_app.exe' : 'flask_app'
   )
+  const xpdfBinPath = process.platform === 'win32' ? path.join("windows", "pdftopng.exe") : path.join("linux", "pdftopng");
   if (fs.existsSync(packagedExecutablePath)) {
-    console.log('Running bundled python backend.\n')
-    // packaged with bundled python
+    // Python backend for installed electron app
+    console.log('Running bundled python backend.\n');
     process.env['AUSMA_AI_DATA_PATH'] = path.join(app.getPath('userData'), 'ausma-ai');
-    process.env['XPDF_PATH'] = path.join(app.getPath('userData'), 'ausma-ai', "resources", "flask_app", "bin", "linux", "pdftopng");
+    if (process.platform === 'win32') {
+      process.env['PYTHONIOENCODING'] = 'utf-8'
+    }
+    process.env['XPDF_PATH'] = path.join(app.getPath('userData'), 'ausma-ai', "resources", "flask_app", "bin", xpdfBinPath);
     serverProcess = spawn(
       packagedExecutablePath,
-      ["--production", "--localhost",],
+      ["--production", "--localhost", "--frontend_path", path.join("..", "..", "frontend")],
       {'cwd': packagedBackendPath}
     );
   } else {
-    // sets the path to include the virtual python environment
+    // Python backend for unpacked electron app
     console.log('Running virtual environment python backend.\n')
     const env = Object.assign({}, process.env);
-    let backendDir = getParentDir() + "/../../backend/";
-    env["PATH"] = backendDir + ".venv/bin:" + env["PATH"];
+    let backendDir = path.join(getParentDir(), "..", "..", "backend");
+    const backendVenvBinFolder = process.platform === "win32" ? "Scripts" : "bin";
+    env["PATH"] = path.join(backendDir, ".venv", backendVenvBinFolder) + path.delimiter + env["PATH"];
     console.log(env["PATH"]);
+    env["XPDF_PATH"] = path.join("bin", xpdfBinPath);
     serverProcess = spawn(
-      "python3",
-      [backendDir + "flask_app.py", "--production", "--localhost"],
+      process.platform === "win32" ? "python.exe" : "python3",
+      [path.join(backendDir, "flask_app.py"), "--production", "--localhost", "--frontend_path", path.join("..", "frontend", "dist")],
       { env: env, cwd: backendDir }
     );
   }
 
-  const is_loaded = new Promise((resolve, reject) => {
+  const isLoaded = new Promise((resolve, reject) => {
     serverProcess.stderr.on("data", function (data) {
       const dataStr = data.toString("utf8");
       if (dataStr.includes("Running on")) {
@@ -139,7 +145,7 @@ async function launchLocalServer() {
       process.stdout.write(dataStr);
     });
   });
-  await is_loaded;
+  await isLoaded;
 }
 
 function getParentDir() {
