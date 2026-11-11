@@ -2,7 +2,7 @@
 
 $url = "https://dl.xpdfreader.com/xpdf-tools-win-4.06.zip"
 $archive_file = "$env:TEMP\xpdf.zip"
-$destination = "bin\windows\pdftopng.exe"
+$destination = "$PSScriptRoot\bin\windows\pdftopng.exe"
 
 $subfolder = if ([Environment]::Is64BitOperatingSystem) {
     "bin64"
